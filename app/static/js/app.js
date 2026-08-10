@@ -548,27 +548,32 @@ async function loadDashboardKPI() {
     if (!data || !data.length) return;
     const grid = $qs("#kpi-grid-container");
     if (!grid) return; // tab not rendered yet
-    grid.innerHTML = data.map(d => `
+    grid.innerHTML = data.map(d => {
+      const f = d.followers_kpi || {actual:0, target:1, pct:0};
+      const p = d.plays_kpi || {actual:0, target:1, pct:0};
+      const pu = d.publish_kpi || {actual:0, target:1, pct:0};
+      const e = d.engagement_kpi || {actual:0, target:1, pct:0};
+      return `
       <div class="kpi-card">
         <div class="kpi-title">${d.platform}${d.has_target ? '' : ' <span class="kpi-no-target">未设目标</span>'}</div>
         <div class="kpi-bar">
-          <div class="kpi-bar-label"><span>新增粉丝</span><span>${fmt(d.followers_kpi.actual)} / ${fmt(d.followers_kpi.target)}</span></div>
-          <div class="kpi-track"><div class="kpi-fill accent" style="width:${Math.min(d.followers_kpi.pct, 100)}%"></div></div>
+          <div class="kpi-bar-label"><span>新增粉丝</span><span>${fmt(f.actual)} / ${fmt(f.target)}</span></div>
+          <div class="kpi-track"><div class="kpi-fill accent" style="width:${Math.min(f.pct, 100)}%"></div></div>
         </div>
         <div class="kpi-bar">
-          <div class="kpi-bar-label"><span>播放 / 阅读</span><span>${fmt(d.plays_kpi.actual)} / ${fmt(d.plays_kpi.target)}</span></div>
-          <div class="kpi-track"><div class="kpi-fill blue" style="width:${Math.min(d.plays_kpi.pct, 100)}%"></div></div>
+          <div class="kpi-bar-label"><span>播放 / 阅读</span><span>${fmt(p.actual)} / ${fmt(p.target)}</span></div>
+          <div class="kpi-track"><div class="kpi-fill blue" style="width:${Math.min(p.pct, 100)}%"></div></div>
         </div>
         <div class="kpi-bar">
-          <div class="kpi-bar-label"><span>发布数量</span><span>${d.publish_kpi.actual} / ${d.publish_kpi.target}</span></div>
-          <div class="kpi-track"><div class="kpi-fill gold" style="width:${Math.min(d.publish_kpi.pct, 100)}%"></div></div>
+          <div class="kpi-bar-label"><span>发布数量</span><span>${pu.actual} / ${pu.target}</span></div>
+          <div class="kpi-track"><div class="kpi-fill gold" style="width:${Math.min(pu.pct, 100)}%"></div></div>
         </div>
         <div class="kpi-bar">
-          <div class="kpi-bar-label"><span>互动量</span><span>${fmt(d.engagement_kpi.actual)} / ${fmt(d.engagement_kpi.target)}</span></div>
-          <div class="kpi-track"><div class="kpi-fill green" style="width:${Math.min(d.engagement_kpi.pct, 100)}%"></div></div>
+          <div class="kpi-bar-label"><span>互动量</span><span>${fmt(e.actual)} / ${fmt(e.target)}</span></div>
+          <div class="kpi-track"><div class="kpi-fill green" style="width:${Math.min(e.pct, 100)}%"></div></div>
         </div>
       </div>
-    `).join("");
+    `}).join("");
   } catch(e) {
     toast("KPI 加载失败: " + (e.message || e), "error");
   }
