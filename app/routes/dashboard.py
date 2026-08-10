@@ -175,6 +175,7 @@ def dashboard_overview(
             "platform": plat,
             "followers": followers_now,
             "followers_wow": qoq(tw["new_followers"], lw["new_followers"]),
+            "new_followers": tw["new_followers"],
             "plays_reads": plays_reads_this,
             "plays_reads_wow": qoq(plays_reads_this, plays_reads_last),
             "likes": tw["likes"],
