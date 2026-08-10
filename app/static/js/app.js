@@ -839,7 +839,7 @@ async function openBatchEntry(platform) {
 
   let rows = accts.map((a, i) => {
     const prev = lastWeekData[a] || {};
-    const showBookmark = (platform === "小红书");
+    const showBookmark = (platform === "小红书" || platform === "抖音");
     return `<div class="batch-row">
       <div class="batch-account">${a}</div>
       <div class="batch-fields">
@@ -850,6 +850,8 @@ async function openBatchEntry(platform) {
         <div class="batch-field"><label>评论</label><input id="b${i}-c" type="number" value="${prev.comments||0}" placeholder="评论"></div>
         ${showBookmark ? `<div class="batch-field"><label>收藏</label><input id="b${i}-bm" type="number" value="${prev.bookmarks||0}" placeholder="收藏"></div>` : ''}
         <div class="batch-field"><label>分享</label><input id="b${i}-s" type="number" value="${prev.shares||0}" placeholder="分享"></div>
+        ${platform === "抖音" ? `<div class="batch-field"><label>主页访问</label><input id="b${i}-iv" type="number" value="${prev.in_views||0}" placeholder="主页访问"></div>
+        <div class="batch-field"><label>完播率%</label><input id="b${i}-cr" type="number" value="${prev.completion_rate||0}" placeholder="完播率" step="0.1" style="width:60px"></div>` : ''}
         <div class="batch-field"><label>发布数</label><input id="b${i}-pub" type="number" value="${prev.publish_count||0}" placeholder="发布条数" style="width:60px"></div>
       </div>
     </div>`;
@@ -883,12 +885,14 @@ async function saveBatch(modalId, platform, count) {
     const c = +($qs(`#b${i}-c`).value) || 0;
     const s = +($qs(`#b${i}-s`)?.value) || 0;
     const bm = +($qs(`#b${i}-bm`)?.value) || 0;
+    const iv = +($qs(`#b${i}-iv`)?.value) || 0;
+    const cr = parseFloat($qs(`#b${i}-cr`)?.value) || 0;
     const pub = +($qs(`#b${i}-pub`).value) || 0;
 
     const body = {
       week, platform, account: acctName,
       followers: f, new_followers: nf, plays: p, likes: l, comments: c,
-      shares: s, bookmarks: bm, publish_count: pub,
+      shares: s, bookmarks: bm, in_views: iv, completion_rate: cr, publish_count: pub,
     };
     if (platform === "小红书") { body.note_reads = p; body.plays = 0; }
     else if (platform === "公众号") { body.reads = p; body.plays = 0; }
@@ -922,6 +926,8 @@ function openMetricForm() {
       <div class="form-group"><label>评论</label><input type="number" id="mf-comments" value="0"></div>
       <div class="form-group"><label>分享</label><input type="number" id="mf-shares" value="0"></div>
       <div class="form-group" id="mf-bookmark-group" style="display:none"><label>收藏</label><input type="number" id="mf-bookmarks" value="0"></div>
+      <div class="form-group" id="mf-home-group" style="display:none"><label>主页访问</label><input type="number" id="mf-inviews" value="0"></div>
+      <div class="form-group" id="mf-comp-group" style="display:none"><label>完播率 (%)</label><input type="number" id="mf-comprate" value="0" step="0.1"></div>
       <div class="form-group"><label>新增粉丝</label><input type="number" id="mf-newf" value="0"></div>
       <div class="form-group"><label>发布数</label><input type="number" id="mf-pub" value="0"></div>
     </div>
@@ -935,8 +941,10 @@ function openMetricForm() {
 
 function togglePlatformFields() {
   const plat = document.getElementById("mf-plat").value;
-  const bookmark = document.getElementById("mf-bookmark-group");
-  if (bookmark) bookmark.style.display = (plat === "小红书") ? "" : "none";
+  const show = (id, v) => { const el = document.getElementById(id); if (el) el.style.display = v ? "" : "none"; };
+  show("mf-bookmark-group", plat === "小红书" || plat === "抖音");
+  show("mf-home-group", plat === "抖音");
+  show("mf-comp-group", plat === "抖音");
 }
 
 async function saveMetric(modalId) {
@@ -953,6 +961,8 @@ async function saveMetric(modalId) {
     comments: +$qs("#mf-comments").value||0,
     shares: +$qs("#mf-shares").value||0,
     bookmarks: +($qs("#mf-bookmarks")?.value)||0,
+    in_views: +($qs("#mf-inviews")?.value)||0,
+    completion_rate: +($qs("#mf-comprate")?.value)||0,
     new_followers: +$qs("#mf-newf").value||0,
     publish_count: +$qs("#mf-pub").value||0,
     reads: $qs("#mf-plat").value === "公众号" ? (+$qs("#mf-plays").value||0) : 0,
