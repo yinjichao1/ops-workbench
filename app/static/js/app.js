@@ -72,14 +72,40 @@ function switchOvMode(mode) {
   ovCurrentMode = mode;
   const w = document.getElementById("ov-mode-week");
   const m = document.getElementById("ov-mode-month");
+  const wkP = document.getElementById("ov-week-picker");
+  const moP = document.getElementById("ov-month-picker");
   if (mode === "week") {
     if (w) { w.style.background = "var(--accent)"; w.style.color = "#fff"; w.style.border = "none"; }
     if (m) { m.style.background = "var(--bg-elevated)"; m.style.color = "var(--text-muted)"; m.style.border = "1px solid var(--border)"; }
+    if (wkP) wkP.style.display = "";
+    if (moP) moP.style.display = "none";
   } else {
     if (m) { m.style.background = "var(--accent)"; m.style.color = "#fff"; m.style.border = "none"; }
     if (w) { w.style.background = "var(--bg-elevated)"; w.style.color = "var(--text-muted)"; w.style.border = "1px solid var(--border)"; }
+    if (wkP) wkP.style.display = "none";
+    if (moP) moP.style.display = "";
   }
-  loadDashboard();
+  onOvFilterChange();
+}
+
+function onOvFilterChange() {
+  const mode = ovCurrentMode || "week";
+  const wkP = document.getElementById("ov-week-picker");
+  const moP = document.getElementById("ov-month-picker");
+  const lbl = document.getElementById("ov-period-label");
+  let start, end;
+  if (mode === "month" && moP && moP.value) {
+    const parts = moP.value.split("-");
+    start = end = moP.value + "-01";
+    if (lbl) lbl.textContent = `显示 ${parts[0]}年${parts[1]}月`;
+  } else if (wkP && wkP.value) {
+    start = end = wkP.value;
+    if (lbl) lbl.textContent = `显示 ${wkP.value} 周`;
+  } else {
+    loadDashboard();
+    return;
+  }
+  loadDashboard(start, end);
 }
 
 function toggleSubmenu(el) {

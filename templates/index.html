@@ -74,11 +74,15 @@
     </div>
     <div class="page-body">
       <!-- 区块1: 平台数据 -->
-      <div class="dashtab" id="dashtab-overview">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <div style="display:flex;gap:4px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;gap:4px;align-items:center">
           <button class="btn btn-sm" id="ov-mode-week" style="background:var(--accent);color:#fff;border:none;border-radius:4px 0 0 4px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer" onclick="switchOvMode('week')">按周维度</button>
           <button class="btn btn-sm" id="ov-mode-month" style="background:var(--bg-elevated);color:var(--text-muted);border:1px solid var(--border);border-radius:0 4px 4px 0;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer" onclick="switchOvMode('month')">按月维度</button>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="week" id="ov-week-picker" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary)">
+          <input type="month" id="ov-month-picker" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary);display:none">
+          <span id="ov-period-label" style="font-size:12px;color:var(--text-muted)"></span><button class="btn btn-outline btn-sm" onclick="onOvFilterChange()">查询</button>
         </div>
       </div>
       <div class="stat-grid cols-4" id="overview-grid"></div>
