@@ -184,6 +184,7 @@ function renderOverviewCards(data) {
     const fwow = d.followers_wow || 0;
     const isDouyin = d.platform === "抖音";
     const isShipin = d.platform === "视频号";
+    const isGzh = d.platform === "公众号";
     const isXhs = d.platform === "小红书";
     return `
     <div class="stat-card ${cls}" onclick="openPlatformDetail('${d.platform}')">
@@ -196,7 +197,7 @@ function renderOverviewCards(data) {
         <div class="stat-detail-row"><span class="sdl">评论</span><span class="sdv">${fmt(d.comments||0)}</span></div>
         ${isShipin ? `<div class="stat-detail-row"><span class="sdl">爱心</span><span class="sdv">${fmt(d.hearts||0)}</span></div>` : ''}
         <div class="stat-detail-row"><span class="sdl">分享</span><span class="sdv">${fmt(d.shares||0)}</span></div>
-        ${isXhs || isDouyin ? `<div class="stat-detail-row"><span class="sdl">收藏</span><span class="sdv">${fmt(d.bookmarks||0)}</span></div>` : ''}
+        ${isXhs || isDouyin || isGzh ? `<div class="stat-detail-row"><span class="sdl">收藏</span><span class="sdv">${fmt(d.bookmarks||0)}</span></div>` : ''}
         ${isDouyin ? `<div class="stat-detail-row"><span class="sdl">主页访问</span><span class="sdv">${fmt(d.in_views||0)}</span></div>` : ''}
         ${isDouyin || isShipin ? `<div class="stat-detail-row"><span class="sdl">完播率</span><span class="sdv">${(d.completion_rate||0).toFixed(1)}%</span></div>` : ''}
         <div class="stat-detail-row"><span class="sdl">互动量</span><span class="sdv">${fmt(d.engagement)}</span></div>
@@ -352,7 +353,7 @@ function renderPlatformDetail(data, platform) {
         <span class="aml">分享</span>
         <span class="amv">${fmt(a.shares||0)}</span>
       </div>
-      ${platform === "小红书" || platform === "抖音" ? `
+      ${platform === "小红书" || platform === "抖音" || platform === "公众号" ? `
       <div class="account-metric-row">
         <span class="aml">收藏</span>
         <span class="amv">${fmt(a.bookmarks||0)}</span>
@@ -934,7 +935,7 @@ async function openBatchEntry(platform) {
 
   let rows = accts.map((a, i) => {
     const prev = lastWeekData[a] || {};
-    const showBookmark = (platform === "小红书" || platform === "抖音");
+    const showBookmark = (platform === "小红书" || platform === "抖音" || platform === "公众号");
     return `<div class="batch-row">
       <div class="batch-account">${a}</div>
       <div class="batch-fields">
@@ -1040,7 +1041,7 @@ function openMetricForm() {
 function togglePlatformFields() {
   const plat = document.getElementById("mf-plat").value;
   const show = (id, v) => { const el = document.getElementById(id); if (el) el.style.display = v ? "" : "none"; };
-  show("mf-bookmark-group", plat === "小红书" || plat === "抖音");
+  show("mf-bookmark-group", plat === "小红书" || plat === "抖音" || plat === "公众号");
   show("mf-home-group", plat === "抖音");
   show("mf-comp-group", plat === "抖音" || plat === "视频号");
   show("mf-heart-group", plat === "视频号");
