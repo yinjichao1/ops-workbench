@@ -67,6 +67,21 @@ function switchDashtabFromSidebar(tab) {
   switchDashtab(null, tab);
 }
 
+let ovCurrentMode = "week";
+function switchOvMode(mode) {
+  ovCurrentMode = mode;
+  const w = document.getElementById("ov-mode-week");
+  const m = document.getElementById("ov-mode-month");
+  if (mode === "week") {
+    if (w) { w.style.background = "var(--accent)"; w.style.color = "#fff"; w.style.border = "none"; }
+    if (m) { m.style.background = "var(--bg-elevated)"; m.style.color = "var(--text-muted)"; m.style.border = "1px solid var(--border)"; }
+  } else {
+    if (m) { m.style.background = "var(--accent)"; m.style.color = "#fff"; m.style.border = "none"; }
+    if (w) { w.style.background = "var(--bg-elevated)"; w.style.color = "var(--text-muted)"; w.style.border = "1px solid var(--border)"; }
+  }
+  loadDashboard();
+}
+
 function toggleSubmenu(el) {
   const sidebarItem = el.closest(".sidebar-item");
   const submenuId = sidebarItem?.dataset.page;
@@ -232,17 +247,28 @@ function showSkeleton(containerId, type) {
 async function loadDashboard(startWeek, endWeek) {
   // 默认显示上周数据
   if (!startWeek) {
-    const lw = new Date();
-    lw.setDate(lw.getDate() - (lw.getDay() || 7) - 6);
-    const y = lw.getFullYear();
-    const m = String(lw.getMonth() + 1).padStart(2, '0');
-    const d = String(lw.getDate()).padStart(2, '0');
-    startWeek = endWeek = `${y}-${m}-${d}`;
+    if (ovCurrentMode === "month") {
+      // 按月维度：显示上月
+      const now = new Date();
+      const m = now.getMonth(); // 0-indexed, this is current month
+      const lastMonth = m === 0 ? 12 : m;
+      const lastYear = m === 0 ? now.getFullYear() - 1 : now.getFullYear();
+      startWeek = endWeek = `${lastYear}-${String(lastMonth).padStart(2,'0')}-01`;
+    } else {
+      // 按周维度：显示上周
+      const lw = new Date();
+      lw.setDate(lw.getDate() - (lw.getDay() || 7) - 6);
+      const y = lw.getFullYear();
+      const mo = String(lw.getMonth() + 1).padStart(2, '0');
+      const d = String(lw.getDate()).padStart(2, '0');
+      startWeek = endWeek = `${y}-${mo}-${d}`;
+    }
   }
   showSkeleton("overview-grid", "cards-4");
   showSkeleton("kpi-grid-container", "kpi-3");
   let url = API + "/dashboard/overview";
   if (startWeek && endWeek) url += `?start_week=${startWeek}&end_week=${endWeek}`;
+  if (ovCurrentMode === "month") url += "&mode=month";
 
   try {
     const r = await fetch(url);

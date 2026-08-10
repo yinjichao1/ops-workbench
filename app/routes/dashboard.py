@@ -69,19 +69,37 @@ def _month_range(today: date):
 def dashboard_overview(
     start_week: str = Query(""),
     end_week: str = Query(""),
+    mode: str = Query("week"),
     db: Session = Depends(get_db),
 ):
-    """首页总览：可选周次筛选，默认上周。"""
+    """首页总览：可选周/月筛选，默认上周/上月。"""
     today = date.today()
     if start_week and end_week:
-        this_mon = parse_week(start_week)
-        this_tue = parse_week(end_week) + timedelta(days=6)
-        last_mon = this_mon - timedelta(weeks=1)
-        last_tue = this_tue - timedelta(weeks=1)
+        if mode == "month":
+            this_mon = date.fromisoformat(start_week).replace(day=1)
+            next_m = this_mon.replace(day=28) + timedelta(days=4)
+            this_tue = next_m - timedelta(days=next_m.day)
+            last_mon = (this_mon - timedelta(days=1)).replace(day=1)
+            last_tue = (last_mon.replace(day=28) + timedelta(days=4))
+            last_tue = last_tue - timedelta(days=last_tue.day)
+        else:
+            this_mon = parse_week(start_week)
+            this_tue = parse_week(end_week) + timedelta(days=6)
+            last_mon = this_mon - timedelta(weeks=1)
+            last_tue = this_tue - timedelta(weeks=1)
     else:
-        # 默认显示上周
-        this_mon, this_tue = _last_week_range(today)
-        last_mon, last_tue = this_mon - timedelta(weeks=1), this_tue - timedelta(weeks=1)
+        if mode == "month":
+            # 默认上月
+            this_mon = (today.replace(day=1) - timedelta(days=1)).replace(day=1)
+            next_m = this_mon.replace(day=28) + timedelta(days=4)
+            this_tue = next_m - timedelta(days=next_m.day)
+            last_mon = (this_mon - timedelta(days=1)).replace(day=1)
+            last_tue = (last_mon.replace(day=28) + timedelta(days=4))
+            last_tue = last_tue - timedelta(days=last_tue.day)
+        else:
+            # 默认显示上周
+            this_mon, this_tue = _last_week_range(today)
+            last_mon, last_tue = this_mon - timedelta(weeks=1), this_tue - timedelta(weeks=1)
 
     # Available weeks for filter
     all_weeks = (
