@@ -506,8 +506,9 @@ async function loadDashboardDetail(allData, platform, account) {
       }
     }
   } catch(e) {}
+}
 
-  // Top 5 — 在「本周热门」tab 里跨所有平台
+// Top 5 — 在「本周热门」tab 里跨所有平台
 async function loadHotContent() {
   const top5Div = $qs("#top5-container");
   if (!top5Div) return;
