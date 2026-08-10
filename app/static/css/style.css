@@ -414,6 +414,31 @@ body {
 }
 
 /* ===== BATCH ENTRY FORM ===== */
+
+/* ===== LEADS CHARTS ===== */
+.lead-bar-row {
+  display: flex; align-items: center; gap: 8px; padding: 4px 0;
+  font-size: 11px;
+}
+.lead-bar-label {
+  min-width: 60px; text-align: right; color: var(--text-muted);
+  font-weight: 600; font-size: 10px;
+}
+.lead-bar-track {
+  flex: 1; height: 10px; background: var(--bg-elevated);
+  border-radius: 3px; overflow: hidden;
+}
+.lead-bar-fill {
+  height: 100%; border-radius: 3px; background: var(--accent);
+  transition: width 0.4s;
+}
+.lead-bar-fill.warning { background: #F59E0B; }
+.lead-bar-fill.region { background: #8B5CF6; }
+.lead-bar-fill.gold { background: #F59E0B; }
+.lead-bar-val {
+  min-width: 50px; font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-primary); text-align: right;
+}
 .batch-container { max-height: 45vh; overflow-y: auto; }
 .batch-row {
   background: var(--bg-elevated); border: 1px solid var(--border-soft);

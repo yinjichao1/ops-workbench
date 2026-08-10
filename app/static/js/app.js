@@ -49,6 +49,7 @@ function switchDashtab(el, tab) {
   // 切换 tab 时按需加载数据
   if (tab === "trend") loadDashboardDetail(null, "抖音");
   if (tab === "hot") loadHotContent();
+  if (tab === "leads") loadLeads();
 }
 
 function switchDashtabFromSidebar(tab) {
@@ -1351,6 +1352,81 @@ function isoWeek(d) {
   const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
   const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
   return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+}
+
+// ========== LEADS ==========
+async function loadLeads() {
+  const s = await fetch(API + "/leads/summary");
+  if (!s.ok) return;
+  const data = await s.json();
+
+  // Stat cards
+  document.getElementById("leads-cards").innerHTML = [
+    { label: "总线索", val: data.total, cls: "" },
+    { label: "有效线索", val: data.valid, cls: "up", sub: `留资率 ${data.valid_rate}%` },
+    { label: "待跟进", val: data.pending, cls: "" },
+    { label: "平均沟通", val: data.contact_avg, cls: "" },
+  ].map(c => `<div class="stat-card">
+    <div class="stat-label">${c.label}</div>
+    <div class="stat-value ${c.cls}">${c.val}</div>
+    ${c.sub ? `<div class="stat-change up">${c.sub}</div>` : ''}
+  </div>`).join("");
+
+  // Source distribution
+  if (data.by_source.length) {
+    const maxSrc = Math.max(...data.by_source.map(s => s.count));
+    document.getElementById("leads-source-chart").innerHTML = data.by_source.map(s => `
+      <div class="lead-bar-row">
+        <span class="lead-bar-label">${s.name}</span>
+        <div class="lead-bar-track"><div class="lead-bar-fill" style="width:${(s.count/maxSrc)*100}%"></div></div>
+        <span class="lead-bar-val">${s.count} (${s.pct}%)</span>
+      </div>`).join("");
+  }
+
+  // Status
+  if (data.by_status.length) {
+    const maxSt = Math.max(...data.by_status.map(s => s.count));
+    document.getElementById("leads-status-chart").innerHTML = data.by_status.map(s => `
+      <div class="lead-bar-row">
+        <span class="lead-bar-label">${s.name}</span>
+        <div class="lead-bar-track"><div class="lead-bar-fill ${s.name==='跟进中'?'accent':s.name==='未跟进'?'warning':''}" style="width:${(s.count/maxSt)*100}%"></div></div>
+        <span class="lead-bar-val">${s.count}</span>
+      </div>`).join("");
+  }
+
+  // Daily trend
+  if (data.by_day.length) {
+    const maxD = Math.max(...data.by_day.map(d => d.count), 1);
+    document.getElementById("leads-day-chart").innerHTML = data.by_day.map(d => {
+      const h = Math.max(4, (d.count / maxD) * 80);
+      return `<div style="flex:1;text-align:center">
+        <div style="background:var(--accent);height:${h}px;border-radius:3px 3px 0 0;min-height:2px;opacity:${0.4+(h/80)*0.6}"></div>
+        <div style="font-size:8px;color:var(--text-muted);margin-top:2px">${d.date.slice(5)}</div>
+      </div>`;
+    }).join("");
+  }
+
+  // Region
+  if (data.by_region.length) {
+    const maxR = Math.max(...data.by_region.map(r => r.count));
+    document.getElementById("leads-region-chart").innerHTML = data.by_region.map(r => `
+      <div class="lead-bar-row">
+        <span class="lead-bar-label">${r.name}</span>
+        <div class="lead-bar-track"><div class="lead-bar-fill region" style="width:${(r.count/maxR)*100}%"></div></div>
+        <span class="lead-bar-val">${r.count}</span>
+      </div>`).join("");
+  }
+
+  // Intent distribution
+  if (data.intent_distribution.length) {
+    const maxI = Math.max(...data.intent_distribution.map(i => i.count));
+    document.getElementById("leads-intent-chart").innerHTML = data.intent_distribution.map(i => `
+      <div class="lead-bar-row">
+        <span class="lead-bar-label">意向 ${i.level}</span>
+        <div class="lead-bar-track"><div class="lead-bar-fill gold" style="width:${(i.count/maxI)*100}%"></div></div>
+        <span class="lead-bar-val">${i.count}</span>
+      </div>`).join("");
+  }
 }
 
 // ========== INIT ==========
