@@ -1578,7 +1578,10 @@ async function loadLeads() {
   let week = "", month = "", year = "";
   if (mode === "week") week = $qs("#leads-week")?.value || "";
   else if (mode === "month") month = $qs("#leads-month")?.value || "";
-  else if (mode === "year") year = $qs("#leads-year")?.value || "";
+  else if (mode === "year") {
+    const yv = $qs("#leads-year")?.value;
+    year = yv ? parseInt(yv) : new Date().getFullYear();
+  }
   const url = API + `/leads/summary?mode=${mode}&week_val=${encodeURIComponent(week)}&month_val=${encodeURIComponent(month)}&year_val=${year}`;
   const s = await fetch(url);
   if (!s.ok) return;
