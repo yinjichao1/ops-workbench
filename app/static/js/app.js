@@ -3,10 +3,27 @@
 // ========== DASHBOARD SUB-NAV ==========
 function switchDashtab(el, tab) {
   document.querySelectorAll(".sub-nav-item").forEach(t => t.classList.remove("active"));
-  el.classList.add("active");
+  if (el) el.classList.add("active");
   document.querySelectorAll(".dashtab").forEach(d => d.style.display = "none");
   const target = document.getElementById("dashtab-" + tab);
   if (target) target.style.display = "";
+  // 同步侧边栏子菜单高亮
+  document.querySelectorAll(".sidebar-sub-item").forEach(s => {
+    s.classList.toggle("active", s.dataset.tab === tab);
+  });
+}
+
+function switchDashtabFromSidebar(tab) {
+  switchDashtab(null, tab);
+}
+
+function toggleSubmenu(el) {
+  const sidebarItem = el.closest(".sidebar-item");
+  const submenuId = sidebarItem?.dataset.page;
+  if (!submenuId) return;
+  const submenu = document.querySelector(`[data-submenu="${submenuId}"]`);
+  if (submenu) submenu.classList.toggle("open");
+  el.textContent = submenu?.classList.contains("open") ? "▾" : "▸";
 }
 
 function switchTrendTab(platform) {
