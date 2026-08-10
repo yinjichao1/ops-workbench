@@ -1389,37 +1389,43 @@ async function loadLeads() {
     ${c.sub ? `<div class="stat-change up">${c.sub}</div>` : ''}
   </div>`).join("");
 
-  // 渠道来源（去掉线上+短视频，9 个平台）
+  // 渠道来源（隐藏零数据，9个平台）
   const all_sources = ["抖音", "微信视频号", "微信公众号", "微信私域社群/个人", "小红书平台",
                        "本地生活平台", "快手", "AI搜索/智能问答", "其他新媒体平台"];
   const src_map = {};
   data.by_source.forEach(s => { src_map[s.name] = s.count; });
-  const src_data = all_sources.map(k => ({name: k, count: src_map[k] || 0}));
-  const maxSrc = Math.max(...src_data.map(s => s.count), 1);
-  document.getElementById("leads-source-chart").innerHTML = src_data.map(s => `
+  const src_data = all_sources.filter(k => (src_map[k] || 0) > 0)
+                              .map(k => ({name: k, count: src_map[k] || 0}));
+  if (src_data.length === 0) {
+    document.getElementById("leads-source-chart").innerHTML = '<div class="empty-state"><p>暂无数据</p></div>';
+  } else {
+    const maxSrc = Math.max(...src_data.map(s => s.count), 1);
+    document.getElementById("leads-source-chart").innerHTML = src_data.map(s => `
       <div class="lead-bar-row">
         <span class="lead-bar-label">${s.name}</span>
         <div class="lead-bar-track"><div class="lead-bar-fill" style="width:${(s.count/maxSrc)*100}%"></div></div>
         <span class="lead-bar-val">${s.count}</span>
       </div>`).join("");
+  }
 
-  // Sub-channels: 抖音细分, 公众号细分
-  if (data.sub_douyin && data.sub_douyin.length) {
-    const m = Math.max(...data.sub_douyin.map(s=>s.count),1);
-    document.getElementById("leads-sub-douyin").innerHTML = data.sub_douyin.map(s=>`
-      <div class="lead-bar-row"><span class="lead-bar-label">${s.name}</span><div class="lead-bar-track"><div class="lead-bar-fill" style="width:${(s.count/m)*100}%"></div></div><span class="lead-bar-val">${s.count}</span></div>`).join("");
+  // Sub-channels: 抖音/公众号/视频号 — 只显示非零
+  function renderBars(el, data, key) {
+    const filtered = (data || []).filter(s => s.count > 0);
+    if (!filtered.length) {
+      el.innerHTML = '<div class="empty-state"><p>暂无数据</p></div>';
+      return;
+    }
+    const m = Math.max(...filtered.map(s => s.count), 1);
+    el.innerHTML = filtered.map(s => `
+      <div class="lead-bar-row">
+        <span class="lead-bar-label">${s.name}</span>
+        <div class="lead-bar-track"><div class="lead-bar-fill ${key}" style="width:${(s.count/m)*100}%"></div></div>
+        <span class="lead-bar-val">${s.count}</span>
+      </div>`).join("");
   }
-  if (data.sub_gzh && data.sub_gzh.length) {
-    const m = Math.max(...data.sub_gzh.map(s=>s.count),1);
-    document.getElementById("leads-sub-gzh").innerHTML = data.sub_gzh.map(s=>`
-      <div class="lead-bar-row"><span class="lead-bar-label">${s.name}</span><div class="lead-bar-track"><div class="lead-bar-fill gzh" style="width:${(s.count/m)*100}%"></div></div><span class="lead-bar-val">${s.count}</span></div>`).join("");
-  }
-  if (data.sub_shipin && data.sub_shipin.length) {
-    const m = Math.max(...data.sub_shipin.map(s=>s.count),1);
-    document.getElementById("leads-sub-douyin").insertAdjacentHTML("beforeend",
-      '<div class="card-header" style="padding:10px 0 6px 0;border:none"><span class="card-title">视频号细分</span></div>' +
-      data.sub_shipin.map(s=>`<div class="lead-bar-row"><span class="lead-bar-label">${s.name}</span><div class="lead-bar-track"><div class="lead-bar-fill shipin" style="width:${(s.count/m)*100}%"></div></div><span class="lead-bar-val">${s.count}</span></div>`).join(""));
-  }
+  renderBars(document.getElementById("leads-sub-douyin"), data.sub_douyin, "");
+  renderBars(document.getElementById("leads-sub-gzh"), data.sub_gzh, "gzh");
+  renderBars(document.getElementById("leads-sub-shipin"), data.sub_shipin, "shipin");
 
   // 有效性（待定/有效/无效）
   const all_validity = ["有效", "待定", "无效"];
@@ -1448,25 +1454,31 @@ async function loadLeads() {
   }
 
   // Region
-  if (data.by_region.length) {
-    const maxR = Math.max(...data.by_region.map(r => r.count));
-    document.getElementById("leads-region-chart").innerHTML = data.by_region.map(r => `
+  const regionData = (data.by_region || []).filter(r => r.count > 0);
+  if (regionData.length) {
+    const maxR = Math.max(...regionData.map(r => r.count));
+    document.getElementById("leads-region-chart").innerHTML = regionData.map(r => `
       <div class="lead-bar-row">
         <span class="lead-bar-label">${r.name}</span>
         <div class="lead-bar-track"><div class="lead-bar-fill region" style="width:${(r.count/maxR)*100}%"></div></div>
         <span class="lead-bar-val">${r.count}</span>
       </div>`).join("");
+  } else {
+    document.getElementById("leads-region-chart").innerHTML = '<div class="empty-state"><p>暂无数据</p></div>';
   }
 
   // Intent distribution
-  if (data.intent_distribution.length) {
-    const maxI = Math.max(...data.intent_distribution.map(i => i.count));
-    document.getElementById("leads-intent-chart").innerHTML = data.intent_distribution.map(i => `
+  const intentData = (data.intent_distribution || []).filter(i => i.count > 0);
+  if (intentData.length) {
+    const maxI = Math.max(...intentData.map(i => i.count));
+    document.getElementById("leads-intent-chart").innerHTML = intentData.map(i => `
       <div class="lead-bar-row">
         <span class="lead-bar-label">意向 ${i.level}</span>
         <div class="lead-bar-track"><div class="lead-bar-fill gold" style="width:${(i.count/maxI)*100}%"></div></div>
         <span class="lead-bar-val">${i.count}</span>
       </div>`).join("");
+  } else {
+    document.getElementById("leads-intent-chart").innerHTML = '<div class="empty-state"><p>暂无数据</p></div>';
   }
 }
 
