@@ -15,6 +15,39 @@
 .sub-nav-item.active {
   color: var(--accent); border-bottom-color: var(--accent);
 }
+
+/* Split-stat row for platform cards */
+.stat-row-split {
+  display: flex; gap: 12px; margin-bottom: 12px;
+}
+.stat-split-item {
+  flex: 1; background: var(--bg-surface); border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.stat-split-label {
+  font-size: 9px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.stat-split-val {
+  font-family: var(--font-display); font-size: 22px; font-weight: 800;
+  color: var(--text-primary); line-height: 1.1;
+}
+
+.account-metric-row-split {
+  display: flex; gap: 8px; margin-bottom: 8px;
+}
+.account-split-item {
+  flex: 1; background: var(--bg-elevated); border-radius: 6px;
+  padding: 8px; text-align: center;
+}
+.asl {
+  display: block; font-size: 9px; font-weight: 700; color: var(--text-muted);
+  letter-spacing: 0.04em; margin-bottom: 2px;
+}
+.asv {
+  display: block; font-family: var(--font-display); font-size: 16px;
+  font-weight: 800; color: var(--text-primary);
+}
 :root {
   --bg-root: #FAFBFC;
   --bg-surface: #FFFFFF;

@@ -223,8 +223,16 @@ function renderOverviewCards(data) {
     return `
     <div class="stat-card ${cls}" onclick="openPlatformDetail('${d.platform}')">
       <div class="stat-label">${d.platform}</div>
-      <div class="stat-value">${fmt(d.plays_reads)}</div>
-      <div class="stat-sub">${isDouyin || isShipin ? '播放量' : '阅读量'} · 粉丝 ${fmt(d.followers)}</div>
+      <div class="stat-row-split">
+        <div class="stat-split-item">
+          <div class="stat-split-label">${isDouyin || isShipin ? '播放量' : '阅读量'}</div>
+          <div class="stat-split-val">${fmt(d.plays_reads)}</div>
+        </div>
+        <div class="stat-split-item">
+          <div class="stat-split-label">粉丝</div>
+          <div class="stat-split-val">${fmt(d.followers)}</div>
+        </div>
+      </div>
       <div class="stat-detail">
         <div class="stat-detail-row"><span class="sdl">点赞</span><span class="sdv">${fmt(d.likes||0)}</span></div>
         <div class="stat-detail-row"><span class="sdl">评论</span><span class="sdv">${fmt(d.comments||0)}</span></div>
@@ -323,14 +331,14 @@ function renderPlatformDetail(data, platform) {
   // 平台聚合
   document.getElementById("pd-aggregate").innerHTML = `
     <div class="stat-card ${cls}">
-      <div class="stat-label">粉丝总数</div>
-      <div class="stat-value">${fmt(agg.followers)}</div>
-      <div class="stat-change ${agg.new_followers_pct >= 0 ? 'up' : 'down'}">${agg.new_followers_pct >= 0 ? '↑' : '↓'}${Math.abs(agg.new_followers_pct)}% 新增 ${fmt(agg.new_followers)}</div>
-    </div>
-    <div class="stat-card ${cls}">
       <div class="stat-label">${platform === "抖音" || platform === "视频号" ? "播放量" : "阅读量"}</div>
       <div class="stat-value">${fmt(agg.plays_reads)}</div>
       <div class="stat-change ${agg.plays_reads_pct >= 0 ? 'up' : 'down'}">${agg.plays_reads_pct >= 0 ? '↑' : '↓'}${Math.abs(agg.plays_reads_pct)}%</div>
+    </div>
+    <div class="stat-card ${cls}">
+      <div class="stat-label">粉丝总数</div>
+      <div class="stat-value">${fmt(agg.followers)}</div>
+      <div class="stat-change ${agg.new_followers_pct >= 0 ? 'up' : 'down'}">${agg.new_followers_pct >= 0 ? '↑' : '↓'}${Math.abs(agg.new_followers_pct)}% 新增 ${fmt(agg.new_followers)}</div>
     </div>
     <div class="stat-card ${cls}">
       <div class="stat-label">互动量</div>
@@ -358,9 +366,15 @@ function renderPlatformDetail(data, platform) {
         <span class="account-name">${a.account}</span>
         ${a.has_data ? '<span class="account-status">已录入</span>' : '<span class="account-status pending">未录入</span>'}
       </div>
-      <div class="account-metric">
-        <div class="account-metric-label">${platform === "抖音" || platform === "视频号" ? "播放量" : "阅读量"}</div>
-        <div class="account-metric-val">${fmt(a.plays_reads)}</div>
+            <div class="account-metric-row-split">
+        <div class="account-split-item">
+          <span class="asl">${platform === "抖音" || platform === "视频号" ? "播放量" : "阅读量"}</span>
+          <span class="asv">${fmt(a.plays_reads)}</span>
+        </div>
+        <div class="account-split-item">
+          <span class="asl">粉丝</span>
+          <span class="asv">${fmt(a.followers)}</span>
+        </div>
       </div>
       <div class="account-metric-row">
         <span class="aml">点赞</span>
