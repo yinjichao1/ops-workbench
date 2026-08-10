@@ -189,10 +189,9 @@ function renderOverviewCards(data) {
     return `
     <div class="stat-card ${cls}" onclick="openPlatformDetail('${d.platform}')">
       <div class="stat-label">${d.platform}</div>
-      <div class="stat-value">${fmt(d.followers)}</div>
-      <div class="stat-change ${fwow >= 0 ? 'up' : 'down'}">${fwow >= 0 ? '↑' : '↓'} ${Math.abs(fwow)}% 粉丝</div>
+      <div class="stat-value">${fmt(d.plays_reads)}</div>
+      <div class="stat-sub">粉丝 ${fmt(d.followers)}</div>
       <div class="stat-detail">
-        <div class="stat-detail-row"><span class="sdl">播放 / 阅读</span><span class="sdv">${fmt(d.plays_reads)}</span></div>
         <div class="stat-detail-row"><span class="sdl">点赞</span><span class="sdv">${fmt(d.likes||0)}</span></div>
         <div class="stat-detail-row"><span class="sdl">评论</span><span class="sdv">${fmt(d.comments||0)}</span></div>
         ${isShipin ? `<div class="stat-detail-row"><span class="sdl">爱心</span><span class="sdv">${fmt(d.hearts||0)}</span></div>` : ''}
@@ -202,6 +201,7 @@ function renderOverviewCards(data) {
         ${isDouyin || isShipin ? `<div class="stat-detail-row"><span class="sdl">完播率</span><span class="sdv">${(d.completion_rate||0).toFixed(1)}%</span></div>` : ''}
         <div class="stat-detail-row"><span class="sdl">互动量</span><span class="sdv">${fmt(d.engagement)}</span></div>
         <div class="stat-detail-row"><span class="sdl">发布</span><span class="sdv">${d.publish_count} 条</span></div>
+        <div class="stat-detail-row stat-detail-attract"><span class="sdl">🎯 吸粉量</span><span class="sdv ${fwow >= 0 ? 'up' : 'down'}">${fwow >= 0 ? '↑' : '↓'}${Math.abs(fwow)}% · ${fmt(d.new_followers||0)}</span></div>
       </div>
     </div>`;
   }).join("");
@@ -325,16 +325,8 @@ function renderPlatformDetail(data, platform) {
         ${a.has_data ? '<span class="account-status">已录入</span>' : '<span class="account-status pending">未录入</span>'}
       </div>
       <div class="account-metric">
-        <div class="account-metric-label">粉丝</div>
-        <div class="account-metric-val">${fmt(a.followers)}</div>
-      </div>
-      <div class="account-metric-row">
-        <span class="aml">新增粉丝</span>
-        <span class="amv ${a.new_followers_pct >= 0 ? 'up' : 'down'}">${a.new_followers_pct >= 0 ? '↑' : '↓'}${Math.abs(a.new_followers_pct||0)}% · ${fmt(a.new_followers)}</span>
-      </div>
-      <div class="account-metric-row">
-        <span class="aml">播放 / 阅读</span>
-        <span class="amv">${fmt(a.plays_reads)}</span>
+        <div class="account-metric-label">播放 / 阅读</div>
+        <div class="account-metric-val">${fmt(a.plays_reads)}</div>
       </div>
       <div class="account-metric-row">
         <span class="aml">点赞</span>
@@ -371,6 +363,10 @@ function renderPlatformDetail(data, platform) {
       <div class="account-metric-row">
         <span class="aml">发布</span>
         <span class="amv">${a.publish_count} 条</span>
+      </div>
+      <div class="account-metric-row account-metric-attract">
+        <span class="aml">🎯 吸粉量</span>
+        <span class="amv ${a.new_followers_pct >= 0 ? 'up' : 'down'}">${a.new_followers_pct >= 0 ? '↑' : '↓'}${Math.abs(a.new_followers_pct||0)}% · ${fmt(a.new_followers)}</span>
       </div>
       <div class="account-card-footer">点击录入或更新本周数据 →</div>
     </div>`;
