@@ -52,6 +52,13 @@ function switchDashtab(el, tab) {
   if (tab === "leads") {
     const wi = $qs("#leads-week");
     if (wi && !wi.value) wi.value = getLastWeek();
+    const yr = $qs("#leads-year");
+    if (yr && !yr.value) yr.value = new Date().getFullYear();
+    const mn = $qs("#leads-month");
+    if (mn && !mn.value) {
+      const n = new Date();
+      mn.value = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
+    }
     loadLeads();
   }
 }
@@ -1508,15 +1515,19 @@ function isoWeek(d) {
 // ========== LEADS ==========
 async function uploadLeadsFile(input) {
   const file = input.files[0]; if (!file) return;
-  const week = $qs("#leads-week")?.value || getLastWeek();
+  const mode = $qs("#leads-mode")?.value || "week";
+  let week = "", month = "", year = "";
+  if (mode === "week") week = $qs("#leads-week")?.value || getLastWeek();
+  else if (mode === "month") month = $qs("#leads-month")?.value || "";
+  else if (mode === "year") year = $qs("#leads-year")?.value || new Date().getFullYear();
+  const url = API + `/leads/upload?mode=${mode}&week_val=${encodeURIComponent(week)}&month_val=${encodeURIComponent(month)}&year_val=${year}`;
   const formData = new FormData(); formData.append("file", file);
-  formData.append("week_val", week);
   toast("正在上传并解析...", "info");
   try {
-    const r = await fetch(API + `/leads/upload?week_val=${encodeURIComponent(week)}`, { method: "POST", body: formData });
+    const r = await fetch(url, { method: "POST", body: formData });
     const result = await r.json();
     if (result.ok) {
-      toast(`导入成功: ${result.imported} 条新增, ${result.skipped||0} 条已跳过`, "success");
+      toast(`导入成功: ${result.imported} 条新增, 清除 ${result.deleted} 条旧数据`, "success");
       loadLeads();
     } else {
       toast("上传失败: " + (result.error || "未知错误"), "error");
@@ -1525,10 +1536,22 @@ async function uploadLeadsFile(input) {
   input.value = "";
 }
 
+function onLeadsModeChange() {
+  const mode = $qs("#leads-mode")?.value || "week";
+  const wk = $qs("#leads-week"), mn = $qs("#leads-month"), yr = $qs("#leads-year");
+  if (wk) wk.style.display = mode === "week" ? "" : "none";
+  if (mn) mn.style.display = mode === "month" ? "" : "none";
+  if (yr) yr.style.display = mode === "year" ? "" : "none";
+  loadLeads();
+}
+
 async function loadLeads() {
-  const weekInput = $qs("#leads-week");
-  const week = weekInput?.value || "";
-  const url = API + "/leads/summary" + (week ? `?week_val=${week}` : "");
+  const mode = $qs("#leads-mode")?.value || "week";
+  let week = "", month = "", year = "";
+  if (mode === "week") week = $qs("#leads-week")?.value || "";
+  else if (mode === "month") month = $qs("#leads-month")?.value || "";
+  else if (mode === "year") year = $qs("#leads-year")?.value || "";
+  const url = API + `/leads/summary?mode=${mode}&week_val=${encodeURIComponent(week)}&month_val=${encodeURIComponent(month)}&year_val=${year}`;
   const s = await fetch(url);
   if (!s.ok) return;
   const data = await s.json();

@@ -99,14 +99,29 @@ def create_lead(body: LeadIn, db: SqlSession = Depends(get_db)):
 @router.get("/leads/summary")
 def leads_summary(
     week_val: str = Query("", description="YYYY-MM-DD"),
+    month_val: str = Query("", description="YYYY-MM"),
+    year_val: int = Query(0),
+    mode: str = Query("week"),
     db: SqlSession = Depends(get_db),
 ):
     today = date.today()
-    if week_val:
+    if mode == "month" and month_val:
+        parts = month_val.split("-")
+        start = date(int(parts[0]), int(parts[1]), 1)
+        if int(parts[1]) == 12:
+            end = date(int(parts[0]) + 1, 1, 1) - timedelta(days=1)
+        else:
+            end = date(int(parts[0]), int(parts[1]) + 1, 1) - timedelta(days=1)
+    elif mode == "year" and year_val:
+        start = date(year_val, 1, 1)
+        end = date(year_val, 12, 31)
+    elif week_val:
         start = date.fromisoformat(week_val)
+        end = start + timedelta(days=6)
     else:
-        start = today - timedelta(days=(today.weekday() + 7) % 7 + 7)
-    end = start + timedelta(days=6)
+        start, end = _last_week_range(today)
+        start = start - timedelta(days=7)
+        end = end - timedelta(days=7)
 
     rows = db.query(Lead).filter(Lead.date >= start, Lead.date <= end).all()
     total = len(rows)
@@ -193,9 +208,12 @@ def leads_summary(
 async def upload_leads(
     file: UploadFile = File(...),
     week_val: str = Query(""),
+    month_val: str = Query(""),
+    year_val: int = Query(0),
+    mode: str = Query("week"),
     db: SqlSession = Depends(get_db),
 ):
-    """上传 Excel，按周替换：先清空该周旧数据，再导入新数据。"""
+    """上传 Excel，按周/月/年替换：先清空该范围旧数据，再导入新数据。"""
     try:
         import pandas as pd
     except ImportError:
@@ -205,14 +223,27 @@ async def upload_leads(
     df = pd.read_excel(BytesIO(contents))
     df = df.where(pd.notna(df), None)
 
-    # 确定日期范围并先清空该周已有数据
-    if week_val:
+    # 确定日期范围
+    if mode == "month" and month_val:
+        parts = month_val.split("-")
+        start = date(int(parts[0]), int(parts[1]), 1)
+        if int(parts[1]) == 12:
+            end = date(int(parts[0]) + 1, 1, 1) - timedelta(days=1)
+        else:
+            end = date(int(parts[0]), int(parts[1]) + 1, 1) - timedelta(days=1)
+    elif mode == "year" and year_val:
+        start = date(year_val, 1, 1)
+        end = date(year_val, 12, 31)
+    elif week_val:
         start = date.fromisoformat(week_val)
         end = start + timedelta(days=6)
-        deleted = db.query(Lead).filter(Lead.date >= start, Lead.date <= end).delete()
-        db.commit()
     else:
-        deleted = 0
+        # 默认本周
+        start = date.today()
+        end = start + timedelta(days=6)
+
+    deleted = db.query(Lead).filter(Lead.date >= start, Lead.date <= end).delete()
+    db.commit()
 
     imported = 0
     for _, r in df.iterrows():

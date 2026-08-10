@@ -106,13 +106,20 @@
 
       <!-- 区块5: 线索数据 -->
       <div class="dashtab" id="dashtab-leads" style="display:none">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
           <span class="card-title">线索数据分析</span>
-          <div style="display:flex;gap:8px;align-items:center">
-            <span style="font-size:11px;color:var(--text-muted)">周次</span>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--text-muted)">维度</span>
+            <select id="leads-mode" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary)" onchange="onLeadsModeChange()">
+              <option value="week">按周</option>
+              <option value="month">按月</option>
+              <option value="year">按年</option>
+            </select>
             <input type="week" id="leads-week" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary)">
+            <input type="month" id="leads-month" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary);display:none">
+            <input type="number" id="leads-year" min="2020" max="2030" placeholder="2026" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary);width:80px;display:none">
             <button class="btn btn-outline btn-sm" onclick="loadLeads()">查询</button>
-            <button class="btn btn-outline btn-sm" onclick="document.getElementById('leads-upload').click()">📁 上传</button>
+            <button class="btn btn-primary btn-sm" onclick="document.getElementById('leads-upload').click()">📁 上传</button>
             <input type="file" id="leads-upload" accept=".xlsx,.xls" style="display:none" onchange="uploadLeadsFile(this)">
           </div>
         </div>
