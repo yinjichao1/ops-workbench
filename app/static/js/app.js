@@ -1372,27 +1372,33 @@ async function loadLeads() {
     ${c.sub ? `<div class="stat-change up">${c.sub}</div>` : ''}
   </div>`).join("");
 
-  // Source distribution
-  if (data.by_source.length) {
-    const maxSrc = Math.max(...data.by_source.map(s => s.count));
-    document.getElementById("leads-source-chart").innerHTML = data.by_source.map(s => `
+  // 渠道来源（10 个平台全部展示）
+  const all_sources = ["抖音", "微信视频号", "微信公众号", "微信私域社群/个人", "小红书平台",
+                       "本地生活平台", "快手", "AI搜索/智能问答", "其他新媒体平台", "线上+短视频平台"];
+  const src_map = {};
+  data.by_source.forEach(s => { src_map[s.name] = s.count; });
+  const src_data = all_sources.map(k => ({name: k, count: src_map[k] || 0}));
+  const maxSrc = Math.max(...src_data.map(s => s.count), 1);
+  document.getElementById("leads-source-chart").innerHTML = src_data.map(s => `
       <div class="lead-bar-row">
         <span class="lead-bar-label">${s.name}</span>
         <div class="lead-bar-track"><div class="lead-bar-fill" style="width:${(s.count/maxSrc)*100}%"></div></div>
-        <span class="lead-bar-val">${s.count} (${s.pct}%)</span>
-      </div>`).join("");
-  }
-
-  // Status
-  if (data.by_status.length) {
-    const maxSt = Math.max(...data.by_status.map(s => s.count));
-    document.getElementById("leads-status-chart").innerHTML = data.by_status.map(s => `
-      <div class="lead-bar-row">
-        <span class="lead-bar-label">${s.name}</span>
-        <div class="lead-bar-track"><div class="lead-bar-fill ${s.name==='跟进中'?'accent':s.name==='未跟进'?'warning':''}" style="width:${(s.count/maxSt)*100}%"></div></div>
         <span class="lead-bar-val">${s.count}</span>
       </div>`).join("");
-  }
+
+  // 有效性（待定/有效/无效）
+  const all_validity = ["有效", "待定", "无效"];
+  const validity_data = all_validity.map(k => ({
+    name: k,
+    count: data.by_validity && data.by_validity[k] || 0
+  }));
+  const totalForVal = validity_data.reduce((a,b)=>a+b.count, 0) || 1;
+  document.getElementById("leads-status-chart").innerHTML = validity_data.map(s => `
+      <div class="lead-bar-row">
+        <span class="lead-bar-label">${s.name}</span>
+        <div class="lead-bar-track"><div class="lead-bar-fill ${s.name==='有效'?'accent':s.name==='待定'?'warning':'invalid'}" style="width:${(s.count/totalForVal)*100}%"></div></div>
+        <span class="lead-bar-val">${s.count} (${Math.round(s.count/totalForVal*100)}%)</span>
+      </div>`).join("");
 
   // Daily trend
   if (data.by_day.length) {

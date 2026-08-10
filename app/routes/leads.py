@@ -61,14 +61,15 @@ def leads_summary(
     invalid = sum(1 for r in rows if r.validity == "无效")
     pending = sum(1 for r in rows if r.validity == "待定")
 
-    by_source = defaultdict(int)
     by_status = defaultdict(int)
+    by_validity = defaultdict(int)
     by_region = defaultdict(int)
     by_day = defaultdict(int)
     intent_dist = defaultdict(int)
     for r in rows:
         by_source[r.source or "其他"] += 1
         by_status[r.status or "未知"] += 1
+        by_validity[r.validity or "待定"] += 1
         by_region[r.owner or "未知"] += 1
         intent_dist[r.intent or 0] += 1
         by_day[r.date.isoformat()] += 1
@@ -87,6 +88,7 @@ def leads_summary(
         "by_source": [{"name": k, "count": v, "pct": round(v / total * 100, 1) if total else 0}
                       for k, v in sorted(by_source.items(), key=lambda x: -x[1])],
         "by_status": [{"name": k, "count": v} for k, v in by_status.items()],
+        "by_validity": dict(by_validity),
         "by_region": [{"name": k, "count": v} for k, v in sorted(by_region.items(), key=lambda x: -x[1])],
         "by_day": [{"date": k, "count": v} for k, v in sorted(by_day.items())],
         "intent_distribution": [{"level": k, "count": v} for k, v in sorted(intent_dist.items())],
