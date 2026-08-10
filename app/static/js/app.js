@@ -1270,6 +1270,153 @@ async function saveTopic(modalId) {
   } catch(e) { toast("选题创建失败，请重试", "error"); }
 }
 
+// ========== BATCH ENTRY: Content / Calendar / Topics ==========
+function openBatchTopicForm() {
+  const mid = "bt-" + Date.now();
+  const PLAT = ["抖音","视频号","公众号","小红书"];
+  const rows = Array(5).fill(0).map((_, i) => `
+    <div class="batch-row">
+      <input class="bt-title" placeholder="选题标题" style="flex:2">
+      <select class="bt-plat" style="flex:1">${PLAT.map(p=>`<option>${p}</option>`).join("")}</select>
+      <select class="bt-status" style="flex:1"><option>备选</option><option>进行中</option><option>已完成</option></select>
+      <input class="bt-cat" placeholder="分类" style="flex:1">
+      <input class="bt-note" placeholder="备注" style="flex:2">
+    </div>`).join("");
+  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal" style="max-width:780px">
+    <h2>批量录入选题</h2>
+    <div class="batch-container">${rows}</div>
+    <div class="form-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('${mid}')">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveBatchTopics('${mid}')">全部保存</button>
+    </div>
+  </div></div>`;
+  document.body.insertAdjacentHTML("beforeend", html);
+}
+
+async function saveBatchTopics(modalId) {
+  const items = [];
+  document.querySelectorAll(`#${modalId} .batch-row`).forEach(row => {
+    const title = row.querySelector(".bt-title").value.trim();
+    if (!title) return;
+    items.push({
+      title,
+      platform: row.querySelector(".bt-plat").value,
+      status: row.querySelector(".bt-status").value,
+      category: row.querySelector(".bt-cat").value,
+      notes: row.querySelector(".bt-note").value,
+    });
+  });
+  if (!items.length) { toast("请至少填写一个选题标题", "error"); return; }
+  try {
+    const r = await fetch(API + "/batch/topic", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(items) });
+    if (!r.ok) throw new Error("");
+    const result = await r.json();
+    closeModal(modalId);
+    toast(`已录入 ${result.count} 条选题`, "success");
+    loadTopics();
+  } catch(e) { toast("批量录入失败", "error"); }
+}
+
+function openBatchCalendarForm() {
+  const mid = "bc-" + Date.now();
+  const PLAT = ["抖音","视频号","公众号","小红书"];
+  const today = new Date().toISOString().split('T')[0];
+  const rows = Array(5).fill(0).map((_, i) => `
+    <div class="batch-row">
+      <input class="bc-title" placeholder="事件标题" style="flex:2">
+      <select class="bc-plat" style="flex:1">${PLAT.map(p=>`<option>${p}</option>`).join("")}</select>
+      <input type="date" class="bc-date" value="${today}" style="flex:1.3">
+      <input class="bc-person" placeholder="负责人" style="flex:1">
+      <select class="bc-status" style="flex:1"><option>待策划</option><option>制作中</option><option>待审核</option><option>待发布</option></select>
+      <input class="bc-desc" placeholder="描述(选填)" style="flex:2">
+    </div>`).join("");
+  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal" style="max-width:800px">
+    <h2>批量录入内容排期</h2>
+    <div class="batch-container">${rows}</div>
+    <div class="form-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('${mid}')">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveBatchCalendar('${mid}')">全部保存</button>
+    </div>
+  </div></div>`;
+  document.body.insertAdjacentHTML("beforeend", html);
+}
+
+async function saveBatchCalendar(modalId) {
+  const items = [];
+  document.querySelectorAll(`#${modalId} .batch-row`).forEach(row => {
+    const title = row.querySelector(".bc-title").value.trim();
+    if (!title) return;
+    items.push({
+      title,
+      platform: row.querySelector(".bc-plat").value,
+      content_type: "短视频",
+      scheduled_date: row.querySelector(".bc-date").value,
+      status: row.querySelector(".bc-status").value,
+      assignee: row.querySelector(".bc-person").value,
+      description: row.querySelector(".bc-desc").value,
+    });
+  });
+  if (!items.length) { toast("请至少填写一个排期标题", "error"); return; }
+  try {
+    const r = await fetch(API + "/batch/calendar", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(items) });
+    if (!r.ok) throw new Error("");
+    const result = await r.json();
+    closeModal(modalId);
+    toast(`已录入 ${result.count} 条排期`, "success");
+    loadCalendar(new Date().getFullYear(), new Date().getMonth() + 1);
+  } catch(e) { toast("批量录入失败", "error"); }
+}
+
+function openBatchContentForm() {
+  const mid = "bd-" + Date.now();
+  const PLAT = ["抖音","视频号","公众号","小红书"];
+  const today = new Date().toISOString().split('T')[0];
+  const rows = Array(5).fill(0).map((_, i) => `
+    <div class="batch-row">
+      <input class="bd-title" placeholder="内容标题" style="flex:2.5">
+      <select class="bd-plat" style="flex:1">${PLAT.map(p=>`<option>${p}</option>`).join("")}</select>
+      <input type="date" class="bd-date" value="${today}" style="flex:1.2">
+      <input class="bd-imp" type="number" placeholder="播放/阅读" style="flex:1">
+      <input class="bd-likes" type="number" placeholder="点赞" style="flex:0.8">
+      <input class="bd-comments" type="number" placeholder="评论" style="flex:0.8">
+    </div>`).join("");
+  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal" style="max-width:860px">
+    <h2>批量录入内容明细</h2>
+    <div class="batch-container">${rows}</div>
+    <div class="form-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('${mid}')">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveBatchContent('${mid}')">全部保存</button>
+    </div>
+  </div></div>`;
+  document.body.insertAdjacentHTML("beforeend", html);
+}
+
+async function saveBatchContent(modalId) {
+  const items = [];
+  document.querySelectorAll(`#${modalId} .batch-row`).forEach(row => {
+    const title = row.querySelector(".bd-title").value.trim();
+    if (!title) return;
+    items.push({
+      title,
+      platform: row.querySelector(".bd-plat").value,
+      content_type: "短视频",
+      publish_date: row.querySelector(".bd-date").value,
+      impressions: +row.querySelector(".bd-imp").value || 0,
+      likes: +row.querySelector(".bd-likes").value || 0,
+      comments: +row.querySelector(".bd-comments").value || 0,
+    });
+  });
+  if (!items.length) { toast("请至少填写一个内容标题", "error"); return; }
+  try {
+    const r = await fetch(API + "/batch/detail", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(items) });
+    if (!r.ok) throw new Error("");
+    const result = await r.json();
+    closeModal(modalId);
+    toast(`已录入 ${result.count} 条内容`, "success");
+    loadContent();
+  } catch(e) { toast("批量录入失败", "error"); }
+}
+
 // ========== TASK FORM ==========
 function openTaskForm() {
   const mid = "tsk-" + Date.now();

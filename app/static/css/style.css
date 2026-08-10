@@ -414,6 +414,20 @@ body {
 }
 
 /* ===== BATCH ENTRY FORM ===== */
+.batch-container .batch-row {
+  display: flex; gap: 6px; align-items: center; margin-bottom: 8px;
+}
+.batch-container .batch-row input,
+.batch-container .batch-row select {
+  padding: 6px 8px; border: 1px solid var(--border);
+  border-radius: 4px; font-size: 12px; color: var(--text-primary);
+  background: var(--bg-surface);
+  font-family: var(--font-sans);
+}
+.batch-container .batch-row input:focus,
+.batch-container .batch-row select:focus {
+  outline: none; border-color: var(--accent);
+}
 
 /* ===== LEADS CHARTS ===== */
 .lead-bar-row {

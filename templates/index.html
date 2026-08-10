@@ -179,7 +179,10 @@
   <div class="page" id="page-calendar">
     <div class="page-header">
       <div><h1>内容排期</h1><div class="breadcrumb">思格教育 <span>/</span> 运营工作台 <span>/</span> 内容排期</div></div>
-      <button class="btn btn-primary btn-sm" onclick="openCreateCalendar(new Date().toISOString().split('T')[0])">新建排期</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm" onclick="openBatchCalendarForm()">批量录入</button>
+        <button class="btn btn-primary btn-sm" onclick="openCreateCalendar(new Date().toISOString().split('T')[0])">新建排期</button>
+      </div>
     </div>
     <div class="page-body">
       <div class="card"><div class="card-body">
@@ -196,7 +199,10 @@
   <div class="page" id="page-content">
     <div class="page-header">
       <div><h1>内容明细</h1><div class="breadcrumb">思格教育 <span>/</span> 运营工作台 <span>/</span> 内容明细</div></div>
-      <button class="btn btn-primary btn-sm" onclick="openContentForm()">录入内容</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm" onclick="openBatchContentForm()">批量录入</button>
+        <button class="btn btn-primary btn-sm" onclick="openContentForm()">录入内容</button>
+      </div>
     </div>
     <div class="page-body">
       <div class="card">
@@ -227,6 +233,7 @@
   <div class="page" id="page-topics">
     <div class="page-header">
       <div><h1>选题库</h1><div class="breadcrumb">思格教育 <span>/</span> 运营工作台 <span>/</span> 选题库</div></div>
+      <button class="btn btn-outline btn-sm" onclick="openBatchTopicForm()">批量录入</button>
       <button class="btn btn-primary btn-sm" onclick="openTopicForm()">新增选题</button>
     </div>
     <div class="page-body">

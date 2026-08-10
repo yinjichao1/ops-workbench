@@ -25,7 +25,7 @@ STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # Import and register routers
-from .routes import dashboard, data, content, tasks, topics, reports, targets, export_data, leads  # noqa: E402
+from .routes import dashboard, data, content, tasks, topics, reports, targets, export_data, leads, batch  # noqa: E402
 
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["看板"])
 app.include_router(data.router, prefix="/api/data", tags=["数据录入"])
@@ -36,6 +36,7 @@ app.include_router(reports.router, prefix="/api/reports", tags=["报表"])
 app.include_router(targets.router, prefix="/api", tags=["目标"])
 app.include_router(export_data.router, prefix="/api", tags=["导出"])
 app.include_router(leads.router, prefix="/api", tags=["线索"])
+app.include_router(batch.router, prefix="/api", tags=["批量导入"])
 
 
 @app.get("/")
