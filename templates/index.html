@@ -64,27 +64,63 @@
       </div>
     </div>
     <div class="page-body">
-      <!-- 筛选栏 -->
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:20px;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border-soft);border-radius:var(--radius)">
-        <span style="font-size:12px;font-weight:700;color:var(--text-muted);white-space:nowrap">数据筛选</span>
-        <select id="filter-month" class="filter-select" onchange="onMonthFilter()"><option value="">全部月份</option></select>
-        <select id="filter-week" class="filter-select" onchange="onWeekFilter()"><option value="">本周</option></select>
-        <button class="btn btn-outline btn-sm" onclick="resetFilter()">重置</button>
+      <!-- 看板子导航 -->
+      <div class="sub-nav">
+        <button class="sub-nav-item active" onclick="switchDashtab(this,'overview')">平台数据</button>
+        <button class="sub-nav-item" onclick="switchDashtab(this,'kpi')">本月进度</button>
+        <button class="sub-nav-item" onclick="switchDashtab(this,'trend')">平台趋势</button>
+        <button class="sub-nav-item" onclick="switchDashtab(this,'hot')">本周热门</button>
+        <button class="sub-nav-item" onclick="switchDashtab(this,'leads')">线索数据</button>
       </div>
 
+      <!-- 区块1: 平台数据 -->
+      <div class="dashtab" id="dashtab-overview">
       <div class="stat-grid cols-4" id="overview-grid"></div>
-      <div style="margin-bottom:32px">
+      <div>
         <div class="card-header" style="padding:0 0 14px 0;border:none;display:flex;align-items:center;justify-content:space-between">
           <div><span class="card-title">本月进度</span> <span class="card-subtitle">8.1 - 8.9</span></div>
           <button class="btn btn-outline btn-sm" onclick="openTargetSettings()">🎯 设置月度目标</button>
         </div>
         <div class="stat-grid cols-3 kpi-grid" id="kpi-grid-container"></div>
       </div>
-
-      <!-- 本周数据总览 -->
       <div style="margin-bottom:28px">
         <div class="card-header" style="padding:0 0 14px 0;border:none">
           <span class="card-title">本周数据总览</span>
+        </div>
+        <div class="stat-grid cols-3 overview-table-cards" id="overview-table-container"></div>
+      </div>
+      </div>
+
+      <!-- 区块2: 本月进度 -->
+      <div class="dashtab" id="dashtab-kpi" style="display:none">
+        <div class="card-header" style="padding:0 0 14px 0;border:none;display:flex;align-items:center;justify-content:space-between">
+          <div><span class="card-title">本月进度</span> <span class="card-subtitle">8.1 - 8.9</span></div>
+          <button class="btn btn-outline btn-sm" onclick="openTargetSettings()">🎯 设置月度目标</button>
+        </div>
+        <div class="stat-grid cols-3 kpi-grid" id="kpi-grid-container-2"></div>
+      </div>
+
+      <!-- 区块3: 平台趋势 -->
+      <div class="dashtab" id="dashtab-trend" style="display:none">
+        <div class="detail-tabs" style="margin-bottom:16px">
+          <div class="detail-tab active" data-platform="抖音" onclick="switchTrendTab('抖音')">抖音</div>
+          <div class="detail-tab" data-platform="视频号" onclick="switchTrendTab('视频号')">视频号</div>
+          <div class="detail-tab" data-platform="公众号" onclick="switchTrendTab('公众号')">公众号</div>
+          <div class="detail-tab" data-platform="小红书" onclick="switchTrendTab('小红书')">小红书</div>
+        </div>
+        <div id="trend-bars" style="display:flex;align-items:flex-end;gap:8px;height:160px;padding:16px;background:var(--bg-surface);border:1px solid var(--border-soft);border-radius:var(--radius);margin-bottom:20px"></div>
+        <table class="data-table" style="width:100%" id="trend-table" cellpadding="0" cellspacing="0"><thead><tr><th>周次</th><th>播放/阅读</th><th>新增粉丝</th><th>互动量</th><th>发布</th><th>完播率</th></tr></thead><tbody id="trend-table-body"></tbody></table>
+      </div>
+
+      <!-- 区块4: 本周热门 -->
+      <div class="dashtab" id="dashtab-hot" style="display:none">
+        <div id="top5-container"></div>
+      </div>
+
+      <!-- 区块5: 线索数据 -->
+      <div class="dashtab" id="dashtab-leads" style="display:none">
+        <div class="empty-state"><p>线索数据模块开发中...</p></div>
+      </div>
           <span class="card-subtitle" id="overview-week-label"></span>
         </div>
         <div class="card">

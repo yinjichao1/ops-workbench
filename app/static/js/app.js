@@ -1,4 +1,19 @@
-/* ===== 思格教育 · Operations Desk v3.1 ===== */
+/* ===== 思格教育 · Operations Desk v3.2 ===== */
+
+// ========== DASHBOARD SUB-NAV ==========
+function switchDashtab(el, tab) {
+  document.querySelectorAll(".sub-nav-item").forEach(t => t.classList.remove("active"));
+  el.classList.add("active");
+  document.querySelectorAll(".dashtab").forEach(d => d.style.display = "none");
+  const target = document.getElementById("dashtab-" + tab);
+  if (target) target.style.display = "";
+}
+
+function switchTrendTab(platform) {
+  document.querySelectorAll("#dashtab-trend .detail-tab").forEach(t => t.classList.remove("active"));
+  event.target.classList.add("active");
+  loadDashboardDetail(null, platform);
+}
 /* P1: skeleton loading, form validation, error handling, delete confirm */
 /* P2: platform color usage in data, distinct card treatments */
 /* P3: guided empty states, tooltips */

@@ -1,4 +1,20 @@
 /* ===== 蓝白极简 · Minimal Blue-White ===== */
+
+/* ===== SUB NAVIGATION ===== */
+.sub-nav {
+  display: flex; gap: 0; border-bottom: 2px solid var(--border);
+  margin-bottom: 24px;
+}
+.sub-nav-item {
+  padding: 10px 20px; font-size: 13px; font-weight: 600;
+  color: var(--text-muted); border: none; background: none;
+  cursor: pointer; border-bottom: 2px solid transparent;
+  margin-bottom: -2px; transition: all 0.15s;
+}
+.sub-nav-item:hover { color: var(--text-primary); }
+.sub-nav-item.active {
+  color: var(--accent); border-bottom-color: var(--accent);
+}
 :root {
   --bg-root: #FAFBFC;
   --bg-surface: #FFFFFF;
