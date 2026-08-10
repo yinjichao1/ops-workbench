@@ -161,7 +161,7 @@ body {
 .page-header h1 { font-family: var(--font-display); font-size: 21px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
 .breadcrumb { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 .breadcrumb span { color: var(--text-secondary); }
-.page-body { flex:1; padding: 32px; max-width: 1400px; width: 100%; }
+.page-body { flex:1; padding: 32px; width: 100%; }
 
 /* ===== CARDS · Ghost borders ===== */
 .card { background: var(--bg-surface); border: 1px solid var(--border-soft); border-radius: var(--radius); }
