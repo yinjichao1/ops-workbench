@@ -9,6 +9,15 @@ from .models import Base, engine
 # Create tables
 Base.metadata.create_all(bind=engine)
 
+# Auto-migration: add hearts column if missing
+try:
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE platform_daily_metrics ADD COLUMN hearts INTEGER DEFAULT 0"))
+        conn.commit()
+except Exception:
+    pass  # column already exists
+
 app = FastAPI(title="新媒体运营工作台", version="0.1.0")
 
 # Mount static files

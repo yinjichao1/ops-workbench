@@ -25,6 +25,7 @@ class PlatformDailyMetrics(Base):
     plays = Column(Integer, default=0, comment="播放量（抖音/视频号）")
     completion_rate = Column(Float, default=0.0, comment="完播率 %（抖音/视频号）")
     ad_spend = Column(Float, default=0.0, comment="投流消耗 元（抖音）")
+    hearts = Column(Integer, default=0, comment="爱心数（视频号）")
 
     # --- 公众号 ---
     reads = Column(Integer, default=0, comment="阅读量（公众号）")

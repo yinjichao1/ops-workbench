@@ -70,6 +70,7 @@ class DailyMetricIn(BaseModel):
     conversion_count: int = 0
     note_reads: int = 0
     bookmarks: int = 0
+    hearts: int = 0
     engagement_rate: float = 0.0
     is_viral: int = 0
 
