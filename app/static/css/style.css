@@ -1,5 +1,22 @@
 /* ===== 蓝白极简 · Minimal Blue-White ===== */
 
+/* ===== DETAIL TABS (平台趋势/平台明细) ===== */
+.detail-tabs {
+  display: flex; gap: 4px;
+}
+.detail-tab {
+  padding: 6px 14px; font-size: 12px; font-weight: 600;
+  color: var(--text-muted); background: var(--bg-elevated);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.15s;
+}
+.detail-tab:hover {
+  color: var(--text-primary); background: var(--bg-surface);
+}
+.detail-tab.active {
+  color: #fff; background: var(--accent); border-color: var(--accent);
+}
+
 /* ===== SUB NAVIGATION ===== */
 .sub-nav {
   display: flex; gap: 0; border-bottom: 2px solid var(--border);
