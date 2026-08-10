@@ -570,7 +570,7 @@ async function loadDashboardKPI() {
       </div>
     `).join("");
   } catch(e) {
-    toast("KPI 数据获取失败", "error");
+    toast("KPI 加载失败: " + (e.message || e), "error");
   }
 }
 
