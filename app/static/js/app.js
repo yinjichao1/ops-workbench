@@ -850,8 +850,8 @@ async function openBatchEntry(platform) {
         <div class="batch-field"><label>评论</label><input id="b${i}-c" type="number" value="${prev.comments||0}" placeholder="评论"></div>
         ${showBookmark ? `<div class="batch-field"><label>收藏</label><input id="b${i}-bm" type="number" value="${prev.bookmarks||0}" placeholder="收藏"></div>` : ''}
         <div class="batch-field"><label>分享</label><input id="b${i}-s" type="number" value="${prev.shares||0}" placeholder="分享"></div>
-        ${platform === "抖音" ? `<div class="batch-field"><label>主页访问</label><input id="b${i}-iv" type="number" value="${prev.in_views||0}" placeholder="主页访问"></div>
-        <div class="batch-field"><label>完播率%</label><input id="b${i}-cr" type="number" value="${prev.completion_rate||0}" placeholder="完播率" step="0.1" style="width:60px"></div>` : ''}
+        ${platform === "抖音" ? `<div class="batch-field"><label>主页访问</label><input id="b${i}-iv" type="number" value="${prev.in_views||0}" placeholder="主页访问"></div>` : ''}
+        ${platform === "抖音" || platform === "视频号" ? `<div class="batch-field"><label>完播率%</label><input id="b${i}-cr" type="number" value="${prev.completion_rate||0}" placeholder="完播率" step="0.1" style="width:60px"></div>` : ''}
         <div class="batch-field"><label>发布数</label><input id="b${i}-pub" type="number" value="${prev.publish_count||0}" placeholder="发布条数" style="width:60px"></div>
       </div>
     </div>`;
@@ -944,7 +944,7 @@ function togglePlatformFields() {
   const show = (id, v) => { const el = document.getElementById(id); if (el) el.style.display = v ? "" : "none"; };
   show("mf-bookmark-group", plat === "小红书" || plat === "抖音");
   show("mf-home-group", plat === "抖音");
-  show("mf-comp-group", plat === "抖音");
+  show("mf-comp-group", plat === "抖音" || plat === "视频号");
 }
 
 async function saveMetric(modalId) {
