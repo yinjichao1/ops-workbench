@@ -182,6 +182,9 @@ function renderOverviewCards(data) {
   grid.innerHTML = data.map(d => {
     const cls = platClasses[d.platform] || "";
     const fwow = d.followers_wow || 0;
+    const isDouyin = d.platform === "抖音";
+    const isShipin = d.platform === "视频号";
+    const isXhs = d.platform === "小红书";
     return `
     <div class="stat-card ${cls}" onclick="openPlatformDetail('${d.platform}')">
       <div class="stat-label">${d.platform}</div>
@@ -189,8 +192,15 @@ function renderOverviewCards(data) {
       <div class="stat-change ${fwow >= 0 ? 'up' : 'down'}">${fwow >= 0 ? '↑' : '↓'} ${Math.abs(fwow)}% 粉丝</div>
       <div class="stat-detail">
         <div class="stat-detail-row"><span class="sdl">播放 / 阅读</span><span class="sdv">${fmt(d.plays_reads)}</span></div>
+        <div class="stat-detail-row"><span class="sdl">点赞</span><span class="sdv">${fmt(d.likes||0)}</span></div>
+        <div class="stat-detail-row"><span class="sdl">评论</span><span class="sdv">${fmt(d.comments||0)}</span></div>
+        ${isShipin ? `<div class="stat-detail-row"><span class="sdl">爱心</span><span class="sdv">${fmt(d.hearts||0)}</span></div>` : ''}
+        <div class="stat-detail-row"><span class="sdl">分享</span><span class="sdv">${fmt(d.shares||0)}</span></div>
+        ${isXhs || isDouyin ? `<div class="stat-detail-row"><span class="sdl">收藏</span><span class="sdv">${fmt(d.bookmarks||0)}</span></div>` : ''}
+        ${isDouyin ? `<div class="stat-detail-row"><span class="sdl">主页访问</span><span class="sdv">${fmt(d.in_views||0)}</span></div>` : ''}
+        ${isDouyin || isShipin ? `<div class="stat-detail-row"><span class="sdl">完播率</span><span class="sdv">${(d.completion_rate||0).toFixed(1)}%</span></div>` : ''}
         <div class="stat-detail-row"><span class="sdl">互动量</span><span class="sdv">${fmt(d.engagement)}</span></div>
-        <div class="stat-detail-row"><span class="sdl">发布内容</span><span class="sdv">${d.publish_count} 条</span></div>
+        <div class="stat-detail-row"><span class="sdl">发布</span><span class="sdv">${d.publish_count} 条</span></div>
       </div>
     </div>`;
   }).join("");
@@ -462,29 +472,95 @@ async function loadDashboardKPI() {
   try {
     const r = await fetch(API + "/dashboard/kpi");
     if (!r.ok) throw new Error("KPI 数据加载失败");
-    const { data } = await r.json();
+    const { data, year, month } = await r.json();
     if (!data || !data.length) return;
     const grid = $qs("#kpi-grid-container");
     grid.innerHTML = data.map(d => `
       <div class="kpi-card">
-        <div class="kpi-title">${d.platform}</div>
+        <div class="kpi-title">${d.platform}${d.has_target ? '' : ' <span class="kpi-no-target">未设目标</span>'}</div>
         <div class="kpi-bar">
-          <div class="kpi-bar-label"><span>新增粉丝</span><span>${d.followers_kpi.actual} / ${d.followers_kpi.target}</span></div>
+          <div class="kpi-bar-label"><span>新增粉丝</span><span>${fmt(d.followers_kpi.actual)} / ${fmt(d.followers_kpi.target)}</span></div>
           <div class="kpi-track"><div class="kpi-fill accent" style="width:${Math.min(d.followers_kpi.pct, 100)}%"></div></div>
         </div>
         <div class="kpi-bar">
-          <div class="kpi-bar-label"><span>曝光 / 阅读</span><span>${fmt(d.plays_kpi.actual)} / ${fmt(d.plays_kpi.target)}</span></div>
+          <div class="kpi-bar-label"><span>播放 / 阅读</span><span>${fmt(d.plays_kpi.actual)} / ${fmt(d.plays_kpi.target)}</span></div>
           <div class="kpi-track"><div class="kpi-fill blue" style="width:${Math.min(d.plays_kpi.pct, 100)}%"></div></div>
         </div>
         <div class="kpi-bar">
           <div class="kpi-bar-label"><span>发布数量</span><span>${d.publish_kpi.actual} / ${d.publish_kpi.target}</span></div>
           <div class="kpi-track"><div class="kpi-fill gold" style="width:${Math.min(d.publish_kpi.pct, 100)}%"></div></div>
         </div>
+        <div class="kpi-bar">
+          <div class="kpi-bar-label"><span>互动量</span><span>${fmt(d.engagement_kpi.actual)} / ${fmt(d.engagement_kpi.target)}</span></div>
+          <div class="kpi-track"><div class="kpi-fill green" style="width:${Math.min(d.engagement_kpi.pct, 100)}%"></div></div>
+        </div>
       </div>
     `).join("");
   } catch(e) {
     toast("KPI 数据获取失败", "error");
   }
+}
+
+async function openTargetSettings() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth() + 1;
+  // Load existing targets
+  let existing = {};
+  try {
+    const r = await fetch(API + `/targets?year=${year}&month=${month}`);
+    if (r.ok) {
+      const { data } = await r.json();
+      data.forEach(t => existing[t.platform] = t);
+    }
+  } catch(e) {}
+
+  const PLATFORMS = ["抖音", "视频号", "公众号", "小红书"];
+  const mid = "target-" + Date.now();
+  const rows = PLATFORMS.map(p => {
+    const e = existing[p] || {};
+    return `<div class="target-row">
+      <div class="target-platform">${p}</div>
+      <div class="target-fields">
+        <div class="target-field"><label>新增粉丝</label><input type="number" id="tg-${p}-nf" value="${e.target_new_followers||0}"></div>
+        <div class="target-field"><label>播放/阅读</label><input type="number" id="tg-${p}-pr" value="${e.target_plays_reads||0}"></div>
+        <div class="target-field"><label>发布数量</label><input type="number" id="tg-${p}-pub" value="${e.target_publish_count||0}"></div>
+        <div class="target-field"><label>互动量</label><input type="number" id="tg-${p}-eng" value="${e.target_engagement||0}"></div>
+      </div>
+    </div>`;
+  }).join("");
+
+  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal" style="max-width:680px"><h2>${year}年${month}月 KPI 目标</h2>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">未填写的指标会回落到上月数据</div>
+    ${rows}
+    <div class="form-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('${mid}')">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveTargets(${year},${month},'${mid}')">保存目标</button>
+    </div>
+  </div></div>`;
+  document.body.insertAdjacentHTML("beforeend", html);
+}
+
+async function saveTargets(year, month, modalId) {
+  const PLATFORMS = ["抖音", "视频号", "公众号", "小红书"];
+  const records = PLATFORMS.map(p => ({
+    year, month, platform: p,
+    target_new_followers: +($qs(`#tg-${p}-nf`).value) || 0,
+    target_plays_reads: +($qs(`#tg-${p}-pr`).value) || 0,
+    target_publish_count: +($qs(`#tg-${p}-pub`).value) || 0,
+    target_engagement: +($qs(`#tg-${p}-eng`).value) || 0,
+  }));
+  try {
+    const r = await fetch(API + "/targets/bulk", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(records),
+    });
+    if (!r.ok) throw new Error("保存失败");
+    closeModal(modalId);
+    toast("目标已保存", "success");
+    loadDashboard();
+  } catch(e) { toast("目标保存失败", "error"); }
 }
 
 // Detail tab switching

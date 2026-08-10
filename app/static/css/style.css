@@ -287,6 +287,34 @@ body {
   font-size: 10px; color: var(--accent); text-align: center; font-weight: 600;
 }
 
+/* ===== TARGET SETTINGS ===== */
+.target-row {
+  background: var(--bg-elevated); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px;
+}
+.target-platform {
+  font-family: var(--font-display); font-size: 14px; font-weight: 700;
+  color: var(--text-primary); margin-bottom: 10px;
+}
+.target-fields { display: flex; gap: 8px; }
+.target-field { flex: 1; min-width: 60px; }
+.target-field label {
+  display: block; font-size: 9px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px;
+}
+.target-field input {
+  width: 100%; padding: 6px 8px; border: 1px solid var(--border);
+  border-radius: 4px; font-size: 12px; color: var(--text-primary);
+  font-family: var(--font-mono); background: var(--bg-surface);
+}
+.target-field input:focus { outline: none; border-color: var(--accent); }
+
+.kpi-no-target {
+  font-size: 10px; color: var(--warning); font-weight: 600;
+  margin-left: 6px; padding: 1px 6px; border-radius: 3px;
+  background: #FEF3C7;
+}
+
 /* ===== BATCH ENTRY FORM ===== */
 .batch-container { max-height: 45vh; overflow-y: auto; }
 .batch-row {

@@ -5,7 +5,7 @@ from datetime import date, timedelta
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from ..models import get_db
+from ..models import get_db, MonthlyTarget
 from ..models.platform_metrics import PlatformDailyMetrics
 from ..models.content import ContentDetail
 from ..routes.data import parse_week
@@ -126,12 +126,15 @@ def dashboard_overview(
         tw = {
             k: sum_field(this_week, k)
             for k in ["followers", "likes", "comments", "shares", "new_followers",
-                       "publish_count", "plays", "reads", "note_reads", "bookmarks"]
+                       "publish_count", "plays", "reads", "note_reads", "bookmarks",
+                       "hearts", "in_views", "completion_rate"]
         }
         lw = {
             k: sum_field(last_week, k)
             for k in tw
         }
+        # completion_rate is avg not sum
+        tw["completion_rate"] = avg_field(this_week, "completion_rate")
 
         # Engagement total
         total_engage_this = tw["likes"] + tw["comments"] + tw["shares"] + tw["bookmarks"]
@@ -174,6 +177,13 @@ def dashboard_overview(
             "followers_wow": qoq(tw["new_followers"], lw["new_followers"]),
             "plays_reads": plays_reads_this,
             "plays_reads_wow": qoq(plays_reads_this, plays_reads_last),
+            "likes": tw["likes"],
+            "comments": tw["comments"],
+            "shares": tw["shares"],
+            "bookmarks": tw["bookmarks"],
+            "hearts": tw["hearts"],
+            "in_views": tw["in_views"],
+            "completion_rate": tw["completion_rate"],
             "engagement": total_engage_this,
             "engagement_wow": qoq(total_engage_this, total_engage_last),
             "publish_count": tw["publish_count"],
@@ -282,11 +292,20 @@ def dashboard_trend(
 
 @router.get("/kpi")
 def dashboard_kpi(db: Session = Depends(get_db)):
-    """本月 KPI 进度（暂用上月数据作为目标基线）。"""
+    """本月 KPI 进度。优先使用用户在 targets 表中设置的目标，未设则回落到上月数据。"""
     today = date.today()
     this_start, _ = _month_range(today)
     last_start = (this_start - timedelta(days=1)).replace(day=1)
     last_end = this_start - timedelta(days=1)
+
+    # 拉本月所有平台目标
+    targets = {
+        r.platform: r
+        for r in db.query(MonthlyTarget).filter(
+            MonthlyTarget.year == today.year,
+            MonthlyTarget.month == today.month,
+        ).all()
+    }
 
     result = []
     for plat in PLATFORMS:
@@ -313,28 +332,52 @@ def dashboard_kpi(db: Session = Depends(get_db)):
             return sum(getattr(r, field) or 0 for r in rows)
 
         followers_actual = s(this_month, "new_followers")
-        followers_target = max(s(last_month, "new_followers"), 1)
-        followers_pct = min(round(followers_actual / followers_target * 100, 1), 100)
-
         plays_actual = s(this_month, "plays") + s(this_month, "reads") + s(this_month, "note_reads")
-        plays_target = max(
-            s(last_month, "plays") + s(last_month, "reads") + s(last_month, "note_reads"),
-            1,
-        )
-        plays_pct = min(round(plays_actual / plays_target * 100, 1), 100)
-
         publish_actual = s(this_month, "publish_count")
-        publish_target = max(s(last_month, "publish_count"), 1)
-        publish_pct = min(round(publish_actual / publish_target * 100, 1), 100)
+        engagement_actual = (
+            s(this_month, "likes") + s(this_month, "comments")
+            + s(this_month, "shares") + s(this_month, "bookmarks")
+        )
+
+        # 优先用设置的目标，没设就回落到上月
+        t = targets.get(plat)
+        if t and t.target_new_followers > 0:
+            followers_target = t.target_new_followers
+        else:
+            followers_target = max(s(last_month, "new_followers"), 1)
+
+        if t and t.target_plays_reads > 0:
+            plays_target = t.target_plays_reads
+        else:
+            plays_target = max(
+                s(last_month, "plays") + s(last_month, "reads") + s(last_month, "note_reads"),
+                1,
+            )
+
+        if t and t.target_publish_count > 0:
+            publish_target = t.target_publish_count
+        else:
+            publish_target = max(s(last_month, "publish_count"), 1)
+
+        if t and t.target_engagement > 0:
+            engagement_target = t.target_engagement
+        else:
+            engagement_target = max(
+                s(last_month, "likes") + s(last_month, "comments")
+                + s(last_month, "shares") + s(last_month, "bookmarks"),
+                1,
+            )
 
         result.append({
             "platform": plat,
-            "followers_kpi": {"actual": followers_actual, "target": followers_target, "pct": followers_pct},
-            "plays_kpi": {"actual": plays_actual, "target": plays_target, "pct": plays_pct},
-            "publish_kpi": {"actual": publish_actual, "target": publish_target, "pct": publish_pct},
+            "followers_kpi": {"actual": followers_actual, "target": followers_target, "pct": round(followers_actual / followers_target * 100, 1)},
+            "plays_kpi": {"actual": plays_actual, "target": plays_target, "pct": round(plays_actual / plays_target * 100, 1)},
+            "publish_kpi": {"actual": publish_actual, "target": publish_target, "pct": round(publish_actual / publish_target * 100, 1)},
+            "engagement_kpi": {"actual": engagement_actual, "target": engagement_target, "pct": round(engagement_actual / engagement_target * 100, 1)},
+            "has_target": t is not None,
         })
 
-    return {"data": result}
+    return {"data": result, "year": today.year, "month": today.month}
 
 
 @router.get("/platform-detail")
