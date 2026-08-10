@@ -12,9 +12,15 @@ import re
 router = APIRouter()
 
 STATUS_MAP = {"跟进中.": "跟进中", "跟进中": "跟进中", "未跟进": "未跟进", "无需跟进": "无需跟进"}
+SOURCE_MAP = {"微信视频号": "微信视频号"}  # 确保匹配
 
-SOURCES = ["抖音", "微信视频号", "微信公众号", "微信私域社群/个人",
-           "小红书平台", "本地生活平台", "快手", "AI搜索/智能问答", "其他新媒体平台"]
+
+@router.delete("/leads/clear")
+def clear_leads(db: SqlSession = Depends(get_db)):
+    """清空所有线索数据。"""
+    db.query(Lead).delete()
+    db.commit()
+    return {"ok": True}
 
 
 def _parse_sub_source(source: str, note: str) -> list:
@@ -188,19 +194,27 @@ async def upload_leads(
     file: UploadFile = File(...),
     db: SqlSession = Depends(get_db),
 ):
-    """上传 Excel 线索表，自动解析并入库。"""
+    """上传 Excel 线索表，自动解析并入库（按手机号去重）。"""
     try:
         import pandas as pd
     except ImportError:
-        return {"ok": False, "error": "服务器缺少 pandas，请联系管理员安装"}
+        return {"ok": False, "error": "服务器缺少 pandas"}
 
     contents = await file.read()
     df = pd.read_excel(BytesIO(contents))
     df = df.where(pd.notna(df), None)
 
-    imported = 0
+    # 拉取已有手机号用于去重
+    existing_phones = {r[0] for r in db.query(Lead.phone).all()}
+    imported = skipped = 0
+
     for _, r in df.iterrows():
         try:
+            phone = str(r.get("手机号") or "")
+            if phone in existing_phones:
+                skipped += 1
+                continue
+
             date_val = r.get("日期")
             if hasattr(date_val, "strftime"):
                 date_str = date_val.strftime("%Y-%m-%d")
@@ -225,9 +239,10 @@ async def upload_leads(
                 note=str(r.get("备注") or ""),
             )
             db.add(lead)
+            existing_phones.add(phone)
             imported += 1
         except Exception:
             pass
 
     db.commit()
-    return {"ok": True, "imported": imported, "total": len(df)}
+    return {"ok": True, "imported": imported, "skipped": skipped, "total": len(df)}
