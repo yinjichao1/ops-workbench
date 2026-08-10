@@ -142,11 +142,11 @@ def dashboard_overview(
         total_engage_last = lw["likes"] + lw["comments"] + lw["shares"] + lw["bookmarks"]
 
         # Plays/reads total
-        plays_reads_this = tw["plays"] + tw["reads"] + tw["note_reads"]
+        plays_reads_this = tw["plays"] + tw["reads"] + tw["note_read"]
         plays_reads_last = lw["plays"] + lw["reads"] + lw["note_reads"]
 
-# 粉丝总数：取本周已录入数据中最大的粉丝数（粉丝只能增长）
-followers_now = max((r.followers or 0 for r in this_week), default=0)
+        # 粉丝总数：取本周已录入数据中最大的粉丝数（粉丝只能增长）
+        followers_now = max((r.followers or 0 for r in this_week), default=0)
 
         def qoq(val_this, val_last):
             if val_last == 0:
