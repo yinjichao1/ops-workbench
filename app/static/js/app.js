@@ -1575,16 +1575,19 @@ function onLeadsModeChange() {
 
 async function loadLeads() {
   const mode = $qs("#leads-mode")?.value || "week";
-  let week = "", month = "", year = "";
+  let week = "", month = "", year = 0;
   if (mode === "week") week = $qs("#leads-week")?.value || "";
   else if (mode === "month") month = $qs("#leads-month")?.value || "";
   else if (mode === "year") {
-    const yv = $qs("#leads-year")?.value;
-    year = yv ? parseInt(yv) : new Date().getFullYear();
+    const yv = parseInt($qs("#leads-year")?.value);
+    year = (yv >= 2020 && yv <= 2030) ? yv : new Date().getFullYear();
   }
-  const url = API + `/leads/summary?mode=${mode}&week_val=${encodeURIComponent(week)}&month_val=${encodeURIComponent(month)}&year_val=${year}`;
-  const s = await fetch(url);
-  if (!s.ok) return;
+  const params = new URLSearchParams({mode, week_val: week, month_val: month, year_val: year});
+  const s = await fetch(API + "/leads/summary?" + params);
+  if (!s.ok) {
+    console.error("Leads API failed:", s.status, await s.text().catch(() => ""));
+    return;
+  }
   const data = await s.json();
 
   // 4 张统计卡：总线索 / 有效 / 无效 / 待定
