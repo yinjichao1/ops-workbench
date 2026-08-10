@@ -12,7 +12,14 @@ import re
 router = APIRouter()
 
 STATUS_MAP = {"跟进中.": "跟进中", "跟进中": "跟进中", "未跟进": "未跟进", "无需跟进": "无需跟进"}
-SOURCE_MAP = {"微信视频号": "微信视频号"}  # 确保匹配
+SOURCE_MAP = {"微信视频号": "微信视频号"}
+
+
+def _last_week_range(today: date):
+    """返回上周的周一和周日（date, date）。"""
+    days_since_mon = today.weekday()
+    last_mon = today - timedelta(days=days_since_mon + 7)
+    return last_mon, last_mon + timedelta(days=6)  # 确保匹配
 
 
 @router.delete("/leads/clear")
