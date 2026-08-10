@@ -542,10 +542,12 @@ async function loadHotContent() {
 async function loadDashboardKPI() {
   try {
     const r = await fetch(API + "/dashboard/kpi");
-    if (!r.ok) throw new Error("KPI 数据加载失败");
-    const { data, year, month } = await r.json();
+    if (!r.ok) throw new Error("KPI 数据加载失败: " + r.status);
+    const resp = await r.json();
+    const data = resp.data;
     if (!data || !data.length) return;
     const grid = $qs("#kpi-grid-container");
+    if (!grid) return; // tab not rendered yet
     grid.innerHTML = data.map(d => `
       <div class="kpi-card">
         <div class="kpi-title">${d.platform}${d.has_target ? '' : ' <span class="kpi-no-target">未设目标</span>'}</div>
