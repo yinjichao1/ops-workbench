@@ -1556,7 +1556,9 @@ async function uploadLeadsFile(input) {
       toast(`导入成功: ${result.imported} 条新增, 清除 ${result.deleted} 条旧数据`, "success");
       loadLeads();
     } else {
-      toast("上传失败: " + (result.error || "未知错误"), "error");
+      const errMsg = result.error || result.detail?.[0]?.msg || "未知错误";
+      toast("上传失败: " + errMsg, "error", 8000);
+      console.error("Upload error:", result);
     }
   } catch(e) { toast("上传失败: " + (e.message || e), "error"); }
   input.value = "";

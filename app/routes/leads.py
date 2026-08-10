@@ -219,9 +219,12 @@ async def upload_leads(
     except ImportError:
         return {"ok": False, "error": "服务器缺少 pandas"}
 
-    contents = await file.read()
-    df = pd.read_excel(BytesIO(contents))
-    df = df.where(pd.notna(df), None)
+    try:
+        contents = await file.read()
+        df = pd.read_excel(BytesIO(contents))
+        df = df.where(pd.notna(df), None)
+    except Exception as e:
+        return {"ok": False, "error": f"Excel解析失败: {str(e)}"}
 
     # 确定日期范围
     if mode == "month" and month_val:
