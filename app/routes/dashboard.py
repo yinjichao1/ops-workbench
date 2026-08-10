@@ -71,7 +71,7 @@ def dashboard_overview(
     end_week: str = Query(""),
     db: Session = Depends(get_db),
 ):
-    """首页总览：可选周次筛选，默认本周。"""
+    """首页总览：可选周次筛选，默认上周。"""
     today = date.today()
     if start_week and end_week:
         this_mon = parse_week(start_week)
@@ -79,8 +79,13 @@ def dashboard_overview(
         last_mon = this_mon - timedelta(weeks=1)
         last_tue = this_tue - timedelta(weeks=1)
     else:
-        this_mon, this_tue = _week_range(today)
-        last_mon, last_tue = _last_week_range(today)
+        # 默认显示上周
+        last_mon, last_tue = _week_range(today)
+        this_mon = last_mon - timedelta(weeks=1)
+        this_tue = last_tue - timedelta(weeks=1)
+        # swap: this变成上周, last变成前一周
+        this_mon, last_mon = last_mon, this_mon
+        this_tue, last_tue = last_tue, this_tue
 
     # Available weeks for filter
     all_weeks = (

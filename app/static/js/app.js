@@ -89,7 +89,17 @@ function getCurrentWeek() {
   const y = monday.getFullYear();
   const mm = String(monday.getMonth() + 1).padStart(2, '0');
   const dd = String(monday.getDate()).padStart(2, '0');
-  return `${y}-${mm}-${dd}`; // week input uses Monday date
+  return `${y}-${mm}-${dd}`;
+}
+
+function getLastWeek() {
+  const now = new Date();
+  const lastMonday = new Date(now);
+  lastMonday.setDate(now.getDate() - (now.getDay() || 7) - 6);
+  const y = lastMonday.getFullYear();
+  const mm = String(lastMonday.getMonth() + 1).padStart(2, '0');
+  const dd = String(lastMonday.getDate()).padStart(2, '0');
+  return `${y}-${mm}-${dd}`;
 }
 
 function updateAccountSelect(platId, acctId) {
@@ -138,6 +148,15 @@ function showSkeleton(containerId, type) {
 
 // ========== DASHBOARD ==========
 async function loadDashboard(startWeek, endWeek) {
+  // 默认显示上周数据
+  if (!startWeek) {
+    const lw = new Date();
+    lw.setDate(lw.getDate() - (lw.getDay() || 7) - 6);
+    const y = lw.getFullYear();
+    const m = String(lw.getMonth() + 1).padStart(2, '0');
+    const d = String(lw.getDate()).padStart(2, '0');
+    startWeek = endWeek = `${y}-${m}-${d}`;
+  }
   showSkeleton("overview-grid", "cards-4");
   showSkeleton("kpi-grid-container", "kpi-3");
   let url = API + "/dashboard/overview";
@@ -914,7 +933,7 @@ function closeModal(id) { const el = document.getElementById(id); if (el) el.rem
 // ========== BATCH ENTRY ==========
 async function openBatchEntry(platform) {
   const accts = ACCOUNTS[platform] || ["主号"];
-  const thisWeek = getCurrentWeek();
+  const thisWeek = getLastWeek();
 
   // 查上周数据做参考
   let lastWeekData = {};
@@ -1008,7 +1027,7 @@ async function saveBatch(modalId, platform, count) {
 // ========== DATA ENTRY (P1: new metric form) ==========
 function openMetricForm() {
   const mid = "metric-" + Date.now();
-  const thisWeek = getCurrentWeek();
+  const thisWeek = getLastWeek();
   const html = `<div class="modal-overlay show" id="${mid}"><div class="modal"><h2>录入本周数据</h2>
     <div class="form-group"><label>平台 <span class="required">*</span></label><select id="mf-plat" onchange="updateAccountSelect('mf-plat','mf-acct');togglePlatformFields()">${PLATFORMS.map(p=>`<option>${p}</option>`).join("")}</select></div>
     <div class="form-group"><label>账号</label><select id="mf-acct"></select></div>
