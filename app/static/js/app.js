@@ -1355,6 +1355,23 @@ function isoWeek(d) {
 }
 
 // ========== LEADS ==========
+async function uploadLeadsFile(input) {
+  const file = input.files[0]; if (!file) return;
+  const formData = new FormData(); formData.append("file", file);
+  toast("正在上传并解析...", "info");
+  try {
+    const r = await fetch(API + "/leads/upload", { method: "POST", body: formData });
+    const result = await r.json();
+    if (result.ok) {
+      toast(`导入成功: ${result.imported}/${result.total} 条线索`, "success");
+      loadLeads();
+    } else {
+      toast("上传失败: " + (result.error || "未知错误"), "error");
+    }
+  } catch(e) { toast("上传失败: " + (e.message || e), "error"); }
+  input.value = "";
+}
+
 async function loadLeads() {
   const s = await fetch(API + "/leads/summary");
   if (!s.ok) return;

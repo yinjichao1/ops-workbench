@@ -2,12 +2,59 @@
 
 from datetime import date, timedelta
 from collections import defaultdict
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, UploadFile, File
 from pydantic import BaseModel
 from sqlalchemy.orm import Session as SqlSession
 from ..models import get_db, Lead
+from io import BytesIO
+import re
 
 router = APIRouter()
+
+STATUS_MAP = {"跟进中.": "跟进中", "跟进中": "跟进中", "未跟进": "未跟进", "无需跟进": "无需跟进"}
+
+SOURCES = ["抖音", "微信视频号", "微信公众号", "微信私域社群/个人",
+           "小红书平台", "本地生活平台", "快手", "AI搜索/智能问答", "其他新媒体平台"]
+
+
+def _parse_sub_source(source: str, note: str) -> list:
+    """从备注中智能提取细分渠道。返回 [(category, value)]"""
+    results = []
+    n = note or ""
+
+    if source == "抖音":
+        # 提取 (XX抖音) 或 (XX抖音私信) 格式
+        m = re.findall(r'[（(]([^）)]*?抖音[^）)]*?)[）)]', n)
+        if m:
+            for sub in m:
+                sub_clean = sub.replace("私信", "").replace("号", "").strip()
+                if sub_clean:
+                    results.append(("抖音", sub_clean + "号"))
+        # 提取 "范校抖音私信" "葛老师抖音" 无括号格式
+        m2 = re.findall(r'(思格教育抖音|范校抖音|葛老师抖音|安哥抖音)(?:号|私信)?', n)
+        for sub in m2:
+            results.append(("抖音", sub + "号"))
+        if not results:
+            results.append(("抖音", "其他抖音来源"))
+
+    elif source == "微信公众号":
+        if "匹配工具" in n or "表单" in n:
+            results.append(("公众号", "表单/匹配工具"))
+        elif "进群" in n or "社群" in n or "加群" in n:
+            results.append(("公众号", "进群/加社群"))
+        elif "企业微信" in n:
+            results.append(("公众号", "企业微信咨询"))
+        else:
+            results.append(("公众号", "其他公众号"))
+
+    elif source == "微信视频号":
+        m = re.findall(r'(范校视频号|思格视频号|葛老师视频号)', n)
+        if m:
+            results.append(("视频号", m[0]))
+        else:
+            results.append(("视频号", "其他视频号"))
+
+    return results
 
 
 class LeadIn(BaseModel):
@@ -78,28 +125,14 @@ def leads_summary(
         by_day[r.date.isoformat()] += 1
 
         note = r.note or ""
-        if r.source == "抖音":
-            found = False
-            for kw, label in [("思格教育抖音", "思格教育抖音号"), ("葛老师抖音", "葛老师抖音号"), ("范校抖音", "范校抖音号")]:
-                if kw in note:
-                    sub_douyin[label] += 1
-                    found = True
-                    break
-            if not found:
-                sub_douyin["其他抖音来源"] += 1
-
-        if r.source == "微信公众号":
-            if "匹配工具" in note or "表单" in note:
-                sub_gzh["表单/匹配工具"] += 1
-            elif "进群" in note or "社群" in note:
-                sub_gzh["进群/加社群"] += 1
-            elif "企业微信" in note:
-                sub_gzh["企业微信咨询"] += 1
-            else:
-                sub_gzh["其他公众号"] += 1
-
-        if r.source == "微信视频号":
-            sub_shipin["范校视频号" if "范校视频号" in note else "其他视频号"] += 1
+        subs = _parse_sub_source(r.source, note)
+        for cat, val in subs:
+            if cat == "抖音":
+                sub_douyin[val] += 1
+            elif cat == "公众号":
+                sub_gzh[val] += 1
+            elif cat == "视频号":
+                sub_shipin[val] += 1
 
     contact_sum = sum(r.contact_count or 0 for r in rows)
     high_contact = sum(1 for r in rows if (r.contact_count or 0) >= 3)
@@ -121,3 +154,53 @@ def leads_summary(
         "sub_gzh": [{"name": k, "count": v} for k, v in sorted(sub_gzh.items(), key=lambda x: -x[1])],
         "sub_shipin": [{"name": k, "count": v} for k, v in sorted(sub_shipin.items(), key=lambda x: -x[1])],
     }
+
+
+@router.post("/leads/upload")
+async def upload_leads(
+    file: UploadFile = File(...),
+    db: SqlSession = Depends(get_db),
+):
+    """上传 Excel 线索表，自动解析并入库。"""
+    try:
+        import pandas as pd
+    except ImportError:
+        return {"ok": False, "error": "服务器缺少 pandas，请联系管理员安装"}
+
+    contents = await file.read()
+    df = pd.read_excel(BytesIO(contents))
+    df = df.where(pd.notna(df), None)
+
+    imported = 0
+    for _, r in df.iterrows():
+        try:
+            date_val = r.get("日期")
+            if hasattr(date_val, "strftime"):
+                date_str = date_val.strftime("%Y-%m-%d")
+            else:
+                date_str = str(date_val or "")
+
+            lead = Lead(
+                name=str(r.get("姓名") or ""),
+                gender=str(r.get("性别") or "未知"),
+                phone=str(r.get("手机号") or ""),
+                year=int(r.get("年份") or 2026),
+                month=int(r.get("月份") or 8),
+                date=date.fromisoformat(date_str) if date_str else date.today(),
+                status=STATUS_MAP.get(str(r.get("客户状态") or "").strip(), "跟进中"),
+                source=str(r.get("招生来源") or ""),
+                validity=str(r.get("客户有效性") or "待定"),
+                intent=int(r.get("意向级别") or 0),
+                school=str(r.get("公立学校") or ""),
+                grade=str(r.get("年级") or ""),
+                contact_count=int(r.get("沟通次数") or 0),
+                owner=str(r.get("主责任人") or ""),
+                note=str(r.get("备注") or ""),
+            )
+            db.add(lead)
+            imported += 1
+        except Exception:
+            pass
+
+    db.commit()
+    return {"ok": True, "imported": imported, "total": len(df)}
