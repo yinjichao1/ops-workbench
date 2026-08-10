@@ -195,7 +195,7 @@ async def upload_leads(
     week_val: str = Query(""),
     db: SqlSession = Depends(get_db),
 ):
-    """上传 Excel 线索表，自动解析并入库（按手机号去重）。"""
+    """上传 Excel，按周替换：先清空该周旧数据，再导入新数据。"""
     try:
         import pandas as pd
     except ImportError:
@@ -205,16 +205,19 @@ async def upload_leads(
     df = pd.read_excel(BytesIO(contents))
     df = df.where(pd.notna(df), None)
 
-    # 拉取已有手机号用于去重
-    existing_phones = {r[0] for r in db.query(Lead.phone).all()}
-    imported = skipped = 0
+    # 确定日期范围并先清空该周已有数据
+    if week_val:
+        start = date.fromisoformat(week_val)
+        end = start + timedelta(days=6)
+        deleted = db.query(Lead).filter(Lead.date >= start, Lead.date <= end).delete()
+        db.commit()
+    else:
+        deleted = 0
 
+    imported = 0
     for _, r in df.iterrows():
         try:
             phone = str(r.get("手机号") or "")
-            if phone in existing_phones:
-                skipped += 1
-                continue
 
             date_val = r.get("日期")
             if hasattr(date_val, "strftime"):
@@ -242,10 +245,9 @@ async def upload_leads(
                 note=str(r.get("备注") or ""),
             )
             db.add(lead)
-            existing_phones.add(phone)
             imported += 1
         except Exception:
             pass
 
     db.commit()
-    return {"ok": True, "imported": imported, "skipped": skipped, "total": len(df)}
+    return {"ok": True, "imported": imported, "deleted": deleted, "total": len(df)}
