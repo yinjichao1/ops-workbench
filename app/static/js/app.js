@@ -190,7 +190,7 @@ function renderOverviewCards(data) {
     <div class="stat-card ${cls}" onclick="openPlatformDetail('${d.platform}')">
       <div class="stat-label">${d.platform}</div>
       <div class="stat-value">${fmt(d.plays_reads)}</div>
-      <div class="stat-sub">粉丝 ${fmt(d.followers)}</div>
+      <div class="stat-sub">${isDouyin || isShipin ? '播放量' : '阅读量'} · 粉丝 ${fmt(d.followers)}</div>
       <div class="stat-detail">
         <div class="stat-detail-row"><span class="sdl">点赞</span><span class="sdv">${fmt(d.likes||0)}</span></div>
         <div class="stat-detail-row"><span class="sdl">评论</span><span class="sdv">${fmt(d.comments||0)}</span></div>
@@ -325,7 +325,7 @@ function renderPlatformDetail(data, platform) {
         ${a.has_data ? '<span class="account-status">已录入</span>' : '<span class="account-status pending">未录入</span>'}
       </div>
       <div class="account-metric">
-        <div class="account-metric-label">播放 / 阅读</div>
+        <div class="account-metric-label">${platform === "抖音" || platform === "视频号" ? "播放量" : "阅读量"}</div>
         <div class="account-metric-val">${fmt(a.plays_reads)}</div>
       </div>
       <div class="account-metric-row">
