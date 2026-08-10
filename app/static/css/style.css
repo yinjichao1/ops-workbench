@@ -435,6 +435,56 @@ body {
 .lead-bar-fill.warning { background: #F59E0B; }
 .lead-bar-fill.region { background: #8B5CF6; }
 .lead-bar-fill.gold { background: #F59E0B; }
+.lead-bar-fill.invalid { background: #EF4444; }
+.lead-bar-fill.gzh { background: #10B981; }
+.lead-bar-fill.shipin { background: #F59E0B; }
+
+/* ===== LEADS CROSS ANALYSIS ===== */
+.lead-cross-row {
+  display: flex; align-items: center; gap: 8px; padding: 6px 0;
+}
+.lead-rate {
+  font-size: 9px; color: var(--accent); font-weight: 700;
+  margin-left: 4px;
+}
+.lead-stacked-bar {
+  flex: 1; height: 14px; background: var(--bg-elevated);
+  border-radius: 4px; overflow: hidden; display: flex;
+}
+.lead-seg { height: 100%; }
+.lead-seg.valid { background: #10B981; }
+.lead-seg.pending { background: #F59E0B; }
+.lead-seg.invalid { background: #EF4444; }
+
+.lead-cross-legend {
+  display: flex; gap: 8px; font-size: 9px; padding-left: 70px;
+  margin-top: -2px; margin-bottom: 8px;
+}
+.ldg.v { color: #10B981; font-weight: 700; }
+.ldg.p { color: #F59E0B; font-weight: 700; }
+.ldg.i { color: #EF4444; font-weight: 700; }
+
+.lead-table-head, .lead-table-row, .lead-table-foot {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  padding: 5px 6px; font-size: 11px; align-items: center;
+}
+.lead-table-head {
+  background: var(--bg-elevated); border-radius: 4px;
+  font-weight: 700; color: var(--text-muted); font-size: 10px;
+}
+.lead-table-row {
+  border-bottom: 1px solid var(--border-soft);
+}
+.lead-table-foot {
+  font-weight: 700; background: var(--bg-elevated);
+  border-radius: 4px; margin-top: 6px;
+}
+.lt-name { color: var(--text-primary); }
+.lt-num { text-align: center; font-family: var(--font-mono); }
+.lt-num.v { color: #10B981; font-weight: 700; }
+.lt-num.p { color: #F59E0B; font-weight: 700; }
+.lt-num.i { color: #EF4444; font-weight: 700; }
+.lt-rate { text-align: right; font-weight: 700; color: var(--accent); }
 .lead-bar-val {
   min-width: 50px; font-family: var(--font-mono); font-size: 10px;
   color: var(--text-primary); text-align: right;

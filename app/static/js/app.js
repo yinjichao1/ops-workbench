@@ -1377,34 +1377,78 @@ async function loadLeads() {
   if (!s.ok) return;
   const data = await s.json();
 
-  // Stat cards
+  // 4 张统计卡：总线索 / 有效 / 无效 / 待定
   document.getElementById("leads-cards").innerHTML = [
     { label: "总线索", val: data.total, cls: "" },
-    { label: "有效线索", val: data.valid, cls: "up", sub: `留资率 ${data.valid_rate}%` },
+    { label: "有效线索", val: data.valid, cls: "up", sub: `有效率 ${data.valid_rate}%` },
+    { label: "无效线索", val: data.invalid, cls: "down" },
     { label: "待跟进", val: data.pending, cls: "" },
-    { label: "平均沟通", val: data.contact_avg, cls: "" },
   ].map(c => `<div class="stat-card">
     <div class="stat-label">${c.label}</div>
     <div class="stat-value ${c.cls}">${c.val}</div>
     ${c.sub ? `<div class="stat-change up">${c.sub}</div>` : ''}
   </div>`).join("");
 
-  // 渠道来源（隐藏零数据，9个平台）
-  const all_sources = ["抖音", "微信视频号", "微信公众号", "微信私域社群/个人", "小红书平台",
-                       "本地生活平台", "快手", "AI搜索/智能问答", "其他新媒体平台"];
-  const src_map = {};
-  data.by_source.forEach(s => { src_map[s.name] = s.count; });
-  const src_data = all_sources.filter(k => (src_map[k] || 0) > 0)
-                              .map(k => ({name: k, count: src_map[k] || 0}));
-  if (src_data.length === 0) {
-    document.getElementById("leads-source-chart").innerHTML = '<div class="empty-state"><p>暂无数据</p></div>';
-  } else {
-    const maxSrc = Math.max(...src_data.map(s => s.count), 1);
-    document.getElementById("leads-source-chart").innerHTML = src_data.map(s => `
-      <div class="lead-bar-row">
-        <span class="lead-bar-label">${s.name}</span>
-        <div class="lead-bar-track"><div class="lead-bar-fill" style="width:${(s.count/maxSrc)*100}%"></div></div>
-        <span class="lead-bar-val">${s.count}</span>
+  // 渠道×有效性（堆叠条 + 有效率）
+  const sv = (data.by_source_validity || []).filter(s => s.total > 0);
+  if (sv.length) {
+    const maxT = Math.max(...sv.map(s => s.total), 1);
+    document.getElementById("leads-source-chart").innerHTML = sv.map(s => `
+      <div class="lead-cross-row">
+        <span class="lead-bar-label">${s.name} <span class="lead-rate">${s.valid_rate}%</span></span>
+        <div class="lead-stacked-bar">
+          <div class="lead-seg valid" style="width:${(s.valid/maxT)*100}%"></div>
+          <div class="lead-seg pending" style="width:${(s.pending/maxT)*100}%"></div>
+          <div class="lead-seg invalid" style="width:${(s.invalid/maxT)*100}%"></div>
+        </div>
+        <span class="lead-bar-val">${s.total}</span>
+      </div>
+      <div class="lead-cross-legend">
+        <span class="ldg v">✓ ${s.valid}</span>
+        <span class="ldg p">? ${s.pending}</span>
+        <span class="ldg i">✗ ${s.invalid}</span>
+      </div>`).join("");
+  }
+
+  // 渠道有效性汇总表
+  if (sv.length) {
+    document.getElementById("leads-validity-summary").innerHTML = `
+      <div class="lead-table-head"><span>渠道</span><span class="v">有效</span><span class="p">待定</span><span class="i">无效</span><span>有效率</span></div>
+      ${sv.map(s => `
+        <div class="lead-table-row">
+          <span class="lt-name">${s.name}</span>
+          <span class="lt-num v">${s.valid}</span>
+          <span class="lt-num p">${s.pending}</span>
+          <span class="lt-num i">${s.invalid}</span>
+          <span class="lt-rate">${s.valid_rate}%</span>
+        </div>`).join("")}
+      <div class="lead-table-foot">
+        <span class="lt-name">总计</span>
+        <span class="lt-num v">${data.valid}</span>
+        <span class="lt-num p">${data.pending}</span>
+        <span class="lt-num i">${data.invalid}</span>
+        <span class="lt-rate">${data.valid_rate}%</span>
+      </div>`;
+  }
+
+  // 地区×有效性
+  const rv = (data.by_region_validity || []).filter(s => s.total > 0);
+  if (rv.length) {
+    const maxR = Math.max(...rv.map(s => s.total), 1);
+    document.getElementById("leads-region-chart").innerHTML = rv.map(s => `
+      <div class="lead-cross-row">
+        <span class="lead-bar-label">${s.name} <span class="lead-rate">${s.valid_rate}%</span></span>
+        <div class="lead-stacked-bar">
+          <div class="lead-seg valid" style="width:${(s.valid/maxR)*100}%"></div>
+          <div class="lead-seg pending" style="width:${(s.pending/maxR)*100}%"></div>
+          <div class="lead-seg invalid" style="width:${(s.invalid/maxR)*100}%"></div>
+        </div>
+        <span class="lead-bar-val">${s.total}</span>
+      </div>
+      <div class="lead-cross-legend">
+        <span class="ldg v">✓ ${s.valid}</span>
+        <span class="ldg p">? ${s.pending}</span>
+        <span class="ldg i">✗ ${s.invalid}</span>
       </div>`).join("");
   }
 
@@ -1450,36 +1494,6 @@ async function loadLeads() {
         <div style="background:var(--accent);height:${h}px;border-radius:3px 3px 0 0;min-height:2px;opacity:${0.4+(h/80)*0.6}"></div>
         <div style="font-size:8px;color:var(--text-muted);margin-top:2px">${d.date.slice(5)}</div>
       </div>`;
-    }).join("");
-  }
-
-  // Region
-  const regionData = (data.by_region || []).filter(r => r.count > 0);
-  if (regionData.length) {
-    const maxR = Math.max(...regionData.map(r => r.count));
-    document.getElementById("leads-region-chart").innerHTML = regionData.map(r => `
-      <div class="lead-bar-row">
-        <span class="lead-bar-label">${r.name}</span>
-        <div class="lead-bar-track"><div class="lead-bar-fill region" style="width:${(r.count/maxR)*100}%"></div></div>
-        <span class="lead-bar-val">${r.count}</span>
-      </div>`).join("");
-  } else {
-    document.getElementById("leads-region-chart").innerHTML = '<div class="empty-state"><p>暂无数据</p></div>';
-  }
-
-  // Intent distribution
-  const intentData = (data.intent_distribution || []).filter(i => i.count > 0);
-  if (intentData.length) {
-    const maxI = Math.max(...intentData.map(i => i.count));
-    document.getElementById("leads-intent-chart").innerHTML = intentData.map(i => `
-      <div class="lead-bar-row">
-        <span class="lead-bar-label">意向 ${i.level}</span>
-        <div class="lead-bar-track"><div class="lead-bar-fill gold" style="width:${(i.count/maxI)*100}%"></div></div>
-        <span class="lead-bar-val">${i.count}</span>
-      </div>`).join("");
-  } else {
-    document.getElementById("leads-intent-chart").innerHTML = '<div class="empty-state"><p>暂无数据</p></div>';
-  }
 }
 
 // ========== INIT ==========

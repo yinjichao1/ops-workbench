@@ -116,6 +116,9 @@ def leads_summary(
     sub_douyin = defaultdict(int)
     sub_gzh = defaultdict(int)
     sub_shipin = defaultdict(int)
+    # 渠道×有效性、地区×有效性 交叉分析
+    src_valid = defaultdict(lambda: {"有效": 0, "无效": 0, "待定": 0, "total": 0})
+    reg_valid = defaultdict(lambda: {"有效": 0, "无效": 0, "待定": 0, "total": 0})
 
     for r in rows:
         by_source[r.source or "其他"] += 1
@@ -125,6 +128,12 @@ def leads_summary(
         by_day[r.date.isoformat()] += 1
 
         note = r.note or ""
+        v = r.validity or "待定"
+        src_valid[r.source or "其他"][v] += 1
+        src_valid[r.source or "其他"]["total"] += 1
+        reg_valid[r.owner or "未知"][v] += 1
+        reg_valid[r.owner or "未知"]["total"] += 1
+
         subs = _parse_sub_source(r.source, note)
         for cat, val in subs:
             if cat == "抖音":
@@ -153,6 +162,24 @@ def leads_summary(
         "sub_douyin": [{"name": k, "count": v} for k, v in sorted(sub_douyin.items(), key=lambda x: -x[1])],
         "sub_gzh": [{"name": k, "count": v} for k, v in sorted(sub_gzh.items(), key=lambda x: -x[1])],
         "sub_shipin": [{"name": k, "count": v} for k, v in sorted(sub_shipin.items(), key=lambda x: -x[1])],
+        "by_source_validity": [
+            {
+                "name": k,
+                "valid": v["有效"], "invalid": v["无效"], "pending": v["待定"],
+                "total": v["total"],
+                "valid_rate": round(v["有效"] / v["total"] * 100, 1) if v["total"] else 0
+            }
+            for k, v in sorted(src_valid.items(), key=lambda x: -x[1]["total"])
+        ],
+        "by_region_validity": [
+            {
+                "name": k,
+                "valid": v["有效"], "invalid": v["无效"], "pending": v["待定"],
+                "total": v["total"],
+                "valid_rate": round(v["有效"] / v["total"] * 100, 1) if v["total"] else 0
+            }
+            for k, v in sorted(reg_valid.items(), key=lambda x: -x[1]["total"])
+        ],
     }
 
 
