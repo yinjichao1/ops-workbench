@@ -1508,13 +1508,15 @@ function isoWeek(d) {
 // ========== LEADS ==========
 async function uploadLeadsFile(input) {
   const file = input.files[0]; if (!file) return;
+  const week = $qs("#leads-week")?.value || getLastWeek();
   const formData = new FormData(); formData.append("file", file);
+  formData.append("week_val", week);
   toast("正在上传并解析...", "info");
   try {
-    const r = await fetch(API + "/leads/upload", { method: "POST", body: formData });
+    const r = await fetch(API + `/leads/upload?week_val=${encodeURIComponent(week)}`, { method: "POST", body: formData });
     const result = await r.json();
     if (result.ok) {
-      toast(`导入成功: ${result.imported}/${result.total} 条线索`, "success");
+      toast(`导入成功: ${result.imported} 条新增, ${result.skipped||0} 条已跳过`, "success");
       loadLeads();
     } else {
       toast("上传失败: " + (result.error || "未知错误"), "error");

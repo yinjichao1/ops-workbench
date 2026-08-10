@@ -192,6 +192,7 @@ def leads_summary(
 @router.post("/leads/upload")
 async def upload_leads(
     file: UploadFile = File(...),
+    week_val: str = Query(""),
     db: SqlSession = Depends(get_db),
 ):
     """上传 Excel 线索表，自动解析并入库（按手机号去重）。"""
@@ -218,6 +219,8 @@ async def upload_leads(
             date_val = r.get("日期")
             if hasattr(date_val, "strftime"):
                 date_str = date_val.strftime("%Y-%m-%d")
+            elif week_val:
+                date_str = week_val  # 按周上传，无日期用周一
             else:
                 date_str = str(date_val or "")
 
