@@ -145,14 +145,8 @@ def dashboard_overview(
         plays_reads_this = tw["plays"] + tw["reads"] + tw["note_reads"]
         plays_reads_last = lw["plays"] + lw["reads"] + lw["note_reads"]
 
-        # Latest followers
-        latest = (
-            db.query(PlatformDailyMetrics)
-            .filter(PlatformDailyMetrics.platform == plat)
-            .order_by(PlatformDailyMetrics.date.desc())
-            .first()
-        )
-        followers_now = latest.followers if latest else 0
+# 粉丝总数：取本周已录入数据中最大的粉丝数（粉丝只能增长）
+followers_now = max((r.followers or 0 for r in this_week), default=0)
 
         def qoq(val_this, val_last):
             if val_last == 0:
