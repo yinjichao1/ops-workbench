@@ -1641,6 +1641,8 @@ async function loadLeads() {
         <div style="background:var(--accent);height:${h}px;border-radius:3px 3px 0 0;min-height:2px;opacity:${0.4+(h/80)*0.6}"></div>
         <div style="font-size:8px;color:var(--text-muted);margin-top:2px">${d.date.slice(5)}</div>
       </div>`;
+    }).join("");
+  }
 }
 
 // ========== INIT ==========
