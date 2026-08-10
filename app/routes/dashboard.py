@@ -451,6 +451,8 @@ def platform_detail(
                 "plays_reads_pct": pct(acct_plays, last_a_plays),
                 "engagement": acct_engage,
                 "engagement_pct": pct(acct_engage, last_a_engage),
+                "shares": s(acct_rows, "shares"),
+                "bookmarks": s(acct_rows, "bookmarks"),
                 "publish_count": acct_pub,
                 "has_data": True,
             })

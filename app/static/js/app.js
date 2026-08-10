@@ -329,6 +329,15 @@ function renderPlatformDetail(data, platform) {
         <span class="aml">互动量</span>
         <span class="amv">${fmt(a.engagement)}</span>
       </div>
+      ${platform === "小红书" ? `
+      <div class="account-metric-row">
+        <span class="aml">分享</span>
+        <span class="amv">${fmt(a.shares||0)}</span>
+      </div>
+      <div class="account-metric-row">
+        <span class="aml">收藏</span>
+        <span class="amv">${fmt(a.bookmarks||0)}</span>
+      </div>` : ''}
       <div class="account-metric-row">
         <span class="aml">发布</span>
         <span class="amv">${a.publish_count} 条</span>
