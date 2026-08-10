@@ -42,7 +42,7 @@ function switchDashtab(el, tab) {
   if (el) el.classList.add("active");
   document.querySelectorAll(".dashtab").forEach(d => d.style.display = "none");
   const target = document.getElementById("dashtab-" + tab);
-  if (target) target.style.display = "";
+  if (target) target.style.display = "block";
   document.querySelectorAll(".sidebar-sub-item").forEach(s => {
     s.classList.toggle("active", s.dataset.tab === tab);
   });
