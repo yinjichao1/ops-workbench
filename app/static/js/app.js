@@ -1542,11 +1542,15 @@ function isoWeek(d) {
 async function uploadLeadsFile(input) {
   const file = input.files[0]; if (!file) return;
   const mode = $qs("#leads-mode")?.value || "week";
-  let week = "", month = "", year = "";
+  let week = "", month = "", year = 0;
   if (mode === "week") week = $qs("#leads-week")?.value || getLastWeek();
   else if (mode === "month") month = $qs("#leads-month")?.value || "";
-  else if (mode === "year") year = $qs("#leads-year")?.value || new Date().getFullYear();
-  const url = API + `/leads/upload?mode=${mode}&week_val=${encodeURIComponent(week)}&month_val=${encodeURIComponent(month)}&year_val=${year}`;
+  else if (mode === "year") {
+    const yv = parseInt($qs("#leads-year")?.value);
+    year = (yv >= 2020 && yv <= 2030) ? yv : new Date().getFullYear();
+  }
+  const params = new URLSearchParams({mode, week_val: week, month_val: month, year_val: year});
+  const url = API + "/leads/upload?" + params;
   const formData = new FormData(); formData.append("file", file);
   toast("正在上传并解析...", "info");
   try {
