@@ -634,7 +634,7 @@ function loadMonthCalendar(year, month) {
         const isToday = ds === todayStr;
         html += `<div class="calendar-day ${isToday ? 'today' : ''}" onclick="openCreateCalendar('${ds}')">
           <div class="day-num">${d}</div>
-          ${evts.map(e => `<div class="calendar-event ${platCls[e.platform]||''}" onclick="event.stopPropagation();editCalendar(${e.id})" title="${e.platform} · ${e.status}">${e.title}</div>`).join("")}
+          ${evts.map(e => `<div class="calendar-event ${platCls[e.platform]||''}" onclick="event.stopPropagation();editCalendar(${e.id})" title="${e.platform} · ${e.status}"><span class="cal-platform">${e.platform}</span><span class="cal-title">${e.title}</span></div>`).join("")}
         </div>`;
       }
       document.getElementById("cal-grid").innerHTML = html;

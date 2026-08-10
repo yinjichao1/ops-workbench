@@ -214,6 +214,14 @@ body {
   padding: 1px 4px; border-radius: 2px; font-size: 9px; margin-top: 2px;
   cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
   border-left: 2px solid;
+  display: flex; gap: 3px; align-items: center;
+}
+.calendar-event .cal-platform {
+  flex-shrink: 0; font-weight: 800; opacity: 0.85;
+  font-size: 9px; line-height: 1;
+}
+.calendar-event .cal-title {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0;
 }
 .calendar-event.douyin { border-color: var(--douyin); background: var(--douyin-muted); }
 .calendar-event.shipinhao { border-color: var(--shipinhao); background: var(--shipinhao-muted); }
