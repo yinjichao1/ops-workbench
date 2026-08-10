@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方向 C · 赛博编辑部 — 新媒体运营工作台</title>
+<style>
+/* ===== Design System C: Cyber Newsroom ===== */
+:root {
+  --bg-deep: #1C1917;
+  --bg-panel: #231F1C;
+  --bg-card: #292521;
+  --bg-elevated: #322D28;
+  --border: #3A3530;
+  --border-glow: #4A453F;
+  --text-primary: #F0E6D8;
+  --text-secondary: #B8AFA2;
+  --text-muted: #7A7268;
+  --accent: #D4A853;
+  --accent-glow: rgba(212,168,83,0.18);
+  --accent-strong: #E8C46A;
+  --douyin: #FF5A7A;
+  --douyin-glow: rgba(255,90,122,0.2);
+  --shipinhao: #4ADE80;
+  --shipinhao-glow: rgba(74,222,128,0.2);
+  --gzh: #60A5FA;
+  --gzh-glow: rgba(96,165,250,0.2);
+  --xhs: #FB7185;
+  --xhs-glow: rgba(251,113,133,0.2);
+  --up: #4ADE80;
+  --down: #FF5A7A;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --font-display: 'Playfair Display', 'Georgia', 'Noto Serif SC', serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'SF Mono', 'JetBrains Mono', 'Cascadia Code', monospace;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Warm noise overlay */
+body::after {
+  content: ''; position: fixed; inset: 0;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0;
+}
+
+/* ===== Header ===== */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(35,31,28,0.88);
+  backdrop-filter: blur(24px) saturate(140%);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  display: flex; align-items: center;
+  height: 58px;
+  gap: 6px;
+}
+.header-logo {
+  font-family: var(--font-display);
+  font-size: 17px; font-weight: 600; color: var(--accent-strong);
+  margin-right: 32px; white-space: nowrap; letter-spacing: 0.01em;
+}
+.header-tab {
+  padding: 6px 16px; border-radius: 6px; font-size: 13px;
+  color: var(--text-secondary); cursor: pointer; transition: all .2s;
+  font-weight: 400; border: none; background: none; font-family: inherit;
+}
+.header-tab:hover { color: var(--accent-strong); }
+.header-tab.active { background: rgba(212,168,83,0.1); color: var(--accent-strong); }
+
+.header-status {
+  margin-left: auto; display: flex; align-items: center; gap: 8px;
+}
+.status-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--up); box-shadow: 0 0 6px rgba(74,222,128,0.5);
+}
+.status-text {
+  font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+}
+
+/* ===== Main ===== */
+main {
+  max-width: 1380px; margin: 0 auto; padding: 32px;
+  position: relative; z-index: 1;
+}
+
+/* ===== Hero Banner ===== */
+.hero-banner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.hero-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 28px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-card::after {
+  content: ''; position: absolute; top: -50%; right: -20%; width: 60%; height: 200%;
+  background: radial-gradient(ellipse, rgba(212,168,83,0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-tag {
+  font-size: 10px; font-weight: 600; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px;
+}
+.hero-title {
+  font-family: var(--font-display);
+  font-size: 28px; font-weight: 700; color: var(--text-primary);
+  margin-bottom: 6px; letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.hero-subtitle {
+  font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;
+}
+.hero-stats {
+  display: flex; gap: 24px;
+}
+.hero-stat-val {
+  font-family: var(--font-mono); font-size: 28px; font-weight: 500;
+  color: var(--text-primary); letter-spacing: -0.02em;
+}
+.hero-stat-label {
+  font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em;
+}
+.hero-stat-change { font-size: 11px; margin-top: 2px; font-family: var(--font-mono); }
+.hero-stat-change.up { color: var(--up); }
+.hero-stat-change.down { color: var(--down); }
+
+/* ===== Platform Cards ===== */
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.platform-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: all .2s;
+  cursor: pointer;
+}
+.platform-card:hover {
+  border-color: var(--border-glow);
+  background: var(--bg-elevated);
+}
+.card-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.platform-tag {
+  font-size: 10px; font-weight: 700; padding: 3px 10px;
+  border-radius: 4px; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.platform-tag.douyin { background: rgba(255,90,122,0.12); color: var(--douyin); }
+.platform-tag.shipinhao { background: rgba(74,222,128,0.12); color: var(--shipinhao); }
+.platform-tag.gzh { background: rgba(96,165,250,0.12); color: var(--gzh); }
+.platform-tag.xhs { background: rgba(251,113,133,0.12); color: var(--xhs); }
+
+.card-big-num {
+  font-family: var(--font-mono); font-size: 32px; font-weight: 500;
+  color: var(--text-primary); line-height: 1; margin-bottom: 4px;
+  letter-spacing: -0.03em;
+}
+.card-big-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+.card-metrics {
+  display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 14px;
+  padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.04);
+}
+.card-metric-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px;
+}
+.card-metric-row .label { color: var(--text-muted); }
+.card-metric-row .val { font-family: var(--font-mono); color: var(--text-secondary); font-size: 12px; }
+
+/* ===== KPI ===== */
+.kpi-section { margin-bottom: 24px; }
+.section-label {
+  font-size: 10px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px;
+}
+.kpi-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+}
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.kpi-label {
+  font-family: var(--font-display);
+  font-size: 14px; color: var(--text-secondary);
+  margin-bottom: 16px; font-weight: 600;
+}
+.kpi-bar { margin-bottom: 10px; }
+.kpi-bar:last-child { margin-bottom: 0; }
+.kpi-bar-header {
+  display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;
+}
+.kpi-bar-header span:first-child { color: var(--text-muted); }
+.kpi-bar-header span:last-child { font-family: var(--font-mono); color: var(--text-muted); font-size: 10px; }
+.kpi-track { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.kpi-fill { height: 100%; border-radius: 2px; }
+
+/* ===== Content Columns ===== */
+.content-columns {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+/* ===== Table ===== */
+.data-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.data-panel-header {
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.data-panel-title {
+  font-family: var(--font-display); font-size: 14px; color: var(--text-primary); font-weight: 600;
+}
+.data-panel-badge {
+  font-size: 10px; color: var(--accent); background: rgba(212,168,83,0.1);
+  padding: 2px 8px; border-radius: 3px; letter-spacing: 0.04em;
+}
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left; padding: 10px 16px;
+  font-size: 9px; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  border-bottom: 1px solid var(--border);
+}
+.data-table td {
+  padding: 9px 16px; font-size: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+  color: var(--text-secondary);
+}
+.data-table td:last-child { font-family: var(--font-mono); }
+.data-table tr:hover td { background: rgba(212,168,83,0.03); }
+
+/* ===== Top List ===== */
+.top-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.top-panel-header {
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  font-family: var(--font-display); font-size: 14px; color: var(--text-primary); font-weight: 600;
+}
+.top-tabs {
+  display: flex; border-bottom: 1px solid var(--border);
+}
+.top-tab {
+  flex: 1; padding: 8px; text-align: center; font-size: 11px;
+  color: var(--text-muted); cursor: pointer; transition: all .15s;
+  border: none; background: none; font-family: inherit;
+}
+.top-tab:hover { color: var(--text-secondary); }
+.top-tab.active { color: var(--accent-strong); border-bottom: 2px solid var(--accent); }
+
+.top-list { padding: 12px 16px; }
+.top-item {
+  display: flex; align-items: center; gap: 10px; padding: 7px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+}
+.top-item:last-child { border-bottom: none; }
+.top-rank {
+  font-family: var(--font-display); font-size: 16px; font-weight: 700;
+  width: 24px; text-align: center; color: var(--text-muted);
+}
+.top-rank.gold { color: var(--accent-strong); }
+.top-rank.silver { color: var(--text-muted); }
+.top-rank.bronze { color: #B8744A; }
+.top-info { flex: 1; min-width: 0; }
+.top-title { font-size: 12px; color: var(--text-secondary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.top-meta { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+.top-stat { font-family: var(--font-mono); font-size: 12px; color: var(--accent-strong); font-weight: 500; }
+
+/* ===== Mini Chart ===== */
+.mini-chart-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px;
+}
+.mini-chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.mini-chart-title {
+  font-size: 11px; color: var(--text-muted); margin-bottom: 10px;
+  font-family: var(--font-mono); letter-spacing: 0.04em;
+}
+.mini-bars { display: flex; align-items: flex-end; gap: 4px; height: 100px; }
+.mb { flex: 1; border-radius: 2px 2px 0 0; min-height: 3px; }
+
+/* Responsive */
+@media (max-width: 1200px) { .platform-grid { grid-template-columns: repeat(2, 1fr); } .kpi-row { grid-template-columns: 1fr 1fr; } .content-columns { grid-template-columns: 1fr; } }
+@media (max-width: 768px) { .platform-grid { grid-template-columns: 1fr; } .kpi-row { grid-template-columns: 1fr; } .hero-banner { grid-template-columns: 1fr; } main { padding: 20px 16px; } }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-logo">Operations Desk</div>
+  <button class="header-tab active">看板</button>
+  <button class="header-tab">排期</button>
+  <button class="header-tab">内容</button>
+  <button class="header-tab">任务</button>
+  <button class="header-tab">选题</button>
+  <button class="header-tab">周报</button>
+  <div class="header-status">
+    <span class="status-dot"></span>
+    <span class="status-text">DATA LIVE</span>
+  </div>
+</header>
+
+<main>
+
+<!-- Hero Banner -->
+<section class="hero-banner">
+  <div class="hero-card">
+    <div class="hero-tag">本周总览</div>
+    <div class="hero-title">四平台运营<br>全线增长中</div>
+    <div class="hero-subtitle">抖音播放量突破新高，小红书增粉强劲，视频号稳步爬升</div>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-val">843.2K</div>
+        <div class="hero-stat-label">抖音播放</div>
+        <div class="hero-stat-change up">↑ 12.7%</div>
+      </div>
+      <div>
+        <div class="hero-stat-val">9.2%</div>
+        <div class="hero-stat-label">小红书增粉</div>
+        <div class="hero-stat-change up">↑ 22.1%</div>
+      </div>
+      <div>
+        <div class="hero-stat-val">40</div>
+        <div class="hero-stat-label">本周发布</div>
+        <div class="hero-stat-change up">↑ 4</div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-card" style="display:flex;align-items:flex-end;padding-bottom:16px;">
+    <div style="width:100%">
+      <div class="hero-tag">KPI 进度</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">8 月已完成 32% · 时间进度 29%</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div style="flex:1"><div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:4px;">粉丝</div><div class="kpi-track"><div class="kpi-fill" style="width:78%;background:var(--accent);box-shadow:0 0 8px var(--accent-glow)"></div></div></div>
+        <div style="flex:1"><div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:4px;">播放</div><div class="kpi-track"><div class="kpi-fill" style="width:74%;background:var(--gzh);box-shadow:0 0 8px var(--gzh-glow)"></div></div></div>
+        <div style="flex:1"><div style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);margin-bottom:4px;">发布</div><div class="kpi-track"><div class="kpi-fill" style="width:82%;background:var(--shipinhao);box-shadow:0 0 8px var(--shipinhao-glow)"></div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Platform Cards -->
+<section class="platform-grid">
+  <div class="platform-card">
+    <div class="card-top">
+      <span class="platform-tag douyin">抖音</span>
+      <span class="card-metric-row" style="width:auto;gap:4px"><span class="label" style="font-size:10px">完播</span><span class="val" style="font-size:11px;color:var(--up)">42.1%</span></span>
+    </div>
+    <div class="card-big-num">12.85<span style="font-size:14px;color:var(--text-muted);margin-left:2px">万</span></div>
+    <div class="card-big-label">粉丝总数 · <span style="color:var(--up);font-family:var(--font-mono)">↑4.2%</span></div>
+    <div class="card-metrics">
+      <div class="card-metric-row"><span class="label">播放量</span><span class="val">843.2K</span></div>
+      <div class="card-metric-row"><span class="label">互动量</span><span class="val">32.1K</span></div>
+      <div class="card-metric-row"><span class="label">本周发布</span><span class="val">14 条</span></div>
+    </div>
+  </div>
+
+  <div class="platform-card">
+    <div class="card-top">
+      <span class="platform-tag shipinhao">视频号</span>
+      <span class="card-metric-row" style="width:auto;gap:4px"><span class="label" style="font-size:10px">完播</span><span class="val" style="font-size:11px;color:var(--up)">38.6%</span></span>
+    </div>
+    <div class="card-big-num">8.42<span style="font-size:14px;color:var(--text-muted);margin-left:2px">万</span></div>
+    <div class="card-big-label">粉丝总数 · <span style="color:var(--up);font-family:var(--font-mono)">↑2.8%</span></div>
+    <div class="card-metrics">
+      <div class="card-metric-row"><span class="label">播放量</span><span class="val">521.6K</span></div>
+      <div class="card-metric-row"><span class="label">互动量</span><span class="val">18.7K</span></div>
+      <div class="card-metric-row"><span class="label">本周发布</span><span class="val">9 条</span></div>
+    </div>
+  </div>
+
+  <div class="platform-card">
+    <div class="card-top">
+      <span class="platform-tag gzh">公众号</span>
+    </div>
+    <div class="card-big-num">5.36<span style="font-size:14px;color:var(--text-muted);margin-left:2px">万</span></div>
+    <div class="card-big-label">粉丝总数 · <span style="color:var(--up);font-family:var(--font-mono)">↑1.5%</span></div>
+    <div class="card-metrics">
+      <div class="card-metric-row"><span class="label">阅读量</span><span class="val">28.4K</span></div>
+      <div class="card-metric-row"><span class="label">互动量</span><span class="val">3.2K</span></div>
+      <div class="card-metric-row"><span class="label">本周发文</span><span class="val">6 篇</span></div>
+    </div>
+  </div>
+
+  <div class="platform-card">
+    <div class="card-top">
+      <span class="platform-tag xhs">小红书</span>
+    </div>
+    <div class="card-big-num">3.91<span style="font-size:14px;color:var(--text-muted);margin-left:2px">万</span></div>
+    <div class="card-big-label">粉丝总数 · <span style="color:var(--up);font-family:var(--font-mono)">↑9.2%</span></div>
+    <div class="card-metrics">
+      <div class="card-metric-row"><span class="label">阅读量</span><span class="val">156.8K</span></div>
+      <div class="card-metric-row"><span class="label">互动量</span><span class="val">14.6K</span></div>
+      <div class="card-metric-row"><span class="label">本周笔记</span><span class="val">11 篇</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Mini Charts -->
+<section class="mini-chart-row">
+  <div class="mini-chart-card">
+    <div class="mini-chart-title">// 抖音 7d 播放趋势</div>
+    <div class="mini-bars" id="c-dy-bars"></div>
+  </div>
+  <div class="mini-chart-card">
+    <div class="mini-chart-title">// 小红书 7d 阅读趋势</div>
+    <div class="mini-bars" id="c-xhs-bars"></div>
+  </div>
+</section>
+
+<!-- Content Columns -->
+<section class="content-columns">
+  <div class="data-panel">
+    <div class="data-panel-header">
+      <span class="data-panel-title">最新数据</span>
+      <span class="data-panel-badge">TODAY</span>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>日期</th><th>平台</th><th>播放/阅读</th><th>互动</th><th>+粉丝</th></tr></thead>
+      <tbody>
+        <tr><td>8.9</td><td><span class="platform-tag douyin" style="font-size:9px;padding:1px 6px">抖音</span></td><td>143,200</td><td>7,935</td><td>340</td></tr>
+        <tr><td>8.9</td><td><span class="platform-tag xhs" style="font-size:9px;padding:1px 6px">小红书</span></td><td>28,600</td><td>2,796</td><td>120</td></tr>
+        <tr><td>8.8</td><td><span class="platform-tag douyin" style="font-size:9px;padding:1px 6px">抖音</span></td><td>128,400</td><td>6,974</td><td>298</td></tr>
+        <tr><td>8.8</td><td><span class="platform-tag shipinhao" style="font-size:9px;padding:1px 6px">视频号</span></td><td>82,300</td><td>4,316</td><td>156</td></tr>
+        <tr><td>8.8</td><td><span class="platform-tag gzh" style="font-size:9px;padding:1px 6px">公众号</span></td><td>4,820</td><td>545</td><td>42</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="top-panel">
+    <div class="top-panel-header">本周热门</div>
+    <div class="top-tabs">
+      <button class="top-tab active">抖音</button>
+      <button class="top-tab">视频号</button>
+      <button class="top-tab">小红书</button>
+    </div>
+    <div class="top-list">
+      <div class="top-item">
+        <span class="top-rank gold">1</span>
+        <div class="top-info"><div class="top-title">国家电网考试·第二批报名攻略</div><div class="top-meta">抖音 · 短视频</div></div>
+        <span class="top-stat">42.3K</span>
+      </div>
+      <div class="top-item">
+        <span class="top-rank silver">2</span>
+        <div class="top-info"><div class="top-title">电气专业 vs 其他专业对比</div><div class="top-meta">抖音 · 短视频</div></div>
+        <span class="top-stat">38.1K</span>
+      </div>
+      <div class="top-item">
+        <span class="top-rank bronze">3</span>
+        <div class="top-info"><div class="top-title">笔试前最后 7 天怎么安排</div><div class="top-meta">抖音 · 短视频</div></div>
+        <span class="top-stat">31.6K</span>
+      </div>
+      <div class="top-item">
+        <span class="top-rank">4</span>
+        <div class="top-info"><div class="top-title">电网一批录取分数线汇总</div><div class="top-meta">视频号 · 短视频</div></div>
+        <span class="top-stat">28.4K</span>
+      </div>
+      <div class="top-item">
+        <span class="top-rank">5</span>
+        <div class="top-info"><div class="top-title">各省录取率横向对比</div><div class="top-meta">视频号 · 短视频</div></div>
+        <span class="top-stat">22.7K</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+function miniBars(data, id, color) {
+  const max = Math.max(...data);
+  const maxH = 88;
+  document.getElementById(id).innerHTML = data.map(v => {
+    const h = (v / max) * maxH;
+    const alpha = 0.3 + v / max * 0.7;
+    return `<div class="mb" style="height:${h}px;background:${color};opacity:${alpha};box-shadow:0 0 6px ${color}22"></div>`;
+  }).join('');
+}
+miniBars([98,85,76,62,88,72,95], 'c-dy-bars', '#FF5A7A');
+miniBars([86,72,65,55,78,68,92], 'c-xhs-bars', '#FB7185');
+</script>
+</body>
+</html>

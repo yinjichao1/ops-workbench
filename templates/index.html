@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>思格教育 · 运营工作台</title>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-logo-text">思格教育</div>
+    <div class="sidebar-logo-sub">Operations Desk</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">概览</div>
+    <button class="sidebar-item active" data-page="dashboard">
+      <span class="nav-icon">&#9679;</span><span class="nav-text">数据看板</span>
+    </button>
+    <button class="sidebar-item" data-page="calendar">
+      <span class="nav-icon">&#9700;</span><span class="nav-text">内容排期</span>
+    </button>
+    <button class="sidebar-item" data-page="content">
+      <span class="nav-icon">&#9783;</span><span class="nav-text">内容明细</span>
+    </button>
+    <div class="sidebar-section-label">管理</div>
+    <button class="sidebar-item" data-page="tasks">
+      <span class="nav-icon">&#9745;</span><span class="nav-text">任务管理</span>
+      <span class="nav-badge" id="task-count">0</span>
+    </button>
+    <button class="sidebar-item" data-page="topics">
+      <span class="nav-icon">&#9733;</span><span class="nav-text">选题库</span>
+    </button>
+    <div class="sidebar-section-label">输出</div>
+    <button class="sidebar-item" data-page="reports">
+      <span class="nav-icon">&#9998;</span><span class="nav-text">报表生成</span>
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">主</div>
+      <div class="sidebar-user-info">
+        <div class="name">网络部</div>
+        <div>sigedu.cn</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="main-content">
+
+  <div class="page active" id="page-dashboard">
+    <div class="page-header">
+      <div>
+        <h1 id="page-title">数据看板</h1>
+        <div class="breadcrumb">思格教育 <span>/</span> 运营工作台 <span>/</span> 数据看板</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" onclick="openMetricForm()">录入数据</button>
+        <button class="btn btn-outline btn-sm" onclick="openContentForm()">录入内容</button>
+        <button class="btn btn-primary btn-sm" onclick="document.querySelector('[data-page=reports]').click()">生成周报</button>
+      </div>
+    </div>
+    <div class="page-body">
+      <!-- 筛选栏 -->
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:20px;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border-soft);border-radius:var(--radius)">
+        <span style="font-size:12px;font-weight:700;color:var(--text-muted);white-space:nowrap">数据筛选</span>
+        <select id="filter-month" class="filter-select" onchange="onMonthFilter()"><option value="">全部月份</option></select>
+        <select id="filter-week" class="filter-select" onchange="onWeekFilter()"><option value="">本周</option></select>
+        <button class="btn btn-outline btn-sm" onclick="resetFilter()">重置</button>
+      </div>
+
+      <div class="stat-grid cols-4" id="overview-grid"></div>
+      <div style="margin-bottom:32px">
+        <div class="card-header" style="padding:0 0 14px 0;border:none">
+          <span class="card-title">本月进度</span>
+          <span class="card-subtitle">8.1 - 8.9</span>
+        </div>
+        <div class="stat-grid cols-3 kpi-grid" id="kpi-grid-container"></div>
+      </div>
+
+      <!-- 本周数据总览 -->
+      <div style="margin-bottom:28px">
+        <div class="card-header" style="padding:0 0 14px 0;border:none">
+          <span class="card-title">本周数据总览</span>
+          <span class="card-subtitle" id="overview-week-label"></span>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:0">
+            <table class="data-table" id="overview-table">
+              <thead><tr><th>平台</th><th>粉丝</th><th>新增</th><th>播放/阅读</th><th>互动</th><th>发布</th><th>环比</th></tr></thead>
+              <tbody id="overview-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px">
+        <div class="card">
+            <div class="card-header">
+            <span class="card-title">平台趋势</span>
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-outline btn-sm detail-tab active" data-platform="抖音">抖音</button>
+              <button class="btn btn-outline btn-sm detail-tab" data-platform="视频号">视频号</button>
+              <button class="btn btn-outline btn-sm detail-tab" data-platform="公众号">公众号</button>
+              <button class="btn btn-outline btn-sm detail-tab" data-platform="小红书">小红书</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="account-tabs" style="display:none;gap:4px;margin-bottom:12px;flex-wrap:wrap"></div>
+            <div style="display:flex;align-items:flex-end;gap:4px;height:120px;margin-bottom:14px" id="trend-bars">
+              <div class="skeleton" style="flex:1;height:80px;border-radius:2px 2px 0 0"></div>
+              <div class="skeleton" style="flex:1;height:100px;border-radius:2px 2px 0 0"></div>
+              <div class="skeleton" style="flex:1;height:60px;border-radius:2px 2px 0 0"></div>
+              <div class="skeleton" style="flex:1;height:90px;border-radius:2px 2px 0 0"></div>
+              <div class="skeleton" style="flex:1;height:70px;border-radius:2px 2px 0 0"></div>
+              <div class="skeleton" style="flex:1;height:110px;border-radius:2px 2px 0 0"></div>
+              <div class="skeleton" style="flex:1;height:85px;border-radius:2px 2px 0 0"></div>
+            </div>
+            <table class="data-table"><thead><tr><th>周</th><th>播放/阅读</th><th>点赞</th><th>评论</th><th>新增粉丝</th></tr></thead><tbody id="detail-table-body"></tbody></table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">本周热门</span></div>
+          <div class="card-body"><div id="top5-list"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PLATFORM DETAIL ===== -->
+  <div class="page" id="page-platform-detail">
+    <div class="page-header">
+      <div>
+        <div class="breadcrumb" style="margin-bottom:4px"><span onclick="goToDashboard()" style="cursor:pointer">数据看板</span> / <span id="pd-platform-name">平台明细</span></div>
+        <h1 id="pd-title">平台明细</h1>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" onclick="goToDashboard()">← 返回看板</button>
+        <button class="btn btn-primary btn-sm" onclick="openBatchEntry(window._pdPlatform||'抖音')">快速录入本周</button>
+      </div>
+    </div>
+    <div class="page-body">
+      <!-- 平台聚合卡片 -->
+      <div class="stat-grid cols-4" id="pd-aggregate"></div>
+
+      <!-- 账号子卡 -->
+      <div style="margin-bottom:24px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span class="card-title">各账号数据</span>
+          <span class="card-subtitle" id="pd-week-label"></span>
+        </div>
+        <div class="stat-grid cols-4" id="pd-accounts"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-calendar">
+    <div class="page-header">
+      <div><h1>内容排期</h1><div class="breadcrumb">思格教育 <span>/</span> 运营工作台 <span>/</span> 内容排期</div></div>
+      <button class="btn btn-primary btn-sm" onclick="openCreateCalendar(new Date().toISOString().split('T')[0])">新建排期</button>
+    </div>
+    <div class="page-body">
+      <div class="card"><div class="card-body">
+        <div class="calendar-nav">
+          <button onclick="calendarPrev()">&#8592;</button>
+          <h2 id="cal-title">2026 年 8 月</h2>
+          <button onclick="calendarNext()">&#8594;</button>
+        </div>
+        <div class="calendar-grid" id="cal-grid"></div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="page" id="page-content">
+    <div class="page-header">
+      <div><h1>内容明细</h1><div class="breadcrumb">思格教育 <span>/</span> 运营工作台 <span>/</span> 内容明细</div></div>
+      <button class="btn btn-primary btn-sm" onclick="openContentForm()">录入内容</button>
+    </div>
+    <div class="page-body">
+      <div class="card">
+        <div class="card-body" style="padding:0">
+          <table class="data-table" id="content-table">
+            <thead><tr><th>日期</th><th>平台</th><th>类型</th><th>标题</th><th>标记</th><th>点赞</th><th>负责人</th></tr></thead>
+            <tbody id="content-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-tasks">
+    <div class="page-header">
+      <div><h1>任务管理</h1><div class="breadcrumb">思格教育 <span>/</span> 运营工作台 <span>/</span> 任务管理</div></div>
+      <button class="btn btn-primary btn-sm" onclick="openTaskForm()">新建任务</button>
+    </div>
+    <div class="page-body">
+      <div class="kanban-grid">
+        <div class="kanban-col todo"><div class="kanban-col-header">待办</div><div id="kanban-todo"></div></div>
+        <div class="kanban-col progress"><div class="kanban-col-header">进行中</div><div id="kanban-progress"></div></div>
+        <div class="kanban-col done"><div class="kanban-col-header">已完成</div><div id="kanban-done"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-topics">
+    <div class="page-header">
+      <div><h1>选题库</h1><div class="breadcrumb">思格教育 <span>/</span> 运营工作台 <span>/</span> 选题库</div></div>
+      <button class="btn btn-primary btn-sm" onclick="openTopicForm()">新增选题</button>
+    </div>
+    <div class="page-body">
+      <div class="card"><div class="card-body" style="padding:0">
+        <table class="data-table" id="topics-table">
+          <thead><tr><th>标题</th><th>来源</th><th>适配平台</th><th>状态</th><th>创建人</th><th>操作</th></tr></thead>
+          <tbody id="topics-table-body"></tbody>
+        </table>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="page" id="page-reports">
+    <div class="page-header">
+      <div><h1>报表生成</h1><div class="breadcrumb">思格教育 <span>/</span> 运营工作台 <span>/</span> 报表生成</div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="loadReports('weekly')">生成周报</button>
+        <button class="btn btn-outline btn-sm" onclick="loadReports('monthly')">生成月报</button>
+      </div>
+    </div>
+    <div class="page-body">
+      <div id="report-area">
+        <div class="empty-state">
+          <h3>报表生成</h3>
+          <p>基于已录入的平台运营数据，一键生成结构化运营周报或月报。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="/static/js/app.js?v=0810b"></script>
+</body>
+</html>

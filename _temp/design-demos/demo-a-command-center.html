@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方向 A · 数据指挥室 — 新媒体运营工作台</title>
+<style>
+/* ===== Design System A: Data Command Center ===== */
+:root {
+  --bg-deep: #0A0C10;
+  --bg-panel: #111318;
+  --bg-card: #161820;
+  --bg-elevated: #1C1E26;
+  --border: #252830;
+  --border-glow: #2A2D36;
+  --text-primary: #E8E9ED;
+  --text-secondary: #8B8F9A;
+  --text-muted: #565A65;
+  --accent: #6C8CFF;
+  --accent-glow: rgba(108,140,255,0.25);
+  --douyin: #FF3B6E;
+  --douyin-glow: rgba(255,59,110,0.25);
+  --shipinhao: #3DD68C;
+  --shipinhao-glow: rgba(61,214,140,0.25);
+  --gzh: #4DA3FF;
+  --gzh-glow: rgba(77,163,255,0.25);
+  --xhs: #FF6B6B;
+  --xhs-glow: rgba(255,107,107,0.25);
+  --up: #3DD68C;
+  --down: #FF3B6E;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'SF Mono', 'Fira Code', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle background grid */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== Header ===== */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(17,19,24,0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  display: flex; align-items: center;
+  height: 56px;
+  gap: 8px;
+}
+.header-logo {
+  font-size: 15px; font-weight: 700; color: var(--text-primary);
+  margin-right: 28px; letter-spacing: -0.02em; white-space: nowrap;
+}
+.header-tab {
+  padding: 8px 16px; border-radius: 6px; font-size: 13px;
+  color: var(--text-secondary); cursor: pointer; transition: all .15s;
+  font-weight: 500; border: none; background: none; font-family: inherit;
+}
+.header-tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+.header-tab.active { background: var(--bg-card); color: var(--text-primary); }
+
+.header-time {
+  margin-left: auto; font-family: var(--font-mono); font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ===== Main ===== */
+main {
+  max-width: 1440px; margin: 0 auto; padding: 28px;
+  position: relative; z-index: 1;
+}
+
+.section-title {
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 16px;
+}
+
+/* ===== Platform Cards ===== */
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.platform-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: all .2s ease;
+  cursor: pointer;
+}
+.platform-card:hover {
+  border-color: var(--border-glow);
+  transform: translateY(-2px);
+}
+
+/* Platform accent glow bar */
+.platform-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  border-radius: 2px 2px 0 0;
+}
+.platform-card.douyin::before { background: var(--douyin); box-shadow: 0 0 20px var(--douyin-glow); }
+.platform-card.shipinhao::before { background: var(--shipinhao); box-shadow: 0 0 20px var(--shipinhao-glow); }
+.platform-card.gzh::before { background: var(--gzh); box-shadow: 0 0 20px var(--gzh-glow); }
+.platform-card.xhs::before { background: var(--xhs); box-shadow: 0 0 20px var(--xhs-glow); }
+
+.card-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 18px;
+}
+.platform-icon {
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.platform-icon.douyin { background: var(--douyin); box-shadow: 0 0 8px var(--douyin-glow); }
+.platform-icon.shipinhao { background: var(--shipinhao); box-shadow: 0 0 8px var(--shipinhao-glow); }
+.platform-icon.gzh { background: var(--gzh); box-shadow: 0 0 8px var(--gzh-glow); }
+.platform-icon.xhs { background: var(--xhs); box-shadow: 0 0 8px var(--xhs-glow); }
+.card-platform { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+
+.metric { margin-bottom: 14px; }
+.metric:last-child { margin-bottom: 0; }
+.metric-label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; letter-spacing: 0.04em; }
+.metric-row { display: flex; align-items: baseline; gap: 6px; }
+.metric-value {
+  font-family: var(--font-mono); font-size: 22px; font-weight: 600;
+  color: var(--text-primary); letter-spacing: -0.02em;
+}
+.metric-change { font-size: 11px; font-weight: 600; font-family: var(--font-mono); }
+.metric-change.up { color: var(--up); }
+.metric-change.down { color: var(--down); }
+
+/* ===== KPI Section ===== */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.kpi-platform {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+}
+.kpi-platform-name { font-size: 13px; font-weight: 600; }
+
+.kpi-bar { margin-bottom: 12px; }
+.kpi-bar:last-child { margin-bottom: 0; }
+.kpi-bar-label {
+  display: flex; justify-content: space-between; margin-bottom: 6px;
+  font-size: 11px;
+}
+.kpi-bar-label span:first-child { color: var(--text-secondary); }
+.kpi-bar-label span:last-child { font-family: var(--font-mono); color: var(--text-muted); font-size: 10px; }
+.kpi-track {
+  height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;
+}
+.kpi-fill {
+  height: 100%; border-radius: 2px; transition: width 0.6s ease;
+}
+.kpi-fill.followers { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+.kpi-fill.plays { background: var(--gzh); box-shadow: 0 0 8px var(--gzh-glow); }
+.kpi-fill.publish { background: var(--shipinhao); box-shadow: 0 0 8px var(--shipinhao-glow); }
+
+/* ===== Mini Chart Area ===== */
+.chart-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.chart-card-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+}
+.chart-card-title { font-size: 13px; font-weight: 600; }
+.chart-card-platform {
+  font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);
+}
+.chart-placeholder {
+  height: 180px;
+  display: flex; align-items: flex-end; gap: 6px;
+  padding: 0 4px;
+}
+.bar {
+  flex: 1; border-radius: 3px 3px 0 0; min-height: 4px;
+  transition: height 0.4s ease;
+}
+
+/* ===== Top 5 Section ===== */
+.top5-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.top5-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.top5-title { font-size: 11px; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 0.06em; }
+.top5-item {
+  display: flex; align-items: center; gap: 8px; padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.top5-item:last-child { border-bottom: none; }
+.top5-rank {
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
+  width: 16px; text-align: center;
+}
+.top5-rank.top { color: var(--douyin); font-weight: 700; }
+.top5-text { flex: 1; font-size: 12px; color: var(--text-secondary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.top5-stat { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+
+/* ===== Data Grid Detail ===== */
+.data-section { margin-bottom: 28px; }
+.data-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left; padding: 10px 16px;
+  font-size: 10px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+}
+.data-table td {
+  padding: 10px 16px; font-size: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  font-family: var(--font-mono);
+}
+.data-table td:first-child { color: var(--text-secondary); }
+.data-table td:last-child { color: var(--text-muted); }
+.data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.data-table .trend-up { color: var(--up); }
+.data-table .trend-down { color: var(--down); }
+
+/* Responsive */
+@media (max-width: 1200px) { .platform-grid { grid-template-columns: repeat(2, 1fr); } .kpi-grid { grid-template-columns: 1fr 1fr; } .top5-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 768px) { .platform-grid { grid-template-columns: 1fr; } .kpi-grid { grid-template-columns: 1fr; } .chart-section { grid-template-columns: 1fr; } .top5-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-logo">新媒体运营工作台</div>
+  <button class="header-tab active">数据看板</button>
+  <button class="header-tab">内容排期</button>
+  <button class="header-tab">内容明细</button>
+  <button class="header-tab">任务管理</button>
+  <button class="header-tab">选题库</button>
+  <button class="header-tab">周报</button>
+  <div class="header-time" id="clock">00:00:00</div>
+</header>
+
+<main>
+
+<!-- Platform Overview Cards -->
+<section class="platform-grid">
+  <div class="platform-card douyin">
+    <div class="card-header">
+      <span class="platform-icon douyin"></span>
+      <span class="card-platform">抖音</span>
+    </div>
+    <div class="metric">
+      <div class="metric-label">粉丝总数</div>
+      <div class="metric-row"><span class="metric-value">12.85</span><span class="metric-change up">↑4.2%</span></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">本周播放量</div>
+      <div class="metric-row"><span class="metric-value">843.2K</span><span class="metric-change up">↑12.7%</span></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">互动量</div>
+      <div class="metric-row"><span class="metric-value">32.1K</span><span class="metric-change down">↓3.1%</span></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">发布数</div>
+      <div class="metric-row"><span class="metric-value">14</span><span class="metric-change up">↑2</span></div>
+    </div>
+  </div>
+
+  <div class="platform-card shipinhao">
+    <div class="card-header">
+      <span class="platform-icon shipinhao"></span>
+      <span class="card-platform">视频号</span>
+    </div>
+    <div class="metric">
+      <div class="metric-label">粉丝总数</div>
+      <div class="metric-row"><span class="metric-value">8.42</span><span class="metric-change up">↑2.8%</span></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">本周播放量</div>
+      <div class="metric-row"><span class="metric-value">521.6K</span><span class="metric-change up">↑8.3%</span></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">互动量</div>
+      <div class="metric-row"><span class="metric-value">18.7K</span><span class="metric-change up">↑5.6%</span></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">发布数</div>
+      <div class="metric-row"><span class="metric-value">9</span><span class="metric-change down">↓1</span></div>
+    </div>
+  </div>
+
+  <div class="platform-card gzh">
+    <div class="card-header">
+      <span class="platform-icon gzh"></span>
+      <span class="card-platform">公众号</span>
+    </div>
+    <div class="metric">
+      <div class="metric-label">粉丝总数</div>
+      <div class="metric-row"><span class="metric-value">5.36</span><span class="metric-change up">↑1.5%</span></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">本周阅读量</div>
+      <div class="metric-row"><span class="metric-value">28.4K</span><span class="metric-change down">↓6.2%</span></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">互动量</div>
+      <div class="metric-row"><span class="metric-value">3.2K</span><span class="metric-change up">↑0.8%</span></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">发文数</div>
+      <div class="metric-row"><span class="metric-value">6</span><span class="metric-change">—</span></div>
+    </div>
+  </div>
+
+  <div class="platform-card xhs">
+    <div class="card-header">
+      <span class="platform-icon xhs"></span>
+      <span class="card-platform">小红书</span>
+    </div>
+    <div class="metric">
+      <div class="metric-label">粉丝总数</div>
+      <div class="metric-row"><span class="metric-value">3.91</span><span class="metric-change up">↑9.2%</span></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">本周阅读量</div>
+      <div class="metric-row"><span class="metric-value">156.8K</span><span class="metric-change up">↑22.1%</span></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">互动量</div>
+      <div class="metric-row"><span class="metric-value">14.6K</span><span class="metric-change up">↑18.4%</span></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">发布笔记</div>
+      <div class="metric-row"><span class="metric-value">11</span><span class="metric-change up">↑3</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- KPI Section -->
+<section>
+  <div class="section-title">本月 KPI 进度</div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-bar">
+        <div class="kpi-bar-label"><span>抖音 · 新增粉丝</span><span>1,240 / 1,500</span></div>
+        <div class="kpi-track"><div class="kpi-fill followers" style="width:82.7%"></div></div>
+      </div>
+      <div class="kpi-bar">
+        <div class="kpi-bar-label"><span>抖音 · 播放量</span><span>3.2M / 4.0M</span></div>
+        <div class="kpi-track"><div class="kpi-fill plays" style="width:80%"></div></div>
+      </div>
+      <div class="kpi-bar">
+        <div class="kpi-bar-label"><span>抖音 · 发布数</span><span>42 / 50</span></div>
+        <div class="kpi-track"><div class="kpi-fill publish" style="width:84%"></div></div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-bar">
+        <div class="kpi-bar-label"><span>视频号 · 新增粉丝</span><span>680 / 1,000</span></div>
+        <div class="kpi-track"><div class="kpi-fill followers" style="width:68%"></div></div>
+      </div>
+      <div class="kpi-bar">
+        <div class="kpi-bar-label"><span>视频号 · 播放量</span><span>2.1M / 3.0M</span></div>
+        <div class="kpi-track"><div class="kpi-fill plays" style="width:70%"></div></div>
+      </div>
+      <div class="kpi-bar">
+        <div class="kpi-bar-label"><span>视频号 · 发布数</span><span>28 / 40</span></div>
+        <div class="kpi-track"><div class="kpi-fill publish" style="width:70%"></div></div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-bar">
+        <div class="kpi-bar-label"><span>小红书 · 新增粉丝</span><span>420 / 500</span></div>
+        <div class="kpi-track"><div class="kpi-fill followers" style="width:84%"></div></div>
+      </div>
+      <div class="kpi-bar">
+        <div class="kpi-bar-label"><span>小红书 · 阅读量</span><span>580K / 800K</span></div>
+        <div class="kpi-track"><div class="kpi-fill plays" style="width:72.5%"></div></div>
+      </div>
+      <div class="kpi-bar">
+        <div class="kpi-bar-label"><span>小红书 · 发布笔记</span><span>22 / 30</span></div>
+        <div class="kpi-track"><div class="kpi-fill publish" style="width:73.3%"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Trend Bars -->
+<section>
+  <div class="section-title">近 7 天趋势</div>
+  <div class="chart-section">
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <span class="chart-card-title">抖音 · 播放量</span>
+        <span class="chart-card-platform">7d trend</span>
+      </div>
+      <div class="chart-placeholder" id="douyin-bars"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <span class="chart-card-title">小红书 · 阅读量</span>
+        <span class="chart-card-platform">7d trend</span>
+      </div>
+      <div class="chart-placeholder" id="xhs-bars"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Data Table -->
+<section class="data-section">
+  <div class="section-title">数据明细</div>
+  <div class="data-card">
+    <table class="data-table">
+      <thead><tr>
+        <th>日期</th><th>平台</th><th>播放/阅读</th><th>点赞</th><th>评论</th><th>分享</th><th>新增粉丝</th><th>趋势</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>08-09</td><td>抖音</td><td>143,200</td><td>5,840</td><td>1,203</td><td>892</td><td>340</td><td class="trend-up">↑12%</td></tr>
+        <tr><td>08-09</td><td>小红书</td><td>28,600</td><td>2,340</td><td>456</td><td>—</td><td>120</td><td class="trend-up">↑22%</td></tr>
+        <tr><td>08-08</td><td>抖音</td><td>128,400</td><td>5,120</td><td>1,089</td><td>765</td><td>298</td><td class="trend-up">↑8%</td></tr>
+        <tr><td>08-08</td><td>视频号</td><td>82,300</td><td>3,210</td><td>672</td><td>434</td><td>156</td><td class="trend-down">↓3%</td></tr>
+        <tr><td>08-08</td><td>公众号</td><td>4,820</td><td>389</td><td>—</td><td>156</td><td>42</td><td class="trend-down">↓6%</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Top 5 -->
+<section>
+  <div class="section-title">本周 Top 内容</div>
+  <div class="top5-grid">
+    <div class="top5-card">
+      <div class="top5-title">抖音 TOP 5</div>
+      <div class="top5-item"><span class="top5-rank top">1</span><span class="top5-text">国家电网考试·第二批报名攻略</span><span class="top5-stat">42.3K</span></div>
+      <div class="top5-item"><span class="top5-rank top">2</span><span class="top5-text">电气专业 vs 其他专业对比</span><span class="top5-stat">38.1K</span></div>
+      <div class="top5-item"><span class="top5-rank top">3</span><span class="top5-text">笔试前最后7天怎么安排</span><span class="top5-stat">31.6K</span></div>
+    </div>
+    <div class="top5-card">
+      <div class="top5-title">视频号 TOP 5</div>
+      <div class="top5-item"><span class="top5-rank top">1</span><span class="top5-text">电网一批录取分数线汇总</span><span class="top5-stat">28.4K</span></div>
+      <div class="top5-item"><span class="top5-rank top">2</span><span class="top5-text">面试常见问题·结构化应答</span><span class="top5-stat">22.7K</span></div>
+      <div class="top5-item"><span class="top5-rank top">3</span><span class="top5-text">各省录取率横向对比</span><span class="top5-stat">19.3K</span></div>
+    </div>
+    <div class="top5-card">
+      <div class="top5-title">公众号 TOP 5</div>
+      <div class="top5-item"><span class="top5-rank top">1</span><span class="top5-text">2026年国网招聘政策全面解读</span><span class="top5-stat">8.2K</span></div>
+      <div class="top5-item"><span class="top5-rank top">2</span><span class="top5-text">从二本到国网：我的备考路</span><span class="top5-stat">6.9K</span></div>
+      <div class="top5-item"><span class="top5-rank top">3</span><span class="top5-text">电网考试十大高频易错点</span><span class="top5-stat">5.4K</span></div>
+    </div>
+    <div class="top5-card">
+      <div class="top5-title">小红书 TOP 5</div>
+      <div class="top5-item"><span class="top5-rank top">1</span><span class="top5-text">国网备考30天计划表</span><span class="top5-stat">6.8K</span></div>
+      <div class="top5-item"><span class="top5-rank top">2</span><span class="top5-text">电气工程师上岸经验帖</span><span class="top5-stat">5.3K</span></div>
+      <div class="top5-item"><span class="top5-rank top">3</span><span class="top5-text">我的电网备考笔记·精华</span><span class="top5-stat">4.9K</span></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+// Animate bars
+function animateBars() {
+  const data = [
+    [98,85,76,62,88,72,95],
+    [86,72,65,55,78,68,92]
+  ];
+  const maxH = 160;
+  ['douyin-bars','xhs-bars'].forEach((id,i) => {
+    const container = document.getElementById(id);
+    const max = Math.max(...data[i]);
+    container.innerHTML = data[i].map(v => {
+      const h = (v / max) * maxH;
+      const color = i === 0 ? '#FF3B6E' : '#FF6B6B';
+      return `<div class="bar" style="height:${h}px;background:${color};opacity:${0.4 + v/max * 0.6};box-shadow:0 0 12px ${color}33;"></div>`;
+    }).join('');
+  });
+}
+animateBars();
+
+// Clock
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('zh-CN', {hour12: false});
+}
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>

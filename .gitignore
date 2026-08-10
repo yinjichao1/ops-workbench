@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+data/ops_workbench.db
+.env
+seed_data.py
+seed.json
+/tmp/
+deploy/
+.DS_Store
