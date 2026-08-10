@@ -1274,7 +1274,7 @@ async function saveTopic(modalId) {
 function openBatchTopicForm() {
   const mid = "bt-" + Date.now();
   const PLAT = ["抖音","视频号","公众号","小红书"];
-  const rows = Array(5).fill(0).map((_, i) => `
+  const rows = Array(10).fill(0).map((_, i) => `
     <div class="batch-row">
       <input class="bt-title" placeholder="选题标题" style="flex:2">
       <select class="bt-plat" style="flex:1">${PLAT.map(p=>`<option>${p}</option>`).join("")}</select>
@@ -1321,7 +1321,7 @@ function openBatchCalendarForm() {
   const mid = "bc-" + Date.now();
   const PLAT = ["抖音","视频号","公众号","小红书"];
   const today = new Date().toISOString().split('T')[0];
-  const rows = Array(5).fill(0).map((_, i) => `
+  const rows = Array(10).fill(0).map((_, i) => `
     <div class="batch-row">
       <input class="bc-title" placeholder="事件标题" style="flex:2">
       <select class="bc-plat" style="flex:1">${PLAT.map(p=>`<option>${p}</option>`).join("")}</select>
@@ -1371,7 +1371,7 @@ function openBatchContentForm() {
   const mid = "bd-" + Date.now();
   const PLAT = ["抖音","视频号","公众号","小红书"];
   const today = new Date().toISOString().split('T')[0];
-  const rows = Array(5).fill(0).map((_, i) => `
+  const rows = Array(10).fill(0).map((_, i) => `
     <div class="batch-row">
       <input class="bd-title" placeholder="内容标题" style="flex:2.5">
       <select class="bd-plat" style="flex:1">${PLAT.map(p=>`<option>${p}</option>`).join("")}</select>
