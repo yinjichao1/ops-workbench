@@ -1,4 +1,40 @@
-/* ===== 思格教育 · Operations Desk v3.2 ===== */
+// ========== EXPORT ==========
+function openExportDialog() {
+  const mid = "export-" + Date.now();
+  const thisWeek = getLastWeek();
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()).padStart(2,'0')}`;
+  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal" style="max-width:400px">
+    <h2>导出数据</h2>
+    <div class="form-group"><label>导出维度</label>
+      <select id="exp-mode" onchange="document.getElementById('exp-week-grp').style.display=this.value==='week'?'':'none';document.getElementById('exp-month-grp').style.display=this.value==='month'?'':'none'">
+        <option value="week">按周</option>
+        <option value="month">按月</option>
+      </select>
+    </div>
+    <div class="form-group" id="exp-week-grp"><label>周次</label><input type="week" id="exp-week" value="${thisWeek}"></div>
+    <div class="form-group" id="exp-month-grp" style="display:none"><label>月份</label><input type="month" id="exp-month" value="${thisMonth}"></div>
+    <div class="form-group"><label>平台（留空=全部）</label>
+      <select id="exp-plat"><option value="">全部平台</option>${["抖音","视频号","公众号","小红书"].map(p=>`<option>${p}</option>`).join("")}</select>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('${mid}')">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="doExport('${mid}')">下载 CSV</button>
+    </div>
+  </div></div>`;
+  document.body.insertAdjacentHTML("beforeend", html);
+}
+
+function doExport(modalId) {
+  const mode = $qs("#exp-mode").value;
+  const platform = $qs("#exp-plat").value;
+  let url = API + `/export?mode=${mode}&platform=${encodeURIComponent(platform)}`;
+  if (mode === "week") url += `&week_val=${$qs("#exp-week").value}`;
+  else url += `&month_val=${$qs("#exp-month").value}`;
+  closeModal(modalId);
+  window.open(url, "_blank");
+  toast("CSV 文件开始下载", "success");
+}
 
 // ========== DASHBOARD SUB-NAV ==========
 function switchDashtab(el, tab) {
