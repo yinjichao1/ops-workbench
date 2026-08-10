@@ -390,12 +390,20 @@ def dashboard_kpi(db: Session = Depends(get_db)):
 def platform_detail(
     platform: str = Query(...),
     account: str = Query("", description="账号，留空返回该平台所有账号汇总"),
+    week: str = Query("", description="周次 '2026-W32' 或 'YYYY-MM-DD'，默认上周"),
     db: Session = Depends(get_db),
 ):
-    """平台→账号级联明细：本周该平台汇总 + 各账号数据。"""
+    """平台→账号级联明细：默认显示上周数据。"""
     today = date.today()
-    this_mon, this_sun = _week_range(today)
-    last_mon, last_sun = _last_week_range(today)
+    if week:
+        this_mon = parse_week(week)
+        this_sun = this_mon + timedelta(days=6)
+        last_mon = this_mon - timedelta(weeks=1)
+        last_sun = this_sun - timedelta(weeks=1)
+    else:
+        last_mon, last_sun = _last_week_range(today)
+        this_mon, this_sun = last_mon, last_sun
+        last_mon, last_sun = this_mon - timedelta(weeks=1), this_sun - timedelta(weeks=1)
 
     # 本周数据
     base_q = (

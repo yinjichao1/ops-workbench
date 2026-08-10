@@ -313,7 +313,7 @@ function renderPlatformDetail(data, platform) {
       <div class="stat-change ${agg.new_followers_pct >= 0 ? 'up' : 'down'}">${agg.new_followers_pct >= 0 ? '↑' : '↓'}${Math.abs(agg.new_followers_pct)}% 新增 ${fmt(agg.new_followers)}</div>
     </div>
     <div class="stat-card ${cls}">
-      <div class="stat-label">曝光 / 阅读</div>
+      <div class="stat-label">${platform === "抖音" || platform === "视频号" ? "播放量" : "阅读量"}</div>
       <div class="stat-value">${fmt(agg.plays_reads)}</div>
       <div class="stat-change ${agg.plays_reads_pct >= 0 ? 'up' : 'down'}">${agg.plays_reads_pct >= 0 ? '↑' : '↓'}${Math.abs(agg.plays_reads_pct)}%</div>
     </div>
