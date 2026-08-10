@@ -28,22 +28,22 @@
       <button class="sidebar-sub-item" data-tab="leads" onclick="switchDashtabFromSidebar('leads')">线索数据</button>
     </div>
     <button class="sidebar-item" data-page="calendar">
-      <span class="nav-icon">&#9700;</span><span class="nav-text">内容排期</span>
+      <span class="nav-icon">📅</span><span class="nav-text">内容排期</span>
     </button>
     <button class="sidebar-item" data-page="content">
-      <span class="nav-icon">&#9783;</span><span class="nav-text">内容明细</span>
+      <span class="nav-icon">📄</span><span class="nav-text">内容明细</span>
     </button>
     <div class="sidebar-section-label">管理</div>
     <button class="sidebar-item" data-page="tasks">
-      <span class="nav-icon">&#9745;</span><span class="nav-text">任务管理</span>
+      <span class="nav-icon">✅</span><span class="nav-text">任务管理</span>
       <span class="nav-badge" id="task-count">0</span>
     </button>
     <button class="sidebar-item" data-page="topics">
-      <span class="nav-icon">&#9733;</span><span class="nav-text">选题库</span>
+      <span class="nav-icon">⭐</span><span class="nav-text">选题库</span>
     </button>
     <div class="sidebar-section-label">输出</div>
     <button class="sidebar-item" data-page="reports">
-      <span class="nav-icon">&#9998;</span><span class="nav-text">报表生成</span>
+      <span class="nav-icon">📤</span><span class="nav-text">报表生成</span>
     </button>
   </nav>
   <div class="sidebar-footer">
@@ -109,7 +109,10 @@
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
           <span class="card-title">线索数据分析</span>
           <div style="display:flex;gap:8px;align-items:center">
-            <button class="btn btn-outline btn-sm" onclick="document.getElementById('leads-upload').click()">📁 上传线索表</button>
+            <span style="font-size:11px;color:var(--text-muted)">周次</span>
+            <input type="week" id="leads-week" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary)">
+            <button class="btn btn-outline btn-sm" onclick="loadLeads()">查询</button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('leads-upload').click()">📁 上传</button>
             <input type="file" id="leads-upload" accept=".xlsx,.xls" style="display:none" onchange="uploadLeadsFile(this)">
           </div>
         </div>

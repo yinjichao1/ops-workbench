@@ -49,7 +49,11 @@ function switchDashtab(el, tab) {
   // 切换 tab 时按需加载数据
   if (tab === "trend") loadDashboardDetail(null, "抖音");
   if (tab === "hot") loadHotContent();
-  if (tab === "leads") loadLeads();
+  if (tab === "leads") {
+    const wi = $qs("#leads-week");
+    if (wi && !wi.value) wi.value = getLastWeek();
+    loadLeads();
+  }
 }
 
 function switchDashtabFromSidebar(tab) {
@@ -1520,7 +1524,10 @@ async function uploadLeadsFile(input) {
 }
 
 async function loadLeads() {
-  const s = await fetch(API + "/leads/summary");
+  const weekInput = $qs("#leads-week");
+  const week = weekInput?.value || "";
+  const url = API + "/leads/summary" + (week ? `?week_val=${week}` : "");
+  const s = await fetch(url);
   if (!s.ok) return;
   const data = await s.json();
 
