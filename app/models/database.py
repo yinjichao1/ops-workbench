@@ -1,7 +1,7 @@
-"""Database connection and session management.
+r"""Database connection and session management.
 
 Set OPS_DB_PATH env var to use a shared network DB, e.g.:
-  set OPS_DB_PATH=Z:\shared\ops_workbench.db
+  set OPS_DB_PATH=Z:\\shared\\ops_workbench.db
   or leave blank for local mode.
 """
 

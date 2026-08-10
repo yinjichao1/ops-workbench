@@ -830,6 +830,7 @@ async function openBatchEntry(platform) {
 
   let rows = accts.map((a, i) => {
     const prev = lastWeekData[a] || {};
+    const showBookmark = (platform === "小红书");
     return `<div class="batch-row">
       <div class="batch-account">${a}</div>
       <div class="batch-fields">
@@ -838,6 +839,8 @@ async function openBatchEntry(platform) {
         <div class="batch-field"><label>播放/阅读</label><input id="b${i}-p" type="number" value="${prev.plays||prev.reads||prev.note_reads||0}" placeholder="播放/阅读量"></div>
         <div class="batch-field"><label>点赞</label><input id="b${i}-l" type="number" value="${prev.likes||0}" placeholder="点赞"></div>
         <div class="batch-field"><label>评论</label><input id="b${i}-c" type="number" value="${prev.comments||0}" placeholder="评论"></div>
+        ${showBookmark ? `<div class="batch-field"><label>收藏</label><input id="b${i}-bm" type="number" value="${prev.bookmarks||0}" placeholder="收藏"></div>` : ''}
+        <div class="batch-field"><label>分享</label><input id="b${i}-s" type="number" value="${prev.shares||0}" placeholder="分享"></div>
         <div class="batch-field"><label>发布数</label><input id="b${i}-pub" type="number" value="${prev.publish_count||0}" placeholder="发布条数" style="width:60px"></div>
       </div>
     </div>`;
@@ -858,19 +861,25 @@ async function openBatchEntry(platform) {
 
 async function saveBatch(modalId, platform, count) {
   const week = $qs("#b-week").value;
-  let saved = 0;
+  if (!week) { toast("请选择周次", "error"); return; }
+  let saved = 0, errors = [];
   for (let i = 0; i < count; i++) {
-    const acctName = document.querySelector(`#${modalId} .batch-row:nth-child(${i+1}) .batch-account`).textContent;
+    const acctEl = document.querySelector(`#${modalId} .batch-row:nth-child(${i+1}) .batch-account`);
+    if (!acctEl) { errors.push(`第${i+1}行账号读取失败`); continue; }
+    const acctName = acctEl.textContent;
     const f = +($qs(`#b${i}-f`).value) || 0;
     const nf = +($qs(`#b${i}-nf`).value) || 0;
     const p = +($qs(`#b${i}-p`).value) || 0;
     const l = +($qs(`#b${i}-l`).value) || 0;
     const c = +($qs(`#b${i}-c`).value) || 0;
+    const s = +($qs(`#b${i}-s`)?.value) || 0;
+    const bm = +($qs(`#b${i}-bm`)?.value) || 0;
     const pub = +($qs(`#b${i}-pub`).value) || 0;
 
     const body = {
       week, platform, account: acctName,
-      followers: f, new_followers: nf, plays: p, likes: l, comments: c, publish_count: pub,
+      followers: f, new_followers: nf, plays: p, likes: l, comments: c,
+      shares: s, bookmarks: bm, publish_count: pub,
     };
     if (platform === "小红书") { body.note_reads = p; body.plays = 0; }
     else if (platform === "公众号") { body.reads = p; body.plays = 0; }
@@ -878,10 +887,13 @@ async function saveBatch(modalId, platform, count) {
     try {
       const r = await fetch(API + "/data/metrics", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (r.ok) saved++;
-    } catch(e) {}
+      else errors.push(`${acctName}: HTTP ${r.status}`);
+    } catch(e) { errors.push(`${acctName}: ${e.message}`); }
   }
   closeModal(modalId);
-  toast(`已保存 ${saved}/${count} 个账号`, "success");
+  if (saved === count) toast(`已保存 ${saved}/${count} 个账号`, "success");
+  else if (saved > 0) toast(`部分成功 ${saved}/${count}：${errors.join("; ")}`, "warning");
+  else toast(`保存失败：${errors.join("; ")}`, "error");
   if (window._pdPlatform) loadPlatformDetail(window._pdPlatform);
   else loadDashboard();
 }
@@ -891,7 +903,7 @@ function openMetricForm() {
   const mid = "metric-" + Date.now();
   const thisWeek = getCurrentWeek();
   const html = `<div class="modal-overlay show" id="${mid}"><div class="modal"><h2>录入本周数据</h2>
-    <div class="form-group"><label>平台 <span class="required">*</span></label><select id="mf-plat" onchange="updateAccountSelect('mf-plat','mf-acct')">${PLATFORMS.map(p=>`<option>${p}</option>`).join("")}</select></div>
+    <div class="form-group"><label>平台 <span class="required">*</span></label><select id="mf-plat" onchange="updateAccountSelect('mf-plat','mf-acct');togglePlatformFields()">${PLATFORMS.map(p=>`<option>${p}</option>`).join("")}</select></div>
     <div class="form-group"><label>账号</label><select id="mf-acct"></select></div>
     <div class="form-group"><label>周次 <span class="required">*</span></label><input type="week" id="mf-week" value="${thisWeek}"><span class="error-msg">请选择周次</span></div>
     <div class="form-group"><label>粉丝数</label><input type="number" id="mf-followers" value="0"></div>
@@ -900,6 +912,7 @@ function openMetricForm() {
       <div class="form-group"><label>点赞</label><input type="number" id="mf-likes" value="0"></div>
       <div class="form-group"><label>评论</label><input type="number" id="mf-comments" value="0"></div>
       <div class="form-group"><label>分享</label><input type="number" id="mf-shares" value="0"></div>
+      <div class="form-group" id="mf-bookmark-group" style="display:none"><label>收藏</label><input type="number" id="mf-bookmarks" value="0"></div>
       <div class="form-group"><label>新增粉丝</label><input type="number" id="mf-newf" value="0"></div>
       <div class="form-group"><label>发布数</label><input type="number" id="mf-pub" value="0"></div>
     </div>
@@ -909,6 +922,12 @@ function openMetricForm() {
     </div>
   </div></div>`;
   document.body.insertAdjacentHTML("beforeend", html);
+}
+
+function togglePlatformFields() {
+  const plat = document.getElementById("mf-plat").value;
+  const bookmark = document.getElementById("mf-bookmark-group");
+  if (bookmark) bookmark.style.display = (plat === "小红书") ? "" : "none";
 }
 
 async function saveMetric(modalId) {
@@ -924,6 +943,7 @@ async function saveMetric(modalId) {
     likes: +$qs("#mf-likes").value||0,
     comments: +$qs("#mf-comments").value||0,
     shares: +$qs("#mf-shares").value||0,
+    bookmarks: +($qs("#mf-bookmarks")?.value)||0,
     new_followers: +$qs("#mf-newf").value||0,
     publish_count: +$qs("#mf-pub").value||0,
     reads: $qs("#mf-plat").value === "公众号" ? (+$qs("#mf-plays").value||0) : 0,
