@@ -75,19 +75,6 @@
       <!-- 区块1: 平台数据 -->
       <div class="dashtab" id="dashtab-overview">
       <div class="stat-grid cols-4" id="overview-grid"></div>
-      <div>
-        <div class="card-header" style="padding:0 0 14px 0;border:none;display:flex;align-items:center;justify-content:space-between">
-          <div><span class="card-title">本月进度</span> <span class="card-subtitle">8.1 - 8.9</span></div>
-          <button class="btn btn-outline btn-sm" onclick="openTargetSettings()">🎯 设置月度目标</button>
-        </div>
-        <div class="stat-grid cols-3 kpi-grid" id="kpi-grid-container"></div>
-      </div>
-      <div style="margin-bottom:28px">
-        <div class="card-header" style="padding:0 0 14px 0;border:none">
-          <span class="card-title">本周数据总览</span>
-        </div>
-        <div class="stat-grid cols-3 overview-table-cards" id="overview-table-container"></div>
-      </div>
       </div>
 
       <!-- 区块2: 本月进度 -->
@@ -96,7 +83,7 @@
           <div><span class="card-title">本月进度</span> <span class="card-subtitle">8.1 - 8.9</span></div>
           <button class="btn btn-outline btn-sm" onclick="openTargetSettings()">🎯 设置月度目标</button>
         </div>
-        <div class="stat-grid cols-3 kpi-grid" id="kpi-grid-container-2"></div>
+        <div class="stat-grid cols-3 kpi-grid" id="kpi-grid-container"></div>
       </div>
 
       <!-- 区块3: 平台趋势 -->
@@ -119,48 +106,6 @@
       <!-- 区块5: 线索数据 -->
       <div class="dashtab" id="dashtab-leads" style="display:none">
         <div class="empty-state"><p>线索数据模块开发中...</p></div>
-      </div>
-          <span class="card-subtitle" id="overview-week-label"></span>
-        </div>
-        <div class="card">
-          <div class="card-body" style="padding:0">
-            <table class="data-table" id="overview-table">
-              <thead><tr><th>平台</th><th>粉丝</th><th>新增</th><th>播放/阅读</th><th>互动</th><th>发布</th><th>环比</th></tr></thead>
-              <tbody id="overview-table-body"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:32px">
-        <div class="card">
-            <div class="card-header">
-            <span class="card-title">平台趋势</span>
-            <div style="display:flex;gap:4px">
-              <button class="btn btn-outline btn-sm detail-tab active" data-platform="抖音">抖音</button>
-              <button class="btn btn-outline btn-sm detail-tab" data-platform="视频号">视频号</button>
-              <button class="btn btn-outline btn-sm detail-tab" data-platform="公众号">公众号</button>
-              <button class="btn btn-outline btn-sm detail-tab" data-platform="小红书">小红书</button>
-            </div>
-          </div>
-          <div class="card-body">
-            <div id="account-tabs" style="display:none;gap:4px;margin-bottom:12px;flex-wrap:wrap"></div>
-            <div style="display:flex;align-items:flex-end;gap:4px;height:120px;margin-bottom:14px" id="trend-bars">
-              <div class="skeleton" style="flex:1;height:80px;border-radius:2px 2px 0 0"></div>
-              <div class="skeleton" style="flex:1;height:100px;border-radius:2px 2px 0 0"></div>
-              <div class="skeleton" style="flex:1;height:60px;border-radius:2px 2px 0 0"></div>
-              <div class="skeleton" style="flex:1;height:90px;border-radius:2px 2px 0 0"></div>
-              <div class="skeleton" style="flex:1;height:70px;border-radius:2px 2px 0 0"></div>
-              <div class="skeleton" style="flex:1;height:110px;border-radius:2px 2px 0 0"></div>
-              <div class="skeleton" style="flex:1;height:85px;border-radius:2px 2px 0 0"></div>
-            </div>
-            <table class="data-table"><thead><tr><th>周</th><th>播放/阅读</th><th>点赞</th><th>评论</th><th>新增粉丝</th></tr></thead><tbody id="detail-table-body"></tbody></table>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">本周热门</span></div>
-          <div class="card-body"><div id="top5-list"></div></div>
-        </div>
       </div>
     </div>
   </div>

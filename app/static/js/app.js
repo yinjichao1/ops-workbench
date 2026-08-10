@@ -7,10 +7,12 @@ function switchDashtab(el, tab) {
   document.querySelectorAll(".dashtab").forEach(d => d.style.display = "none");
   const target = document.getElementById("dashtab-" + tab);
   if (target) target.style.display = "";
-  // 同步侧边栏子菜单高亮
   document.querySelectorAll(".sidebar-sub-item").forEach(s => {
     s.classList.toggle("active", s.dataset.tab === tab);
   });
+  // 切换 tab 时按需加载数据
+  if (tab === "trend") loadDashboardDetail(null, "抖音");
+  if (tab === "hot") loadHotContent();
 }
 
 function switchDashtabFromSidebar(tab) {
@@ -505,28 +507,34 @@ async function loadDashboardDetail(allData, platform, account) {
     }
   } catch(e) {}
 
-  // Top 5
+  // Top 5 — 在「本周热门」tab 里跨所有平台
+async function loadHotContent() {
+  const top5Div = $qs("#top5-container");
+  if (!top5Div) return;
   try {
     const ov = await fetch(API + "/dashboard/overview");
     const { data } = await ov.json();
-    const platData = data.find(d => d.platform === platform);
-    const top5Div = $qs("#top5-list");
-    if (platData && platData.top5 && platData.top5.length) {
-      top5Div.innerHTML = platData.top5.map((c, i) => {
-        const rankCls = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : 'rn';
-        return `
-        <div class="top-item">
-          <div class="top-rank ${rankCls}">${i + 1}</div>
-          <div class="top-info">
-            <div class="tt">${c.title || '未命名'}</div>
-            <div class="tm">${platform}</div>
-          </div>
-          <div class="top-stat-r">${fmt(c.likes)}</div>
-        </div>`;
-      }).join("");
-    } else {
+    const items = [];
+    data.forEach(d => {
+      (d.top5 || []).forEach(c => items.push({ ...c, platform: d.platform }));
+    });
+    if (!items.length) {
       top5Div.innerHTML = '<div class="empty-state"><h3>暂无热门内容</h3><p>发布内容并录入数据后，排名会自动出现</p></div>';
+      return;
     }
+    items.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+    top5Div.innerHTML = items.slice(0, 10).map((c, i) => {
+      const rankCls = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : 'rn';
+      return `
+      <div class="top-item">
+        <div class="top-rank ${rankCls}">${i + 1}</div>
+        <div class="top-info">
+          <div class="tt">${c.title || '未命名'}</div>
+          <div class="tm">${c.platform}</div>
+        </div>
+        <div class="top-stat-r">${fmt(c.likes)}</div>
+      </div>`;
+    }).join("");
   } catch(e) {}
 }
 
