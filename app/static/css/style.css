@@ -160,8 +160,6 @@ body {
 .breadcrumb { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 .breadcrumb span { color: var(--text-secondary); }
 .page-body { flex:1; padding: 32px; max-width: 1400px; width: 100%; }
-.page { display: none; }
-.page.active { display: block; }
 
 /* ===== CARDS · Ghost borders ===== */
 .card { background: var(--bg-surface); border: 1px solid var(--border-soft); border-radius: var(--radius); }
