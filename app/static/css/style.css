@@ -148,11 +148,13 @@ body {
 .sidebar-user-info .name { font-size: 12px; font-weight: 600; color: var(--text-primary); }
 
 /* ===== MAIN ===== */
-.main-content { margin-left: var(--sidebar-width); flex:1; min-height:100vh; display:flex; flex-direction:column; }
+.main-content { margin-left: var(--sidebar-width); flex:1; min-height:100vh; display:flex; flex-direction:column; align-items: stretch; }
+.page { display: none; width: 100%; }
+.page.active { display: flex; flex-direction: column; flex: 1; }
 .page-header {
   padding: 22px 32px; display: flex; align-items: center;
   justify-content: space-between; border-bottom: 1px solid var(--border-soft);
-  background: var(--bg-surface);
+  background: var(--bg-surface); width: 100%;
 }
 .page-header h1 { font-family: var(--font-display); font-size: 21px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
 .breadcrumb { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
