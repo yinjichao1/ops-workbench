@@ -80,12 +80,8 @@ def dashboard_overview(
         last_tue = this_tue - timedelta(weeks=1)
     else:
         # 默认显示上周
-        last_mon, last_tue = _week_range(today)
-        this_mon = last_mon - timedelta(weeks=1)
-        this_tue = last_tue - timedelta(weeks=1)
-        # swap: this变成上周, last变成前一周
-        this_mon, last_mon = last_mon, this_mon
-        this_tue, last_tue = last_tue, this_tue
+        this_mon, this_tue = _last_week_range(today)
+        last_mon, last_tue = this_mon - timedelta(weeks=1), this_tue - timedelta(weeks=1)
 
     # Available weeks for filter
     all_weeks = (
