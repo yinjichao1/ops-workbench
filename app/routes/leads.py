@@ -61,18 +61,45 @@ def leads_summary(
     invalid = sum(1 for r in rows if r.validity == "无效")
     pending = sum(1 for r in rows if r.validity == "待定")
 
-    by_status = defaultdict(int)
+    by_source = defaultdict(int)
     by_validity = defaultdict(int)
     by_region = defaultdict(int)
     by_day = defaultdict(int)
     intent_dist = defaultdict(int)
+    sub_douyin = defaultdict(int)
+    sub_gzh = defaultdict(int)
+    sub_shipin = defaultdict(int)
+
     for r in rows:
         by_source[r.source or "其他"] += 1
-        by_status[r.status or "未知"] += 1
         by_validity[r.validity or "待定"] += 1
         by_region[r.owner or "未知"] += 1
         intent_dist[r.intent or 0] += 1
         by_day[r.date.isoformat()] += 1
+
+        note = r.note or ""
+        if r.source == "抖音":
+            found = False
+            for kw, label in [("思格教育抖音", "思格教育抖音号"), ("葛老师抖音", "葛老师抖音号"), ("范校抖音", "范校抖音号")]:
+                if kw in note:
+                    sub_douyin[label] += 1
+                    found = True
+                    break
+            if not found:
+                sub_douyin["其他抖音来源"] += 1
+
+        if r.source == "微信公众号":
+            if "匹配工具" in note or "表单" in note:
+                sub_gzh["表单/匹配工具"] += 1
+            elif "进群" in note or "社群" in note:
+                sub_gzh["进群/加社群"] += 1
+            elif "企业微信" in note:
+                sub_gzh["企业微信咨询"] += 1
+            else:
+                sub_gzh["其他公众号"] += 1
+
+        if r.source == "微信视频号":
+            sub_shipin["范校视频号" if "范校视频号" in note else "其他视频号"] += 1
 
     contact_sum = sum(r.contact_count or 0 for r in rows)
     high_contact = sum(1 for r in rows if (r.contact_count or 0) >= 3)
@@ -85,11 +112,12 @@ def leads_summary(
         "contact_total": contact_sum,
         "contact_avg": round(contact_sum / total, 1) if total else 0,
         "high_contact": high_contact,
-        "by_source": [{"name": k, "count": v, "pct": round(v / total * 100, 1) if total else 0}
-                      for k, v in sorted(by_source.items(), key=lambda x: -x[1])],
-        "by_status": [{"name": k, "count": v} for k, v in by_status.items()],
+        "by_source": [{"name": k, "count": v} for k, v in sorted(by_source.items(), key=lambda x: -x[1])],
         "by_validity": dict(by_validity),
         "by_region": [{"name": k, "count": v} for k, v in sorted(by_region.items(), key=lambda x: -x[1])],
         "by_day": [{"date": k, "count": v} for k, v in sorted(by_day.items())],
         "intent_distribution": [{"level": k, "count": v} for k, v in sorted(intent_dist.items())],
+        "sub_douyin": [{"name": k, "count": v} for k, v in sorted(sub_douyin.items(), key=lambda x: -x[1])],
+        "sub_gzh": [{"name": k, "count": v} for k, v in sorted(sub_gzh.items(), key=lambda x: -x[1])],
+        "sub_shipin": [{"name": k, "count": v} for k, v in sorted(sub_shipin.items(), key=lambda x: -x[1])],
     }
