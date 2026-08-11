@@ -151,7 +151,7 @@ body {
 /* ===== MAIN ===== */
 .main-content { margin-left: var(--sidebar-width); flex:1; min-height:100vh; display:flex; flex-direction:column; align-items: stretch; width: calc(100% - var(--sidebar-width)); }
 .page { display: none; width: 100%; }
-.page.active { display: flex; flex-direction: column; flex: 1; align-items: stretch; }
+.page.active { display: flex; flex-direction: column; flex: 1; align-items: stretch; width: 100%; min-width: 0; }
 .dashtab { display: none; width: 100%; }
 .dashtab.active { display: block; }
 .page-header {
