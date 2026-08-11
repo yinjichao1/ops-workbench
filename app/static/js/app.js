@@ -68,6 +68,17 @@ function switchDashtabFromSidebar(tab) {
 }
 
 let ovCurrentMode = "week";
+function getPreviousMonthValue() {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+function getPreviousWeekDate() {
+  const d = new Date();
+  d.setDate(d.getDate() - (d.getDay() || 7) - 6);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 function switchOvMode(mode) {
   ovCurrentMode = mode;
   const w = document.getElementById("ov-mode-week");
@@ -85,6 +96,10 @@ function switchOvMode(mode) {
     if (wkP) wkP.style.display = "none";
     if (moP) moP.style.display = "";
   }
+  if (mode === "month" && moP && !moP.value) moP.value = getPreviousMonthValue();
+  if (mode === "week" && wkP && !wkP.value) wkP.value = getPreviousWeekDate();
+  const entryBtn = document.getElementById("metric-entry-btn");
+  if (entryBtn) entryBtn.textContent = mode === "month" ? "录入月度数据" : "录入周度数据";
   onOvFilterChange();
 }
 
@@ -1194,11 +1209,10 @@ async function saveBatch(modalId, platform, count) {
 
 // ========== DATA ENTRY (P1: new metric form) ==========
 function openMetricForm(mode) {
-  mode = mode || "week";
+  mode = mode || ovCurrentMode || "week";
   const mid = "metric-" + Date.now();
-  const thisWeek = getLastWeek();
-  const now = new Date();
-  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const thisWeek = getPreviousWeekDate();
+  const thisMonth = getPreviousMonthValue();
   const isMonth = mode === "month";
   const html = `<div class="modal-overlay show" id="${mid}"><div class="modal"><h2>${isMonth ? '录入本月数据' : '录入本周数据'}</h2>
     <div class="form-group"><label>平台 <span class="required">*</span></label><select id="mf-plat" onchange="updateAccountSelect('mf-plat','mf-acct');togglePlatformFields()">${PLATFORMS.map(p=>`<option>${p}</option>`).join("")}</select></div>
@@ -1588,7 +1602,7 @@ async function uploadLeadsFile(input) {
   const mode = $qs("#leads-mode")?.value || "week";
   let week = "", month = "", year = 0;
   if (mode === "week") week = $qs("#leads-week")?.value || getLastWeek();
-  else if (mode === "month") month = $qs("#leads-month")?.value || "";
+  else if (mode === "month") month = $qs("#leads-month")?.value || getPreviousMonthValue();
   else if (mode === "year") {
     const yv = parseInt($qs("#leads-year")?.value);
     year = (yv >= 2020 && yv <= 2030) ? yv : new Date().getFullYear();
@@ -1624,8 +1638,8 @@ function onLeadsModeChange() {
 async function loadLeads() {
   const mode = $qs("#leads-mode")?.value || "week";
   let week = "", month = "", year = 0;
-  if (mode === "week") week = $qs("#leads-week")?.value || "";
-  else if (mode === "month") month = $qs("#leads-month")?.value || "";
+  if (mode === "week") week = $qs("#leads-week")?.value || getPreviousWeekDate();
+  else if (mode === "month") month = $qs("#leads-month")?.value || getPreviousMonthValue();
   else if (mode === "year") {
     const yv = parseInt($qs("#leads-year")?.value);
     year = (yv >= 2020 && yv <= 2030) ? yv : new Date().getFullYear();

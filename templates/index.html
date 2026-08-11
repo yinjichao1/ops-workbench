@@ -69,7 +69,7 @@
         <div class="breadcrumb">思格教育 <span aria-hidden="true">/</span> 运营工作台 <span aria-hidden="true">/</span> 数据看板</div>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-outline btn-sm" onclick="openMetricForm(ovCurrentMode||'week')">录入数据</button>
+        <button class="btn btn-outline btn-sm" id="metric-entry-btn" onclick="openMetricForm(ovCurrentMode||'week')">录入周度数据</button>
         <button class="btn btn-outline btn-sm" onclick="openContentForm()">录入内容</button>
         <button class="btn btn-outline btn-sm" onclick="openExportDialog()">导出数据</button>
         <button class="btn btn-primary btn-sm" onclick="document.querySelector('[data-page=reports]').click()">生成周报</button>
