@@ -103,7 +103,7 @@
   --xhs: #F87171; --xhs-muted: rgba(248,113,113,0.10);
   --up: #34D399; --down: #F87171;
 
-  --sidebar-width: 220px;
+  --sidebar-width: 200px;
   --radius-sm: 6px; --radius: 10px; --radius-lg: 14px;
   --font-display: 'Satoshi', -apple-system, sans-serif;
   --font-body: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -127,9 +127,9 @@ body {
   display: flex; flex-direction: column;
   position: fixed; top:0; left:0; bottom:0; z-index:100;
 }
-.sidebar-brand { padding: 28px 20px 24px; border-bottom: 1px solid var(--border-soft); }
-.sidebar-logo-text { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
-.sidebar-logo-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.06em; margin-top: 2px; }
+.sidebar-brand { padding: 18px 16px 14px; border-bottom: 1px solid var(--border-soft); }
+.sidebar-logo-text { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+.sidebar-logo-sub { font-size: 9px; color: var(--text-muted); letter-spacing: 0.06em; margin-top: 1px; }
 
 .sidebar-nav { flex:1; padding: 12px 10px; display:flex; flex-direction:column; gap:1px; }
 .sidebar-section-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; padding: 18px 8px 6px; }
@@ -159,14 +159,14 @@ body {
 .dashtab { display: none; width: 100%; }
 .dashtab.active { display: block; }
 .page-header {
-  padding: 22px 32px; display: flex; align-items: center;
+  padding: 14px 28px; display: flex; align-items: center;
   justify-content: space-between; border-bottom: 1px solid var(--border-soft);
   background: var(--bg-surface); width: 100%;
 }
 .page-header h1 { font-family: var(--font-display); font-size: 21px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
 .breadcrumb { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 .breadcrumb span { color: var(--text-secondary); }
-.page-body { flex:1; padding: 32px; width: 100%; }
+.page-body { flex:1; padding: 20px 28px; width: 100%; }
 .page-body > * { max-width: 100%; }
 
 /* ===== CARDS · Ghost borders ===== */
