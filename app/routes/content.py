@@ -114,6 +114,16 @@ def update_content(content_id: int, body: ContentUpdateIn, db: Session = Depends
     return {"ok": True}
 
 
+@router.delete("/detail/{content_id}")
+def delete_content(content_id: int, db: Session = Depends(get_db)):
+    record = db.query(ContentDetail).filter(ContentDetail.id == content_id).first()
+    if not record:
+        return {"ok": False, "error": "not found"}
+    db.delete(record)
+    db.commit()
+    return {"ok": True}
+
+
 # ---------- Content Calendar ----------
 class CalendarIn(BaseModel):
     title: str

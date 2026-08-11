@@ -808,12 +808,19 @@ async function loadContent() {
         <td>${d.is_viral ? '🔥 爆款' : '常规'}</td>
         <td>${d.likes || 0}</td>
         <td>${d.author || '-'}</td>
-        <td><button class="btn btn-outline btn-sm" onclick="editContent(${d.id})">编辑</button></td>
+        <td><button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation();editContent(${d.id})">编辑</button> <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteContent(${d.id})">删除</button></td>
       </tr>
     `).join("");
   } catch(e) {
     toast("内容数据加载失败", "error");
   }
+}
+
+async function deleteContent(id) {
+  if (!confirm("确定删除这条内容吗？删除后不可恢复。")) return;
+  const r = await fetch(API + `/content/detail/${id}`, { method: "DELETE" });
+  if (!r.ok) { toast("删除失败", "error"); return; }
+  loadContent(); toast("内容已删除", "success");
 }
 
 // ========== CALENDAR ==========
@@ -1052,12 +1059,18 @@ async function loadTopics() {
         <td>${d.platforms || '-'}</td>
         <td><span class="status-dot ${d.status==='已采纳'?'active':d.status==='已发布'?'active':d.status==='待评估'?'warning':'muted'}">${d.status}</span></td>
         <td>${d.creator || '-'}</td>
-        <td><button class="btn btn-outline btn-sm" onclick="editTopic(${d.id})">编辑</button> ${d.status==='待评估'?`<button class="btn btn-primary btn-sm" onclick="openTopicToCal(${d.id},'${d.title.replace(/'/g,"\\'")}')">转为排期</button>`:''}</td>
+        <td><button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation();editTopic(${d.id})">编辑</button> <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteTopic(${d.id})">删除</button> ${d.status==='待评估'?`<button class="btn btn-primary btn-sm" onclick="openTopicToCal(${d.id},'${d.title.replace(/'/g,"\\'")}')">转为排期</button>`:''}</td>
       </tr>
     `).join("");
   } catch(e) { toast("选题数据加载失败", "error"); }
 }
 
+async function deleteTopic(id) {
+  if (!confirm("确定删除这个选题吗？删除后不可恢复。")) return;
+  const r = await fetch(API + `/topics/${id}`, { method: "DELETE" });
+  if (!r.ok) { toast("删除失败", "error"); return; }
+  loadTopics(); toast("选题已删除", "success");
+}
 async function editTopic(id) {
   const r = await fetch(API + "/topics?page_size=100");
   const { data } = await r.json();

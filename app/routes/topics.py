@@ -101,6 +101,16 @@ def update_topic(topic_id: int, body: TopicUpdateIn, db: Session = Depends(get_d
     return {"ok": True}
 
 
+@router.delete("/{topic_id}")
+def delete_topic(topic_id: int, db: Session = Depends(get_db)):
+    record = db.query(TopicIdea).filter(TopicIdea.id == topic_id).first()
+    if not record:
+        return {"ok": False, "error": "not found"}
+    db.delete(record)
+    db.commit()
+    return {"ok": True}
+
+
 @router.post("/{topic_id}/to-calendar")
 def topic_to_calendar(
     topic_id: int,
