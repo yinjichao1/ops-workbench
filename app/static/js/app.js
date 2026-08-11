@@ -113,7 +113,10 @@ function toggleSubmenu(el) {
   const submenuId = sidebarItem?.dataset.page;
   if (!submenuId) return;
   const submenu = document.querySelector(`[data-submenu="${submenuId}"]`);
-  if (submenu) submenu.classList.toggle("open");
+  if (submenu) {
+    submenu.classList.toggle("open");
+    el.setAttribute("aria-expanded", submenu.classList.contains("open") ? "true" : "false");
+  }
   el.textContent = submenu?.classList.contains("open") ? "▾" : "▸";
 }
 

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>思格教育 · 运营工作台</title>
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=0811c">
+<link rel="stylesheet" href="/static/css/style.css?v=0811d">
 </head>
 <body>
 
@@ -16,9 +16,9 @@
   </div>
   <nav class="sidebar-nav">
     <div class="sidebar-section-label">概览</div>
-    <button class="sidebar-item active" data-page="dashboard">
-      <span class="nav-icon">&#9679;</span><span class="nav-text">数据看板</span>
-      <span class="nav-toggle" onclick="event.stopPropagation();toggleSubmenu(this)">▾</span>
+    <button class="sidebar-item active" data-page="dashboard" aria-label="数据看板">
+      <span class="nav-icon" aria-hidden="true">&#9679;</span><span class="nav-text">数据看板</span>
+      <span class="nav-toggle" role="button" aria-expanded="true" tabindex="0" onclick="event.stopPropagation();toggleSubmenu(this)">▾</span>
     </button>
     <div class="sidebar-submenu open" data-submenu="dashboard">
       <button class="sidebar-sub-item active" data-tab="overview" onclick="switchDashtabFromSidebar('overview')">平台数据</button>
@@ -27,23 +27,23 @@
       <button class="sidebar-sub-item" data-tab="hot" onclick="switchDashtabFromSidebar('hot')">本周热门</button>
       <button class="sidebar-sub-item" data-tab="leads" onclick="switchDashtabFromSidebar('leads')">线索数据</button>
     </div>
-    <button class="sidebar-item" data-page="calendar">
-      <span class="nav-icon">📅</span><span class="nav-text">内容排期</span>
+    <button class="sidebar-item" data-page="calendar" aria-label="内容排期">
+      <span class="nav-icon" aria-hidden="true">📅</span><span class="nav-text">内容排期</span>
     </button>
-    <button class="sidebar-item" data-page="content">
-      <span class="nav-icon">📄</span><span class="nav-text">内容明细</span>
+    <button class="sidebar-item" data-page="content" aria-label="内容明细">
+      <span class="nav-icon" aria-hidden="true">📄</span><span class="nav-text">内容明细</span>
     </button>
     <div class="sidebar-section-label">管理</div>
-    <button class="sidebar-item" data-page="tasks">
-      <span class="nav-icon">✅</span><span class="nav-text">任务管理</span>
+    <button class="sidebar-item" data-page="tasks" aria-label="任务管理">
+      <span class="nav-icon" aria-hidden="true">✅</span><span class="nav-text">任务管理</span>
       <span class="nav-badge" id="task-count">0</span>
     </button>
-    <button class="sidebar-item" data-page="topics">
-      <span class="nav-icon">⭐</span><span class="nav-text">选题库</span>
+    <button class="sidebar-item" data-page="topics" aria-label="选题库">
+      <span class="nav-icon" aria-hidden="true">⭐</span><span class="nav-text">选题库</span>
     </button>
     <div class="sidebar-section-label">输出</div>
-    <button class="sidebar-item" data-page="reports">
-      <span class="nav-icon">📤</span><span class="nav-text">报表生成</span>
+    <button class="sidebar-item" data-page="reports" aria-label="报表生成">
+      <span class="nav-icon" aria-hidden="true">📤</span><span class="nav-text">报表生成</span>
     </button>
   </nav>
   <div class="sidebar-footer">
@@ -63,7 +63,7 @@
     <div class="page-header">
       <div>
         <h1 id="page-title">数据看板</h1>
-        <div class="breadcrumb">思格教育 <span>/</span> 运营工作台 <span>/</span> 数据看板</div>
+        <div class="breadcrumb">思格教育 <span aria-hidden="true">/</span> 运营工作台 <span aria-hidden="true">/</span> 数据看板</div>
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-outline btn-sm" onclick="openMetricForm()">录入数据</button>
@@ -80,8 +80,8 @@
           <button class="btn btn-sm" id="ov-mode-month" style="background:var(--bg-elevated);color:var(--text-muted);border:1px solid var(--border);border-radius:0 4px 4px 0;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer" onclick="switchOvMode('month')">按月维度</button>
         </div>
         <div style="display:flex;gap:6px;align-items:center">
-          <input type="week" id="ov-week-picker" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary)">
-          <input type="month" id="ov-month-picker" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary);display:none">
+          <input type="week" id="ov-week-picker" aria-label="选择周次" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary)">
+          <input type="month" id="ov-month-picker" aria-label="选择月份" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary);display:none">
           <span id="ov-period-label" style="font-size:12px;color:var(--text-muted)"></span><button class="btn btn-outline btn-sm" onclick="onOvFilterChange()">查询</button>
         </div>
       </div>
@@ -125,16 +125,16 @@
               <option value="month">按月</option>
               <option value="year">按年</option>
             </select>
-            <input type="week" id="leads-week" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary)">
-            <input type="month" id="leads-month" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary);display:none">
-            <input type="number" id="leads-year" min="2020" max="2030" placeholder="2026" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary);width:80px;display:none">
+            <input type="week" id="leads-week" aria-label="选择线索周次" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary)">
+            <input type="month" id="leads-month" aria-label="选择线索月份" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary);display:none">
+            <input type="number" id="leads-year" min="2020" max="2030" aria-label="选择线索年份" placeholder="2026" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary);width:80px;display:none">
             <button class="btn btn-outline btn-sm" onclick="loadLeads()">查询</button>
             <button class="btn btn-primary btn-sm" onclick="document.getElementById('leads-upload').click()">📁 上传</button>
             <input type="file" id="leads-upload" accept=".xlsx,.xls" style="display:none" onchange="uploadLeadsFile(this)">
           </div>
         </div>
         <div class="stat-grid cols-4" id="leads-cards"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:20px">
           <div>
             <div class="card-header" style="padding:0 0 10px 0;border:none"><span class="card-title">渠道 × 有效性</span></div>
             <div id="leads-source-chart"></div>
