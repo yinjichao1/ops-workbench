@@ -642,13 +642,7 @@ body {
   color: var(--accent-strong);
   box-shadow: inset 2px 0 0 var(--accent);
 }
-/* Accent gradient text for headers */
-.page-header h1 {
-  background: linear-gradient(135deg, var(--text-primary), var(--accent-strong));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+/* Accent gradient text removed — was making h1 invisible */
 /* Button hover enhancement */
 .btn-primary:hover {
   box-shadow: 0 0 16px var(--accent-glow);
