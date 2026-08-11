@@ -808,6 +808,7 @@ async function loadContent() {
         <td>${d.is_viral ? '🔥 爆款' : '常规'}</td>
         <td>${d.likes || 0}</td>
         <td>${d.author || '-'}</td>
+        <td><button class="btn btn-outline btn-sm" onclick="editContent(${d.id})">编辑</button></td>
       </tr>
     `).join("");
   } catch(e) {
@@ -1051,12 +1052,35 @@ async function loadTopics() {
         <td>${d.platforms || '-'}</td>
         <td><span class="status-dot ${d.status==='已采纳'?'active':d.status==='已发布'?'active':d.status==='待评估'?'warning':'muted'}">${d.status}</span></td>
         <td>${d.creator || '-'}</td>
-        <td>${d.status==='待评估'?`<button class="btn btn-primary btn-sm" onclick="openTopicToCal(${d.id},'${d.title.replace(/'/g,"\\'")}')">转为排期</button>`:''}</td>
+        <td><button class="btn btn-outline btn-sm" onclick="editTopic(${d.id})">编辑</button> ${d.status==='待评估'?`<button class="btn btn-primary btn-sm" onclick="openTopicToCal(${d.id},'${d.title.replace(/'/g,"\\'")}')">转为排期</button>`:''}</td>
       </tr>
     `).join("");
   } catch(e) { toast("选题数据加载失败", "error"); }
 }
 
+async function editTopic(id) {
+  const r = await fetch(API + "/topics?page_size=100");
+  const { data } = await r.json();
+  const item = data.find(x => x.id === id);
+  if (!item) { toast("未找到选题", "error"); return; }
+  const mid = "topic-edit-" + Date.now();
+  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal"><h2>编辑选题</h2>
+    <div class="form-group"><label>标题</label><input id="et-title" value="${item.title || ""}"></div>
+    <div class="form-group"><label>来源</label><input id="et-source" value="${item.source || ""}"></div>
+    <div class="form-group"><label>适配平台</label><input id="et-platforms" value="${item.platforms || ""}"></div>
+    <div class="form-group"><label>优先级</label><select id="et-priority">${["高","中","低"].map(v => `<option ${item.priority===v?"selected":""}>${v}</option>`).join("")}</select></div>
+    <div class="form-group"><label>状态</label><select id="et-status">${["待评估","已采纳","已发布"].map(v => `<option ${item.status===v?"selected":""}>${v}</option>`).join("")}</select></div>
+    <div class="form-group"><label>备注</label><textarea id="et-notes">${item.notes || ""}</textarea></div>
+    <div class="form-actions"><button class="btn btn-outline btn-sm" onclick="closeModal('${mid}')">取消</button><button class="btn btn-primary btn-sm" onclick="saveTopicEdit(${id},'${mid}')">保存修改</button></div>
+  </div></div>`;
+  document.body.insertAdjacentHTML("beforeend", html);
+}
+async function saveTopicEdit(id, modalId) {
+  const body = { title: $qs("#et-title").value, source: $qs("#et-source").value, platforms: $qs("#et-platforms").value, priority: $qs("#et-priority").value, status: $qs("#et-status").value, notes: $qs("#et-notes").value };
+  const r = await fetch(API + `/topics/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  if (!r.ok) { toast("保存失败", "error"); return; }
+  closeModal(modalId); loadTopics(); toast("选题已更新", "success");
+}
 function openTopicToCal(id, title) {
   const mid = "tc-" + Date.now();
   const html = `<div class="modal-overlay show" id="${mid}"><div class="modal"><h2>选题转为排期</h2>

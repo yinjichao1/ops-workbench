@@ -210,8 +210,15 @@
     <div class="page-body">
       <div class="card">
         <div class="card-body" style="padding:0">
+          <div class="card-header" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="card-title">内容明细</span>
+            <select id="content-mode" onchange="onPeriodFilterChange('content',loadContent)"><option value="week">按周</option><option value="month">按月</option></select>
+            <input type="week" id="content-week" aria-label="内容周次">
+            <input type="month" id="content-month" aria-label="内容月份" style="display:none">
+            <button class="btn btn-outline btn-sm" onclick="loadContent()">查询</button>
+          </div>
           <table class="data-table" id="content-table">
-            <thead><tr><th>日期</th><th>平台</th><th>类型</th><th>标题</th><th>标记</th><th>点赞</th><th>负责人</th></tr></thead>
+            <thead><tr><th>日期</th><th>平台</th><th>类型</th><th>标题</th><th>标记</th><th>点赞</th><th>负责人</th><th>操作</th></tr></thead>
             <tbody id="content-table-body"></tbody>
           </table>
         </div>
@@ -269,6 +276,6 @@
 
 </div>
 
-<script src="/static/js/app.js?v=0811m"></script>
+<script src="/static/js/app.js?v=0811p"></script>
 </body>
 </html>
