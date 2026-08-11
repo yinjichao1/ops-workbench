@@ -399,11 +399,23 @@ def platform_detail(
     platform: str = Query(...),
     account: str = Query("", description="账号，留空返回该平台所有账号汇总"),
     week: str = Query("", description="周次 '2026-W32' 或 'YYYY-MM-DD'，默认上周"),
+    mode: str = Query("week", description="week 或 month"),
+    month: str = Query("", description="月份 YYYY-MM，按月时使用"),
     db: Session = Depends(get_db),
 ):
-    """平台→账号级联明细：默认显示上周数据。"""
+    """平台→账号级联明细：按周或按月独立统计。"""
     today = date.today()
-    if week:
+    if mode == "month":
+        if month:
+            this_mon = date.fromisoformat(f"{month}-01")
+        else:
+            this_mon = (today.replace(day=1) - timedelta(days=1)).replace(day=1)
+        next_month = this_mon.replace(day=28) + timedelta(days=4)
+        this_sun = next_month - timedelta(days=next_month.day)
+        last_mon = (this_mon - timedelta(days=1)).replace(day=1)
+        last_next = last_mon.replace(day=28) + timedelta(days=4)
+        last_sun = last_next - timedelta(days=last_next.day)
+    elif week:
         this_mon = parse_week(week)
         this_sun = this_mon + timedelta(days=6)
         last_mon = this_mon - timedelta(weeks=1)

@@ -419,6 +419,7 @@ function switchPlatformDetail(platform) {
 // ========== Platform Detail Page ==========
 function openPlatformDetail(platform) {
   window._pdPlatform = platform;
+  window._pdMode = ovCurrentMode || "week";
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.querySelectorAll(".sidebar-item[data-page]").forEach(i => i.classList.remove("active"));
   // Highlight dashboard sidebar item since this is accessed from dashboard
@@ -426,7 +427,12 @@ function openPlatformDetail(platform) {
   if (dashItem) dashItem.classList.add("active");
   document.getElementById("page-platform-detail").classList.add("active");
   document.getElementById("page-title").textContent = "平台明细";
-  loadPlatformDetail(platform);
+  const quickBtn = document.getElementById("pd-quick-entry-btn");
+  if (quickBtn) {
+    quickBtn.textContent = window._pdMode === "month" ? "快速录入本月" : "快速录入本周";
+    quickBtn.onclick = () => openBatchEntry(window._pdPlatform || "抖音", window._pdMode || "week");
+  }
+  loadPlatformDetail(platform, window._pdMode || "week");
 }
 
 function goToDashboard() {
@@ -439,7 +445,8 @@ function goToDashboard() {
   loadDashboard();
 }
 
-async function loadPlatformDetail(platform) {
+async function loadPlatformDetail(platform, mode) {
+  mode = mode || window._pdMode || "week";
   document.getElementById("pd-platform-name").textContent = platform;
   document.getElementById("pd-title").textContent = `${platform} · 数据明细`;
 
@@ -448,22 +455,23 @@ async function loadPlatformDetail(platform) {
   document.getElementById("pd-accounts").innerHTML = "";
 
   try {
-    const r = await fetch(API + `/dashboard/platform-detail?platform=${encodeURIComponent(platform)}`);
+    const r = await fetch(API + `/dashboard/platform-detail?platform=${encodeURIComponent(platform)}&mode=${encodeURIComponent(mode)}`);
     if (!r.ok) throw new Error("平台明细加载失败");
     const data = await r.json();
-    renderPlatformDetail(data, platform);
+    renderPlatformDetail(data, platform, mode);
   } catch(e) {
     console.error(e);
     toast("平台明细加载失败", "error");
   }
 }
 
-function renderPlatformDetail(data, platform) {
+function renderPlatformDetail(data, platform, mode) {
+  mode = mode || window._pdMode || "week";
   const platClasses = { 抖音: "douyin", 视频号: "shipinhao", 公众号: "gzh", 小红书: "xhs" };
   const cls = platClasses[platform] || "";
   const agg = data.aggregate;
 
-  document.getElementById("pd-week-label").textContent = `本周汇总 · ${data.accounts_data.length} 个账号`;
+  document.getElementById("pd-week-label").textContent = `${mode === "month" ? "本月汇总" : "本周汇总"} · ${data.accounts_data.length} 个账号`;
 
   // 平台聚合
   document.getElementById("pd-aggregate").innerHTML = `
@@ -1114,25 +1122,28 @@ async function loadReports(type) {
 function closeModal(id) { const el = document.getElementById(id); if (el) el.remove(); }
 
 // ========== BATCH ENTRY ==========
-async function openBatchEntry(platform) {
+async function openBatchEntry(platform, mode) {
+  mode = mode || window._pdMode || "week";
   const accts = ACCOUNTS[platform] || ["主号"];
-  const thisWeek = getLastWeek();
+  const periodValue = mode === "month" ? getPreviousMonthValue() : getLastWeek();
 
-  // 查上周数据做参考
-  let lastWeekData = {};
+  // 查询同一维度的上一期数据作为参考，周月互不混用
+  let lastPeriodData = {};
   try {
-    const lastMon = new Date(); lastMon.setDate(lastMon.getDate() - lastMon.getDay() - 6);
-    const y = lastMon.getFullYear(); const m = String(lastMon.getMonth()+1).padStart(2,"0"); const d = String(lastMon.getDate()).padStart(2,"0");
-    const lastWeekStart = `${y}-${m}-${d}`;
-    const r = await fetch(API + `/data/metrics?platform=${encodeURIComponent(platform)}&start_date=${lastWeekStart}&limit=50`);
+    const refDate = mode === "month" ? `${getPreviousMonthValue()}-01` : (() => {
+      const lastMon = new Date(); lastMon.setDate(lastMon.getDate() - lastMon.getDay() - 6);
+      const y = lastMon.getFullYear(); const m = String(lastMon.getMonth()+1).padStart(2,"0"); const d = String(lastMon.getDate()).padStart(2,"0");
+      return `${y}-${m}-${d}`;
+    })();
+    const r = await fetch(API + `/data/metrics?platform=${encodeURIComponent(platform)}&start_date=${refDate}&limit=50`);
     if (r.ok) {
       const { data } = await r.json();
-      data.forEach(row => { lastWeekData[row.account || ""] = row; });
+      data.forEach(row => { lastPeriodData[row.account || ""] = row; });
     }
   } catch(e) {}
 
   let rows = accts.map((a, i) => {
-    const prev = lastWeekData[a] || {};
+    const prev = lastPeriodData[a] || {};
     const showBookmark = (platform === "小红书" || platform === "抖音" || platform === "公众号");
     return `<div class="batch-row">
       <div class="batch-account">${a}</div>
@@ -1153,21 +1164,23 @@ async function openBatchEntry(platform) {
   }).join("");
 
   const mid = "batch-" + Date.now();
-  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal" style="max-width:680px"><h2>${platform} · 快速录入本周数据</h2>
-    <div class="form-group"><label>周次</label><input type="week" id="b-week" value="${thisWeek}" style="width:200px"></div>
+  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal" style="max-width:680px"><h2>${platform} · 快速录入${mode === "month" ? "本月" : "本周"}数据</h2>
+    <div class="form-group"><label>${mode === "month" ? "月份" : "周次"}</label><input type="${mode === "month" ? "month" : "week"}" id="b-period" value="${periodValue}" style="width:200px"></div>
     <div class="batch-container">${rows}</div>
-    <div style="font-size:10px;color:var(--text-muted);margin:8px 0">已填入上周数据作为参考，修改后保存</div>
+    <div style="font-size:10px;color:var(--text-muted);margin:8px 0">已填入${mode === "month" ? "上月" : "上周"}数据作为参考，修改后保存；周度与月度数据分别统计</div>
     <div class="form-actions">
       <button class="btn btn-outline btn-sm" onclick="closeModal('${mid}')">取消</button>
-      <button class="btn btn-primary btn-sm" onclick="saveBatch('${mid}','${platform.replace(/'/g,"\\'")}',${accts.length})">一键保存全部</button>
+      <button class="btn btn-primary btn-sm" onclick="saveBatch('${mid}','${platform.replace(/'/g,"\\'")}',${accts.length},'${mode}')">一键保存全部</button>
     </div>
   </div></div>`;
   document.body.insertAdjacentHTML("beforeend", html);
 }
 
-async function saveBatch(modalId, platform, count) {
-  const week = $qs("#b-week").value;
-  if (!week) { toast("请选择周次", "error"); return; }
+async function saveBatch(modalId, platform, count, mode) {
+  mode = mode || window._pdMode || "week";
+  const periodEl = document.querySelector(`#${modalId} #b-period`);
+  const period = periodEl?.value || "";
+  if (!period) { toast(mode === "month" ? "请选择月份" : "请选择周次", "error"); return; }
   let saved = 0, errors = [];
   for (let i = 0; i < count; i++) {
     const acctEl = document.querySelector(`#${modalId} .batch-row:nth-child(${i+1}) .batch-account`);
@@ -1186,7 +1199,7 @@ async function saveBatch(modalId, platform, count) {
     const pub = +($qs(`#b${i}-pub`).value) || 0;
 
     const body = {
-      week, platform, account: acctName,
+      week: mode === "month" ? `${period}-01` : period, platform, account: acctName,
       followers: f, new_followers: nf, plays: p, likes: l, comments: c,
       shares: s, bookmarks: bm, hearts: ht, in_views: iv, completion_rate: cr, publish_count: pub,
     };
@@ -1203,7 +1216,7 @@ async function saveBatch(modalId, platform, count) {
   if (saved === count) toast(`已保存 ${saved}/${count} 个账号`, "success");
   else if (saved > 0) toast(`部分成功 ${saved}/${count}：${errors.join("; ")}`, "warning");
   else toast(`保存失败：${errors.join("; ")}`, "error");
-  if (window._pdPlatform) loadPlatformDetail(window._pdPlatform);
+  if (window._pdPlatform) loadPlatformDetail(window._pdPlatform, mode);
   else loadDashboard();
 }
 
