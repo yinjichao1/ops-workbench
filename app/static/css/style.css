@@ -114,7 +114,7 @@
 body {
   font-family: var(--font-body); background: var(--bg-root);
   color: var(--text-primary); font-size: 14px; line-height: 1.6;
-  -webkit-font-smoothing: antialiased; min-height: 100vh;
+  -webkit-font-smoothing: antialiased; display: flex; min-height: 100vh;
 }
 
 /* ===== SIDEBAR · Light ===== */
