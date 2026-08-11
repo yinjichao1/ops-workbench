@@ -40,7 +40,7 @@ class CalendarBatchItem(BaseModel):
 class TopicBatchItem(BaseModel):
     title: str = ""
     platforms: str = ""
-    status: str = "灵感"
+    status: str = "待评估"
     priority: str = "中"
     source: str = "灵感"
     creator: str = ""
@@ -51,22 +51,19 @@ class TopicBatchItem(BaseModel):
 def batch_create_detail(items: list[DetailBatchItem], db: SqlSession = Depends(get_db)):
     count = 0
     for item in items:
-        try:
-            d = ContentDetail(
-                platform=item.platform,
-                content_type=item.content_type,
-                title=item.title,
-                publish_date=datetime.strptime(item.publish_date, "%Y-%m-%d").date() if item.publish_date else None,
-                url=item.url,
-                impressions=item.impressions, likes=item.likes, comments=item.comments,
-                shares=item.shares, bookmarks=item.bookmarks,
-                completion_rate=item.completion_rate, reads=item.reads,
-                is_viral=item.is_viral, author=item.author, notes=item.notes,
-            )
-            db.add(d)
-            count += 1
-        except Exception:
-            pass
+        d = ContentDetail(
+            platform=item.platform,
+            content_type=item.content_type,
+            title=item.title,
+            publish_date=datetime.strptime(item.publish_date, "%Y-%m-%d").date() if item.publish_date else None,
+            url=item.url,
+            impressions=item.impressions, likes=item.likes, comments=item.comments,
+            shares=item.shares, bookmarks=item.bookmarks,
+            completion_rate=item.completion_rate, reads=item.reads,
+            is_viral=item.is_viral, author=item.author, notes=item.notes,
+        )
+        db.add(d)
+        count += 1
     db.commit()
     return {"ok": True, "count": count}
 
@@ -75,20 +72,17 @@ def batch_create_detail(items: list[DetailBatchItem], db: SqlSession = Depends(g
 def batch_create_calendar(items: list[CalendarBatchItem], db: SqlSession = Depends(get_db)):
     count = 0
     for item in items:
-        try:
-            d = ContentCalendar(
-                title=item.title,
-                platform=item.platform,
-                content_type=item.content_type,
-                status=item.status,
-                scheduled_date=datetime.strptime(item.scheduled_date, "%Y-%m-%d").date() if item.scheduled_date else None,
-                assignee=item.assignee,
-                description=item.description,
-            )
-            db.add(d)
-            count += 1
-        except Exception:
-            pass
+        d = ContentCalendar(
+            title=item.title,
+            platform=item.platform,
+            content_type=item.content_type,
+            status=item.status,
+            scheduled_date=datetime.strptime(item.scheduled_date, "%Y-%m-%d").date() if item.scheduled_date else None,
+            assignee=item.assignee,
+            description=item.description,
+        )
+        db.add(d)
+        count += 1
     db.commit()
     return {"ok": True, "count": count}
 
@@ -97,19 +91,16 @@ def batch_create_calendar(items: list[CalendarBatchItem], db: SqlSession = Depen
 def batch_create_topic(items: list[TopicBatchItem], db: SqlSession = Depends(get_db)):
     count = 0
     for item in items:
-        try:
-            d = TopicIdea(
-                title=item.title,
-                platforms=item.platforms,
-                status=item.status,
-                priority=item.priority,
-                source=item.source,
-                creator=item.creator,
-                notes=item.notes,
-            )
-            db.add(d)
-            count += 1
-        except Exception:
-            pass
+        d = TopicIdea(
+            title=item.title,
+            platforms=item.platforms,
+            status=item.status,
+            priority=item.priority,
+            source=item.source,
+            creator=item.creator,
+            notes=item.notes,
+        )
+        db.add(d)
+        count += 1
     db.commit()
     return {"ok": True, "count": count}

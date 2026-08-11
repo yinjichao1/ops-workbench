@@ -487,8 +487,10 @@ body {
 .ldg.i { color: #EF4444; font-weight: 700; }
 
 .lead-table-head, .lead-table-row, .lead-table-foot {
-  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  display: grid;
+  grid-template-columns: 2.2fr 0.9fr 0.9fr 0.9fr 1fr 0.7fr 0.7fr 0.7fr 0.9fr;
   padding: 5px 6px; font-size: 11px; align-items: center;
+  gap: 2px;
 }
 .lead-table-head {
   background: var(--bg-elevated); border-radius: 4px;
@@ -501,11 +503,14 @@ body {
   font-weight: 700; background: var(--bg-elevated);
   border-radius: 4px; margin-top: 6px;
 }
-.lt-name { color: var(--text-primary); }
+.lt-name { color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lt-num { text-align: center; font-family: var(--font-mono); }
 .lt-num.v { color: #10B981; font-weight: 700; }
 .lt-num.p { color: #F59E0B; font-weight: 700; }
 .lt-num.i { color: #EF4444; font-weight: 700; }
+.lt-num.i1 { color: #8B5CF6; font-weight: 700; }
+.lt-num.i3 { color: #06B6D4; font-weight: 700; }
+.lt-num.i5 { color: #F97316; font-weight: 700; }
 .lt-rate { text-align: right; font-weight: 700; color: var(--accent); }
 .lead-bar-val {
   min-width: 50px; font-family: var(--font-mono); font-size: 10px;

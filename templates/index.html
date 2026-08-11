@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <title>思格教育 · 运营工作台</title>
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=0811j">
+<link rel="stylesheet" href="/static/css/style.css?v=0811m">
 </head>
 <body>
 
@@ -69,7 +69,7 @@
         <div class="breadcrumb">思格教育 <span aria-hidden="true">/</span> 运营工作台 <span aria-hidden="true">/</span> 数据看板</div>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-outline btn-sm" onclick="openMetricForm()">录入数据</button>
+        <button class="btn btn-outline btn-sm" onclick="openMetricForm(ovCurrentMode||'week')">录入数据</button>
         <button class="btn btn-outline btn-sm" onclick="openContentForm()">录入内容</button>
         <button class="btn btn-outline btn-sm" onclick="openExportDialog()">导出数据</button>
         <button class="btn btn-primary btn-sm" onclick="document.querySelector('[data-page=reports]').click()">生成周报</button>
@@ -77,6 +77,7 @@
     </div>
     <div class="page-body">
       <!-- 区块1: 平台数据 -->
+      <div class="dashtab" id="dashtab-overview" style="display:block">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
         <div style="display:flex;gap:4px;align-items:center">
           <button class="btn btn-sm" id="ov-mode-week" style="background:var(--accent);color:#fff;border:none;border-radius:4px 0 0 4px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer" onclick="switchOvMode('week')">按周维度</button>
@@ -89,6 +90,7 @@
         </div>
       </div>
       <div class="stat-grid cols-4" id="overview-grid"></div>
+      </div>
 
       <!-- 区块2: 本月进度 -->
       <div class="dashtab" id="dashtab-kpi" style="display:none">
@@ -136,35 +138,15 @@
           </div>
         </div>
         <div class="stat-grid cols-4" id="leads-cards"></div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:20px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;margin-top:20px">
           <div>
-            <div class="card-header" style="padding:0 0 10px 0;border:none"><span class="card-title">渠道 × 有效性</span></div>
-            <div id="leads-source-chart"></div>
-          </div>
-          <div>
-            <div class="card-header" style="padding:0 0 10px 0;border:none"><span class="card-title">渠道有效性汇总</span></div>
+            <div class="card-header" style="padding:0 0 10px 0;border:none"><span class="card-title">渠道有效性汇总</span><span class="card-subtitle">按备注细分 · 含意向级别</span></div>
             <div id="leads-validity-summary"></div>
           </div>
           <div>
-            <div class="card-header" style="padding:0 0 10px 0;border:none"><span class="card-title">地区 × 有效性</span></div>
-            <div id="leads-region-chart"></div>
+            <div class="card-header" style="padding:0 0 10px 0;border:none"><span class="card-title">地区有效性汇总</span><span class="card-subtitle">按负责人地区 · 含意向级别</span></div>
+            <div id="leads-region-summary"></div>
           </div>
-          <div>
-            <div class="card-header" style="padding:0 0 10px 0;border:none"><span class="card-title">抖音细分</span></div>
-            <div id="leads-sub-douyin"></div>
-          </div>
-          <div>
-            <div class="card-header" style="padding:0 0 10px 0;border:none"><span class="card-title">公众号细分</span></div>
-            <div id="leads-sub-gzh"></div>
-          </div>
-          <div>
-            <div class="card-header" style="padding:0 0 10px 0;border:none"><span class="card-title">视频号细分</span></div>
-            <div id="leads-sub-shipin"></div>
-          </div>
-          <div>
-            <div class="card-header" style="padding:0 0 10px 0;border:none"><span class="card-title">意向级别</span></div>
-            <div id="leads-intent-chart"></div>
-        </div>
         </div>
       </div>
     </div>
@@ -287,6 +269,6 @@
 
 </div>
 
-<script src="/static/js/app.js?v=0810v2"></script>
+<script src="/static/js/app.js?v=0811m"></script>
 </body>
 </html>

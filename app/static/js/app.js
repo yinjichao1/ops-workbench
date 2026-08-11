@@ -1193,13 +1193,21 @@ async function saveBatch(modalId, platform, count) {
 }
 
 // ========== DATA ENTRY (P1: new metric form) ==========
-function openMetricForm() {
+function openMetricForm(mode) {
+  mode = mode || "week";
   const mid = "metric-" + Date.now();
   const thisWeek = getLastWeek();
-  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal"><h2>录入本周数据</h2>
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const isMonth = mode === "month";
+  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal"><h2>${isMonth ? '录入本月数据' : '录入本周数据'}</h2>
     <div class="form-group"><label>平台 <span class="required">*</span></label><select id="mf-plat" onchange="updateAccountSelect('mf-plat','mf-acct');togglePlatformFields()">${PLATFORMS.map(p=>`<option>${p}</option>`).join("")}</select></div>
     <div class="form-group"><label>账号</label><select id="mf-acct"></select></div>
-    <div class="form-group"><label>周次 <span class="required">*</span></label><input type="week" id="mf-week" value="${thisWeek}"><span class="error-msg">请选择周次</span></div>
+    ${isMonth ? `
+    <div class="form-group"><label>月份 <span class="required">*</span></label><input type="month" id="mf-month" value="${thisMonth}"><span class="error-msg">请选择月份</span></div>
+    <div style="font-size:11px;color:var(--text-warning);margin:-4px 0 10px 0">整月汇总数据会保存为该月 1 号的记录，请与按周录入分开使用，避免重复统计。</div>`
+    : `
+    <div class="form-group"><label>周次 <span class="required">*</span></label><input type="week" id="mf-week" value="${thisWeek}"><span class="error-msg">请选择周次</span></div>`}
     <div class="form-group"><label>粉丝数</label><input type="number" id="mf-followers" value="0"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="form-group"><label>播放 / 阅读</label><input type="number" id="mf-plays" value="0"></div>
@@ -1215,10 +1223,12 @@ function openMetricForm() {
     </div>
     <div class="form-actions">
       <button class="btn btn-outline btn-sm" onclick="closeModal('${mid}')">取消</button>
-      <button class="btn btn-primary btn-sm" onclick="saveMetric('${mid}')">保存数据</button>
+      <button class="btn btn-primary btn-sm" onclick="saveMetric('${mid}','${mode}')">保存数据</button>
     </div>
   </div></div>`;
   document.body.insertAdjacentHTML("beforeend", html);
+  updateAccountSelect('mf-plat','mf-acct');
+  togglePlatformFields();
 }
 
 function togglePlatformFields() {
@@ -1230,14 +1240,18 @@ function togglePlatformFields() {
   show("mf-heart-group", plat === "视频号");
 }
 
-async function saveMetric(modalId) {
-  if (!validateForm(modalId, ["mf-plat", "mf-week"])) {
-    toast("请选择平台和周次", "error"); return;
+async function saveMetric(modalId, mode) {
+  mode = mode || "week";
+  const platEl = document.getElementById("mf-plat");
+  const acctEl = document.getElementById("mf-acct");
+  if (!platEl || (mode === "month" ? !document.getElementById("mf-month")?.value : !document.getElementById("mf-week")?.value)) {
+    toast(mode === "month" ? "请选择平台和月份" : "请选择平台和周次", "error"); return;
   }
+  const week = mode === "month" ? `${document.getElementById("mf-month").value}-01` : document.getElementById("mf-week").value;
   const body = {
-    week: $qs("#mf-week").value,
-    platform: $qs("#mf-plat").value,
-    account: $qs("#mf-acct").value,
+    week,
+    platform: platEl.value,
+    account: acctEl.value,
     followers: +$qs("#mf-followers").value||0,
     plays: +$qs("#mf-plays").value||0,
     likes: +$qs("#mf-likes").value||0,
@@ -1344,7 +1358,7 @@ function openBatchTopicForm() {
     <div class="batch-row">
       <input class="bt-title" placeholder="选题标题" style="flex:2">
       <select class="bt-plat" style="flex:1">${PLAT.map(p=>`<option>${p}</option>`).join("")}</select>
-      <select class="bt-status" style="flex:1"><option>备选</option><option>进行中</option><option>已完成</option></select>
+      <select class="bt-status" style="flex:1"><option>待评估</option><option>已采纳</option><option>已发布</option></select>
       <input class="bt-cat" placeholder="分类" style="flex:1">
       <input class="bt-note" placeholder="备注" style="flex:2">
     </div>`).join("");
@@ -1636,113 +1650,55 @@ async function loadLeads() {
     ${c.sub ? `<div class="stat-change up">${c.sub}</div>` : ''}
   </div>`).join("");
 
-  // 渠道×有效性（堆叠条 + 有效率）
+  // 渠道有效性汇总（按备注细分 + 意向级别 1/3/5）
   const sv = (data.by_source_validity || []).filter(s => s.total > 0);
-  if (sv.length) {
-    const maxT = Math.max(...sv.map(s => s.total), 1);
-    document.getElementById("leads-source-chart").innerHTML = sv.map(s => `
-      <div class="lead-cross-row">
-        <span class="lead-bar-label">${s.name} <span class="lead-rate">${s.valid_rate}%</span></span>
-        <div class="lead-stacked-bar">
-          <div class="lead-seg valid" style="width:${(s.valid/maxT)*100}%"></div>
-          <div class="lead-seg pending" style="width:${(s.pending/maxT)*100}%"></div>
-          <div class="lead-seg invalid" style="width:${(s.invalid/maxT)*100}%"></div>
-        </div>
-        <span class="lead-bar-val">${s.total}</span>
-      </div>
-      <div class="lead-cross-legend">
-        <span class="ldg v">✓ ${s.valid}</span>
-        <span class="ldg p">? ${s.pending}</span>
-        <span class="ldg i">✗ ${s.invalid}</span>
-      </div>`).join("");
-  }
-
-  // 渠道有效性汇总表
-  if (sv.length) {
-    document.getElementById("leads-validity-summary").innerHTML = `
-      <div class="lead-table-head"><span>渠道</span><span class="v">有效</span><span class="p">待定</span><span class="i">无效</span><span>有效率</span></div>
-      ${sv.map(s => `
-        <div class="lead-table-row">
-          <span class="lt-name">${s.name}</span>
-          <span class="lt-num v">${s.valid}</span>
-          <span class="lt-num p">${s.pending}</span>
-          <span class="lt-num i">${s.invalid}</span>
-          <span class="lt-rate">${s.valid_rate}%</span>
-        </div>`).join("")}
+  const summaryTable = (rows, nameKey) => `
+    <div class="lead-table-head">
+      <span>${nameKey}</span><span class="v">有效</span><span class="p">待定</span><span class="i">无效</span><span>有效率</span><span>意向1</span><span>意向3</span><span>意向5</span><span>合计</span>
+    </div>
+    ${rows.map(s => `
+      <div class="lead-table-row">
+        <span class="lt-name" title="${s.name}">${s.name}</span>
+        <span class="lt-num v">${s.valid}</span>
+        <span class="lt-num p">${s.pending}</span>
+        <span class="lt-num i">${s.invalid}</span>
+        <span class="lt-rate">${s.valid_rate}%</span>
+        <span class="lt-num i1">${s.intent1}</span>
+        <span class="lt-num i3">${s.intent3}</span>
+        <span class="lt-num i5">${s.intent5}</span>
+        <span class="lt-num">${s.total}</span>
+      </div>`).join("")}`;
+  document.getElementById("leads-validity-summary").innerHTML = sv.length
+    ? summaryTable(sv, "渠道") + `
       <div class="lead-table-foot">
         <span class="lt-name">总计</span>
         <span class="lt-num v">${data.valid}</span>
         <span class="lt-num p">${data.pending}</span>
         <span class="lt-num i">${data.invalid}</span>
         <span class="lt-rate">${data.valid_rate}%</span>
-      </div>`;
-  }
+        <span class="lt-num i1">${sv.reduce((a,b)=>a+(b.intent1||0),0)}</span>
+        <span class="lt-num i3">${sv.reduce((a,b)=>a+(b.intent3||0),0)}</span>
+        <span class="lt-num i5">${sv.reduce((a,b)=>a+(b.intent5||0),0)}</span>
+        <span class="lt-num">${data.total}</span>
+      </div>`
+    : '<div class="empty-state"><p>暂无数据</p></div>';
 
-  // 地区×有效性
+  // 地区有效性汇总（含意向级别）
   const rv = (data.by_region_validity || []).filter(s => s.total > 0);
-  if (rv.length) {
-    const maxR = Math.max(...rv.map(s => s.total), 1);
-    document.getElementById("leads-region-chart").innerHTML = rv.map(s => `
-      <div class="lead-cross-row">
-        <span class="lead-bar-label">${s.name} <span class="lead-rate">${s.valid_rate}%</span></span>
-        <div class="lead-stacked-bar">
-          <div class="lead-seg valid" style="width:${(s.valid/maxR)*100}%"></div>
-          <div class="lead-seg pending" style="width:${(s.pending/maxR)*100}%"></div>
-          <div class="lead-seg invalid" style="width:${(s.invalid/maxR)*100}%"></div>
-        </div>
-        <span class="lead-bar-val">${s.total}</span>
-      </div>
-      <div class="lead-cross-legend">
-        <span class="ldg v">✓ ${s.valid}</span>
-        <span class="ldg p">? ${s.pending}</span>
-        <span class="ldg i">✗ ${s.invalid}</span>
-      </div>`).join("");
-  }
-
-  // Sub-channels: 抖音/公众号/视频号 — 只显示非零
-  function renderBars(el, data, key) {
-    const filtered = (data || []).filter(s => s.count > 0);
-    if (!filtered.length) {
-      el.innerHTML = '<div class="empty-state"><p>暂无数据</p></div>';
-      return;
-    }
-    const m = Math.max(...filtered.map(s => s.count), 1);
-    el.innerHTML = filtered.map(s => `
-      <div class="lead-bar-row">
-        <span class="lead-bar-label">${s.name}</span>
-        <div class="lead-bar-track"><div class="lead-bar-fill ${key}" style="width:${(s.count/m)*100}%"></div></div>
-        <span class="lead-bar-val">${s.count}</span>
-      </div>`).join("");
-  }
-  renderBars(document.getElementById("leads-sub-douyin"), data.sub_douyin, "");
-  renderBars(document.getElementById("leads-sub-gzh"), data.sub_gzh, "gzh");
-  renderBars(document.getElementById("leads-sub-shipin"), data.sub_shipin, "shipin");
-
-  // 有效性（待定/有效/无效）
-  const all_validity = ["有效", "待定", "无效"];
-  const validity_data = all_validity.map(k => ({
-    name: k,
-    count: data.by_validity && data.by_validity[k] || 0
-  }));
-  const totalForVal = validity_data.reduce((a,b)=>a+b.count, 0) || 1;
-  document.getElementById("leads-status-chart").innerHTML = validity_data.map(s => `
-      <div class="lead-bar-row">
-        <span class="lead-bar-label">${s.name}</span>
-        <div class="lead-bar-track"><div class="lead-bar-fill ${s.name==='有效'?'accent':s.name==='待定'?'warning':'invalid'}" style="width:${(s.count/totalForVal)*100}%"></div></div>
-        <span class="lead-bar-val">${s.count} (${Math.round(s.count/totalForVal*100)}%)</span>
-      </div>`).join("");
-
-  // Daily trend
-  if (data.by_day.length) {
-    const maxD = Math.max(...data.by_day.map(d => d.count), 1);
-    document.getElementById("leads-day-chart").innerHTML = data.by_day.map(d => {
-      const h = Math.max(4, (d.count / maxD) * 80);
-      return `<div style="flex:1;text-align:center">
-        <div style="background:var(--accent);height:${h}px;border-radius:3px 3px 0 0;min-height:2px;opacity:${0.4+(h/80)*0.6}"></div>
-        <div style="font-size:8px;color:var(--text-muted);margin-top:2px">${d.date.slice(5)}</div>
-      </div>`;
-    }).join("");
-  }
+  document.getElementById("leads-region-summary").innerHTML = rv.length
+    ? summaryTable(rv, "地区") + `
+      <div class="lead-table-foot">
+        <span class="lt-name">总计</span>
+        <span class="lt-num v">${data.valid}</span>
+        <span class="lt-num p">${data.pending}</span>
+        <span class="lt-num i">${data.invalid}</span>
+        <span class="lt-rate">${data.valid_rate}%</span>
+        <span class="lt-num i1">${rv.reduce((a,b)=>a+(b.intent1||0),0)}</span>
+        <span class="lt-num i3">${rv.reduce((a,b)=>a+(b.intent3||0),0)}</span>
+        <span class="lt-num i5">${rv.reduce((a,b)=>a+(b.intent5||0),0)}</span>
+        <span class="lt-num">${data.total}</span>
+      </div>`
+    : '<div class="empty-state"><p>暂无数据</p></div>';
 }
 
 // ========== INIT ==========
