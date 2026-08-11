@@ -1363,9 +1363,10 @@ async function saveBatchTopics(modalId) {
     if (!title) return;
     items.push({
       title,
-      platform: row.querySelector(".bt-plat").value,
+      platforms: row.querySelector(".bt-plat").value,
       status: row.querySelector(".bt-status").value,
-      category: row.querySelector(".bt-cat").value,
+      source: "灵感",
+      creator: row.querySelector(".bt-cat")?.value || "",
       notes: row.querySelector(".bt-note").value,
     });
   });

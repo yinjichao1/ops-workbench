@@ -113,6 +113,8 @@ def update_task(task_id: int, body: TaskUpdateIn, db: Session = Depends(get_db))
 @router.delete("/{task_id}")
 def delete_task(task_id: int, db: Session = Depends(get_db)):
     """删除任务。"""
-    db.query(Task).filter(Task.id == task_id).delete()
+    result = db.query(Task).filter(Task.id == task_id).delete()
+    if not result:
+        raise HTTPException(status_code=404, detail="任务不存在")
     db.commit()
     return {"ok": True}

@@ -1,24 +1,30 @@
 """Ops Workbench — FastAPI entry point."""
 
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from .models import Base, engine
 
 # Create tables
 Base.metadata.create_all(bind=engine)
 
-# Auto-migration: add hearts column if missing
-try:
-    from sqlalchemy import text
-    with engine.connect() as conn:
-        conn.execute(text("ALTER TABLE platform_daily_metrics ADD COLUMN hearts INTEGER DEFAULT 0"))
-        conn.commit()
-except Exception:
-    pass  # column already exists
+app = FastAPI(title="新媒体运营工作台", version="0.2.0")
 
-app = FastAPI(title="新媒体运营工作台", version="0.1.0")
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Global exception handler — no stack trace leaks
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(status_code=500, content={"error": str(exc)[:200]})
 
 # Mount static files
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")

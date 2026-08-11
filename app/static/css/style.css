@@ -1,4 +1,4 @@
-/* ===== 蓝白极简 · Minimal Blue-White ===== */
+/* ===== 暗蓝科技风 · Tech Blue ===== */
 
 /* ===== DETAIL TABS (平台趋势/平台明细) ===== */
 .detail-tabs {
@@ -80,26 +80,27 @@
   font-weight: 800; color: var(--text-primary);
 }
 :root {
-  --bg-root: #FAFBFC;
-  --bg-surface: #FFFFFF;
-  --bg-elevated: #F7F8FA;
-  --bg-hover: #F0F3F7;
-  --border: #E6E9EE;
-  --border-soft: #EEF1F5;
-  --accent: #2563EB;
-  --accent-strong: #1D4ED8;
-  --accent-muted: rgba(37,99,235,0.07);
+  --bg-root: #0A0E17;
+  --bg-surface: #0F1521;
+  --bg-elevated: #151B2A;
+  --bg-hover: #1A2235;
+  --border: #1E2A3D;
+  --border-soft: #182230;
+  --accent: #3B82F6;
+  --accent-strong: #60A5FA;
+  --accent-muted: rgba(59,130,246,0.10);
+  --accent-glow: rgba(59,130,246,0.25);
 
-  --text-primary: #111827;
-  --text-secondary: #4B5563;
-  --text-muted: #9CA3AF;
-  --chrome: #111827;
+  --text-primary: #E8ECF2;
+  --text-secondary: #8B95A5;
+  --text-muted: #556070;
+  --chrome: #0A0E17;
 
-  --douyin: #FF5A7A; --douyin-muted: rgba(255,90,122,0.07);
-  --shipinhao: #10B981; --shipinhao-muted: rgba(16,185,129,0.07);
-  --gzh: #2563EB; --gzh-muted: rgba(37,99,235,0.07);
-  --xhs: #EF4444; --xhs-muted: rgba(239,68,68,0.07);
-  --up: #10B981; --down: #EF4444;
+  --douyin: #FF5A7A; --douyin-muted: rgba(255,90,122,0.10);
+  --shipinhao: #34D399; --shipinhao-muted: rgba(52,211,153,0.10);
+  --gzh: #60A5FA; --gzh-muted: rgba(96,165,250,0.10);
+  --xhs: #F87171; --xhs-muted: rgba(248,113,113,0.10);
+  --up: #34D399; --down: #F87171;
 
   --sidebar-width: 220px;
   --radius-sm: 6px; --radius: 10px; --radius-lg: 14px;
@@ -613,6 +614,57 @@ body {
 .report-body blockquote { border-left: 2px solid var(--accent); padding: 6px 12px; margin: 8px 0; background: var(--accent-muted); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; color: var(--text-secondary); }
 .report-body ul { padding-left: 16px; margin: 6px 0; }
 .report-body hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+/* ===== TECH ACCENTS ===== */
+/* Card glow on hover */
+.stat-card:hover, .card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow), 0 2px 12px rgba(0,0,0,0.3);
+}
+/* Monospace data emphasis */
+.stat-value, .kpi-bar-label span:last-child, .top-stat-r {
+  font-family: var(--font-mono);
+}
+/* Modal glass effect */
+.modal {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 0 40px rgba(59,130,246,0.12), 0 16px 48px rgba(0,0,0,0.5);
+}
+/* Active nav glow */
+.sidebar-item.active {
+  background: var(--accent-muted);
+  color: var(--accent-strong);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+/* Accent gradient text for headers */
+.page-header h1 {
+  background: linear-gradient(135deg, var(--text-primary), var(--accent-strong));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+/* Button hover enhancement */
+.btn-primary:hover {
+  box-shadow: 0 0 16px var(--accent-glow);
+  transform: translateY(-1px);
+}
+/* Input fields in dark */
+.form-group input, .form-group select, .form-group textarea {
+  background: var(--bg-root);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-muted);
+}
+/* Toast dark */
+.toast {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
 
 /* ===== TOAST ===== */
 .toast {

@@ -39,11 +39,11 @@ class CalendarBatchItem(BaseModel):
 
 class TopicBatchItem(BaseModel):
     title: str = ""
-    platform: str = ""
-    status: str = "备选"
-    priority: int = 0
-    score: float = 0
-    category: str = ""
+    platforms: str = ""
+    status: str = "灵感"
+    priority: str = "中"
+    source: str = "灵感"
+    creator: str = ""
     notes: str = ""
 
 
@@ -100,11 +100,11 @@ def batch_create_topic(items: list[TopicBatchItem], db: SqlSession = Depends(get
         try:
             d = TopicIdea(
                 title=item.title,
-                platform=item.platform,
+                platforms=item.platforms,
                 status=item.status,
                 priority=item.priority,
-                score=item.score,
-                category=item.category,
+                source=item.source,
+                creator=item.creator,
                 notes=item.notes,
             )
             db.add(d)
