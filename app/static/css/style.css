@@ -114,7 +114,7 @@
 body {
   font-family: var(--font-body); background: var(--bg-root);
   color: var(--text-primary); font-size: 14px; line-height: 1.6;
-  -webkit-font-smoothing: antialiased; display: flex; min-height: 100vh;
+  -webkit-font-smoothing: antialiased; min-height: 100vh;
 }
 
 /* ===== SIDEBAR · Light ===== */
@@ -149,7 +149,7 @@ body {
 .sidebar-user-info .name { font-size: 12px; font-weight: 600; color: var(--text-primary); }
 
 /* ===== MAIN ===== */
-.main-content { margin-left: var(--sidebar-width); flex:1; min-height:100vh; display:flex; flex-direction:column; align-items: stretch; width: calc(100% - var(--sidebar-width)); }
+.main-content { margin-left: var(--sidebar-width); min-height:100vh; display:flex; flex-direction:column; align-items: stretch; }
 .page { display: none; width: 100%; }
 .page.active { display: flex; flex-direction: column; flex: 1; align-items: stretch; width: 100%; min-width: 0; }
 .dashtab { display: none; width: 100%; }
