@@ -837,7 +837,7 @@ async function loadContent() {
   container.innerHTML = '<div class="empty-state"><p>加载中…</p></div>';
   try {
     const range = getFilterRange("content");
-    const params = new URLSearchParams({ page_size: "200", start_date: range.start, end_date: range.end });
+    const params = new URLSearchParams({ page_size: "100", start_date: range.start, end_date: range.end });
     const r = await fetch(API + "/content/detail?" + params.toString());
     if (!r.ok) throw new Error("加载失败");
     const { data } = await r.json();
