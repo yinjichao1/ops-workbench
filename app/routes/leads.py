@@ -103,6 +103,36 @@ def create_lead(body: LeadIn, db: SqlSession = Depends(get_db)):
     return {"ok": True, "id": lead.id}
 
 
+@router.get("/leads/recent")
+def leads_recent(
+    limit: int = Query(5, le=20),
+    db: SqlSession = Depends(get_db),
+):
+    """最新线索（用于运营总览六卡）。"""
+    rows = (
+        db.query(Lead)
+        .order_by(Lead.date.desc(), Lead.id.desc())
+        .limit(limit)
+        .all()
+    )
+    return {
+        "data": [
+            {
+                "id": r.id,
+                "name": r.name or "",
+                "date": str(r.date),
+                "source": r.source or "",
+                "intent": r.intent or 0,
+                "owner": r.owner or "",
+                "status": r.status or "",
+                "validity": r.validity or "",
+                "school": r.school or "",
+            }
+            for r in rows
+        ]
+    }
+
+
 @router.get("/leads/summary")
 def leads_summary(
     week_val: str = Query("", description="YYYY-MM-DD"),

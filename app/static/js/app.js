@@ -140,6 +140,267 @@ function switchTrendTab(platform) {
   event.target.classList.add("active");
   loadDashboardDetail(null, platform);
 }
+
+// ========== 运营总览（独立页面 · NovaChain 六卡） ==========
+let ncMode = "week";
+
+function switchNcMode(mode) {
+  ncMode = mode;
+  const w = document.getElementById("nc-mode-week");
+  const m = document.getElementById("nc-mode-month");
+  const on = { background: "var(--accent)", color: "#fff", border: "none" };
+  const off = { background: "var(--bg-elevated)", color: "var(--text-muted)", border: "1px solid var(--border)" };
+  if (w) Object.assign(w.style, mode === "week" ? on : off);
+  if (m) Object.assign(m.style, mode === "month" ? on : off);
+  loadOverviewNC();
+}
+
+function platColor(p) {
+  return { 抖音: "#FF5A7A", 视频号: "#10B981", 公众号: "#2563EB", 小红书: "#F97316" }[p] || "#2563EB";
+}
+
+async function loadOverviewNC() {
+  const mode = ncMode || "week";
+  const wrap = document.getElementById("nc-team");
+  if (!wrap) return;
+  ["nc-team", "nc-platforms", "nc-stats", "nc-accounts", "nc-hot", "nc-leads"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<div class="nc-loading">加载中…</div>';
+  });
+  const lbl = document.getElementById("nc-period-label");
+  if (lbl) lbl.textContent = mode === "month" ? "显示上月数据" : "显示上周数据";
+
+  try {
+    const [ovR, hotR, leadsR] = await Promise.all([
+      fetch(API + "/dashboard/overview?mode=" + mode),
+      fetch(API + "/dashboard/hot-content?mode=" + mode),
+      fetch(API + "/leads/recent?limit=5"),
+    ]);
+    const ov = (await ovR.json()).data || [];
+    const hot = (await hotR.json()).data || {};
+    const leads = (await leadsR.json()).data || [];
+
+    const trendResults = {};
+    const accResults = {};
+    await Promise.all(PLATFORMS.map(async (p) => {
+      const [tR, aR] = await Promise.all([
+        fetch(API + `/dashboard/trend?platform=${encodeURIComponent(p)}&mode=${mode}`),
+        fetch(API + `/dashboard/platform-detail?platform=${encodeURIComponent(p)}&mode=${mode}`),
+      ]);
+      trendResults[p] = (await tR.json()).trend || [];
+      const agg = await aR.json();
+      accResults[p] = (agg.accounts_data || []).map(x => Object.assign({ platform: p }, x));
+    }));
+
+    renderNcTeam(ov, mode);
+    renderNcPlatforms(ov);
+    renderNcStats(ov, trendResults, mode);
+    renderNcAccounts(accResults, mode);
+    renderNcHot(hot);
+    renderNcLeads(leads);
+  } catch (e) {
+    console.error(e);
+    ["nc-team", "nc-platforms", "nc-stats", "nc-accounts", "nc-hot", "nc-leads"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<div class="nc-empty">加载失败，请刷新重试</div>';
+    });
+    toast("运营总览加载失败", "error");
+  }
+}
+
+function renderNcTeam(data, mode) {
+  const el = document.getElementById("nc-team");
+  if (!el) return;
+  const total = {
+    followers: data.reduce((s, d) => s + (d.followers || 0), 0),
+    plays: data.reduce((s, d) => s + (d.plays_reads || 0), 0),
+    eng: data.reduce((s, d) => s + (d.engagement || 0), 0),
+    pub: data.reduce((s, d) => s + (d.publish_count || 0), 0),
+  };
+  el.innerHTML = `
+    <div class="nc-card-head"><span class="nc-card-title">团队数据</span><span class="nc-card-badge">${mode === "month" ? "月度" : "周度"}</span></div>
+    <div class="nc-team-grid">
+      <div class="nc-team-item"><div class="nc-team-label">总粉丝</div><div class="nc-team-val">${fmt(total.followers)}</div></div>
+      <div class="nc-team-item"><div class="nc-team-label">播放/阅读</div><div class="nc-team-val">${fmt(total.plays)}</div></div>
+      <div class="nc-team-item"><div class="nc-team-label">互动量</div><div class="nc-team-val">${fmt(total.eng)}</div></div>
+      <div class="nc-team-item"><div class="nc-team-label">发布</div><div class="nc-team-val">${total.pub} 条</div></div>
+    </div>
+    <div class="nc-team-foot">4 平台账号统一汇总</div>`;
+}
+
+function renderNcPlatforms(data) {
+  const el = document.getElementById("nc-platforms");
+  if (!el) return;
+  const platCls = { 抖音: "douyin", 视频号: "shipinhao", 公众号: "gzh", 小红书: "xhs" };
+  const total = data.reduce((s, d) => s + (d.plays_reads || 0), 0) || 1;
+  const segs = data.map(d => ({ label: d.platform, value: d.plays_reads || 0, color: platColor(d.platform) }));
+  const list = data.map(d => {
+    const pct = Math.round((d.plays_reads || 0) / total * 100);
+    const fw = d.plays_reads_wow || 0;
+    return `
+      <div class="nc-plat-row">
+        <span class="nc-plat-dot ${platCls[d.platform] || ''}"></span>
+        <span class="nc-plat-name">${d.platform}</span>
+        <span class="nc-plat-val">${fmt(d.plays_reads)}</span>
+        <span class="nc-plat-chg ${fw >= 0 ? "up" : "down"}">${fw >= 0 ? "↑" : "↓"}${Math.abs(fw)}%</span>
+        <span class="nc-plat-pct">${pct}%</span>
+      </div>`;
+  }).join("");
+  el.innerHTML = `
+    <div class="nc-card-head"><span class="nc-card-title">平台数据</span><span class="nc-card-badge">播放/阅读占比</span></div>
+    <div class="nc-plats-body">
+      <div class="nc-ring">${buildRingSvg(segs)}</div>
+      <div class="nc-plat-list">${list}</div>
+    </div>`;
+}
+
+function mergeTrend(trendResults) {
+  const map = {};
+  PLATFORMS.forEach(p => {
+    (trendResults[p] || []).forEach(t => {
+      const key = t.date;
+      if (!map[key]) map[key] = { label: t.label, date: key, plays_reads: 0, engagement: 0, followers: 0, publish_count: 0 };
+      map[key].plays_reads += t.plays_reads || 0;
+      map[key].engagement += t.engagement || 0;
+      map[key].followers = Math.max(map[key].followers, t.followers || 0);
+      map[key].publish_count += t.publish_count || 0;
+    });
+  });
+  return Object.values(map).sort((a, b) => (a.date < b.date ? -1 : 1));
+}
+
+function renderNcStats(data, trendResults, mode) {
+  const el = document.getElementById("nc-stats");
+  if (!el) return;
+  const merged = mergeTrend(trendResults);
+  const tFollow = data.reduce((s, d) => s + (d.new_followers || 0), 0);
+  const tEng = data.reduce((s, d) => s + (d.engagement || 0), 0);
+  const tPub = data.reduce((s, d) => s + (d.publish_count || 0), 0);
+  el.innerHTML = `
+    <div class="nc-card-head"><span class="nc-card-title">数据统计</span><span class="nc-card-badge">${mode === "month" ? "月度" : "周度"}汇总</span></div>
+    <div class="nc-stats-metrics">
+      <div class="nc-stats-m"><span>新增粉丝</span><b>${fmt(tFollow)}</b></div>
+      <div class="nc-stats-m"><span>互动量</span><b>${fmt(tEng)}</b></div>
+      <div class="nc-stats-m"><span>发布数</span><b>${tPub}</b></div>
+    </div>
+    <div class="nc-chart">${buildLineBarSvg(merged)}</div>`;
+}
+
+function renderNcAccounts(accResults, mode) {
+  const el = document.getElementById("nc-accounts");
+  if (!el) return;
+  let html = `<div class="nc-card-head"><span class="nc-card-title">各平台账号</span><span class="nc-card-badge">${mode === "month" ? "月度" : "周度"}</span></div>`;
+  PLATFORMS.forEach(p => {
+    const list = accResults[p] || [];
+    const maxV = Math.max(...list.map(x => x.plays_reads || 0), 1);
+    const block = list.map(a => {
+      const pct = Math.max(3, Math.round((a.plays_reads || 0) / maxV * 100));
+      return `
+        <div class="nc-acc-row">
+          <span class="nc-acc-name">${a.account}</span>
+          <span class="nc-acc-track"><i style="width:${pct}%"></i></span>
+          <span class="nc-acc-val">${fmt(a.plays_reads)}</span>
+        </div>`;
+    }).join("");
+    html += `<div class="nc-acc-group">
+      <div class="nc-acc-plat"><span class="nc-plat-dot ${p === "抖音" ? "douyin" : p === "视频号" ? "shipinhao" : p === "公众号" ? "gzh" : "xhs"}"></span>${p}</div>
+      ${block || '<div class="nc-empty">暂无数据</div>'}
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function renderNcHot(hot) {
+  const el = document.getElementById("nc-hot");
+  if (!el) return;
+  const platCls = { 抖音: "douyin", 视频号: "shipinhao", 公众号: "gzh", 小红书: "xhs" };
+  let html = `<div class="nc-card-head"><span class="nc-card-title">热门内容</span><span class="nc-card-badge">按平台 TOP5</span></div>`;
+  PLATFORMS.forEach(p => {
+    const items = hot[p] || [];
+    html += `<div class="nc-lb-group"><div class="nc-lb-plat"><span class="nc-plat-dot ${platCls[p] || ''}"></span>${p}</div>`;
+    if (!items.length) {
+      html += '<div class="nc-empty">暂无内容</div>';
+    } else {
+      items.forEach((it, i) => {
+        html += `
+          <div class="nc-lb-row">
+            <span class="nc-lb-rank ${i < 3 ? "top" : ""}">${i + 1}</span>
+            <span class="nc-lb-title">${(it.title || "无标题").replace(/</g, "&lt;")}</span>
+            <span class="nc-lb-val">${fmt(it.likes)} ❤</span>
+          </div>`;
+      });
+    }
+    html += `</div>`;
+  });
+  el.innerHTML = html;
+}
+
+function renderNcLeads(leads) {
+  const el = document.getElementById("nc-leads");
+  if (!el) return;
+  const intentLabel = { 1: "低意向", 3: "中意向", 5: "高意向" };
+  const rows = (leads || []).map(l => `
+    <div class="nc-lead-row">
+      <span class="nc-lead-name">${(l.name || "匿名").replace(/</g, "&lt;")}</span>
+      <span class="nc-lead-src">${l.source || "—"}</span>
+      <span class="nc-lead-intent i${l.intent || 0}">${intentLabel[l.intent] || "未定"}</span>
+      <span class="nc-lead-owner">${l.owner || "—"}</span>
+    </div>`).join("");
+  el.innerHTML = `
+    <div class="nc-card-head"><span class="nc-card-title">最新线索</span><span class="nc-card-badge">最近 5 条</span></div>
+    ${rows || '<div class="nc-empty">暂无线索</div>'}`;
+}
+
+function buildRingSvg(segs) {
+  const total = segs.reduce((s, x) => s + x.value, 0) || 1;
+  const R = 42, C = 2 * Math.PI * R;
+  let offset = 0;
+  const arcs = segs.map(s => {
+    const frac = s.value / total;
+    const dash = frac * C;
+    const el = `<circle r="${R}" cx="52" cy="52" fill="none" stroke="${s.color}" stroke-width="12"
+      stroke-dasharray="${dash} ${C - dash}" stroke-dashoffset="${-offset}"
+      transform="rotate(-90 52 52)"></circle>`;
+    offset += dash;
+    return el;
+  }).join("");
+  return `<svg viewBox="0 0 104 104" width="104" height="104" role="img" aria-label="平台播放阅读占比圆环">
+    <circle r="${R}" cx="52" cy="52" fill="none" stroke="#EEF2F9" stroke-width="12"></circle>
+    ${arcs}
+    <text x="52" y="50" text-anchor="middle" font-size="15" font-weight="700" fill="#0F1B2D">${fmt(total)}</text>
+    <text x="52" y="63" text-anchor="middle" font-size="8" fill="#64748B">播放/阅读</text>
+  </svg>`;
+}
+
+function buildLineBarSvg(trend) {
+  const W = 340, H = 110, pad = 8;
+  const items = (trend || []).slice(-8);
+  if (!items.length) return '<div class="nc-empty">暂无趋势数据</div>';
+  const maxV = Math.max(...items.map(t => t.plays_reads || 0), 1);
+  const maxE = Math.max(...items.map(t => t.engagement || 0), 1);
+  const bw = (W - pad * 2) / items.length;
+  const bars = items.map((t, i) => {
+    const h = Math.max(4, (t.plays_reads || 0) / maxV * (H - 30));
+    const x = pad + i * bw + bw * 0.22;
+    return `<rect x="${x.toFixed(1)}" y="${(H - 12 - h).toFixed(1)}" width="${(bw * 0.56).toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="#2563EB" opacity="0.85"></rect>`;
+  }).join("");
+  const pts = items.map((t, i) => {
+    const x = pad + i * bw + bw * 0.5;
+    const y = H - 12 - Math.max(4, (t.engagement || 0) / maxE * (H - 30));
+    return { x, y };
+  });
+  const poly = pts.length > 1 ? `<polyline points="${pts.map(p => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ")}" fill="none" stroke="#DC2626" stroke-width="2"></polyline>` : "";
+  const dots = pts.map(p => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2.6" fill="#DC2626"></circle>`).join("");
+  const labels = items.map((t, i) => {
+    const x = pad + i * bw + bw * 0.5;
+    const short = (t.label || "").replace(/年/g, "").replace(/月/g, "/").replace(/第(\d+)周/g, "W$1");
+    return `<text x="${x.toFixed(1)}" y="${H - 2}" text-anchor="middle" font-size="7.5" fill="#94A3B8">${short}</text>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="110" role="img" aria-label="播放阅读与互动趋势">
+    <line x1="${pad}" y1="${H - 12}" x2="${W - pad}" y2="${H - 12}" stroke="#E2E8F0"></line>
+    ${bars}${poly}${dots}${labels}
+  </svg>`;
+}
 /* P1: skeleton loading, form validation, error handling, delete confirm */
 /* P2: platform color usage in data, distinct card treatments */
 /* P3: guided empty states, tooltips */
@@ -164,13 +425,14 @@ document.querySelectorAll(".sidebar-item[data-page]").forEach(item => {
     document.getElementById("page-" + page).classList.add("active");
 
     const titles = {
-      dashboard: "数据看板", calendar: "内容排期",
+      overview: "运营总览", dashboard: "数据看板", calendar: "内容排期",
       content: "内容明细", tasks: "任务管理",
       topics: "选题库", reports: "报表生成"
     };
     document.getElementById("page-title").textContent = titles[page] || page;
 
     switch(page) {
+      case "overview": loadOverviewNC(); break;
       case "dashboard": loadDashboard(); break;
       case "content": loadContent(); break;
       case "calendar": loadCalendar(); break;

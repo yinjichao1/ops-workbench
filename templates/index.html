@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <title>思格教育 · 运营工作台</title>
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=0811v">
+<link rel="stylesheet" href="/static/css/style.css?v=0812a">
 </head>
 <body>
 
@@ -22,6 +22,9 @@
   </div>
   <nav class="sidebar-nav">
     <div class="sidebar-section-label">概览</div>
+    <button class="sidebar-item" data-page="overview" aria-label="运营总览">
+      <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13h4l2-8 4 14 2-6h6"/></svg></span><span class="nav-text">运营总览</span>
+    </button>
     <button class="sidebar-item active" data-page="dashboard" aria-label="数据看板">
       <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span><span class="nav-text">数据看板</span>
       <span class="nav-toggle" role="button" aria-expanded="true" tabindex="0" onclick="event.stopPropagation();toggleSubmenu(this)">▾</span>
@@ -86,6 +89,33 @@
           <div class="un">网络部</div>
           <div class="uh">sigedu.cn</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 运营总览（独立页面，六卡布局，不替代平台数据） ===== -->
+  <div class="page" id="page-overview">
+    <div class="page-header">
+      <div>
+        <h1>运营总览</h1>
+        <div class="breadcrumb">思格教育 <span aria-hidden="true">/</span> 运营工作台 <span aria-hidden="true">/</span> 运营总览</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn btn-sm" id="nc-mode-week" style="background:var(--accent);color:#fff;border:none;border-radius:4px 0 0 4px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer" onclick="switchNcMode('week')">按周</button>
+        <button class="btn btn-sm" id="nc-mode-month" style="background:var(--bg-elevated);color:var(--text-muted);border:1px solid var(--border);border-radius:0 4px 4px 0;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer" onclick="switchNcMode('month')">按月</button>
+        <span id="nc-period-label" style="font-size:12px;color:var(--text-muted);margin-left:6px"></span>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="nc-overview-top">
+        <div class="nc-card nc-team" id="nc-team"></div>
+        <div class="nc-card nc-platforms" id="nc-platforms"></div>
+        <div class="nc-card nc-stats" id="nc-stats"></div>
+      </div>
+      <div class="nc-overview-bottom">
+        <div class="nc-card nc-accounts" id="nc-accounts"></div>
+        <div class="nc-card nc-hot" id="nc-hot"></div>
+        <div class="nc-card nc-leads" id="nc-leads"></div>
       </div>
     </div>
   </div>
@@ -314,6 +344,6 @@ document.querySelectorAll('.toggle-pill').forEach(function(pill){
   });
 });
 </script>
-<script src="/static/js/app.js?v=0811v"></script>
+<script src="/static/js/app.js?v=0812a"></script>
 </body>
 </html>

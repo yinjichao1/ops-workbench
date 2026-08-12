@@ -875,3 +875,127 @@ body {
   .topbar-actions { margin-left: 0; width: 100%; justify-content: flex-end; }
   .toggle { font-size: 11px; }
 }
+
+/* ============================================================
+   运营总览 · NovaChain 六卡（独立页面 page-overview）
+   ============================================================ */
+.nc-overview-top {
+  display: grid; grid-template-columns: 1.1fr 1.35fr 1.35fr;
+  gap: 16px; margin-bottom: 16px;
+}
+.nc-overview-bottom {
+  display: grid; grid-template-columns: 1.15fr 1.5fr 1.15fr;
+  gap: 16px;
+}
+.nc-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  box-shadow: var(--nc-shadow);
+  padding: 16px 18px;
+  min-width: 0;
+}
+.nc-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.nc-card-title { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.nc-card-badge {
+  font-size: 9px; font-weight: 700; color: var(--accent);
+  background: var(--accent-muted); padding: 2px 8px; border-radius: 999px;
+  letter-spacing: 0.04em;
+}
+.nc-loading { color: var(--text-muted); font-size: 12px; padding: 24px 0; text-align: center; }
+.nc-empty { color: var(--text-muted); font-size: 11px; padding: 10px 0; text-align: center; }
+
+/* 团队卡 */
+.nc-team-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.nc-team-item {
+  background: var(--bg-elevated); border-radius: 10px; padding: 12px 14px;
+  border-left: 3px solid var(--nc-blue);
+}
+.nc-team-item:nth-child(2) { border-left-color: #10B981; }
+.nc-team-item:nth-child(3) { border-left-color: #F97316; }
+.nc-team-item:nth-child(4) { border-left-color: #8B5CF6; }
+.nc-team-label { font-size: 9px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.06em; margin-bottom: 4px; }
+.nc-team-val { font-family: var(--font-display); font-size: 22px; font-weight: 800; color: var(--text-primary); line-height: 1; }
+.nc-team-foot { margin-top: 12px; font-size: 10px; color: var(--text-muted); text-align: center; }
+
+/* 平台卡 */
+.nc-plats-body { display: flex; gap: 14px; align-items: center; }
+.nc-ring { flex-shrink: 0; }
+.nc-plat-list { flex: 1; min-width: 0; }
+.nc-plat-row {
+  display: flex; align-items: center; gap: 8px; padding: 5px 0;
+  border-bottom: 1px dashed var(--border-soft); font-size: 11px;
+}
+.nc-plat-row:last-child { border-bottom: none; }
+.nc-plat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--accent); }
+.nc-plat-dot.douyin { background: #FF5A7A; }
+.nc-plat-dot.shipinhao { background: #10B981; }
+.nc-plat-dot.gzh { background: #2563EB; }
+.nc-plat-dot.xhs { background: #F97316; }
+.nc-plat-name { font-weight: 600; color: var(--text-primary); width: 52px; flex-shrink: 0; }
+.nc-plat-val { font-family: var(--font-mono); font-weight: 600; color: var(--text-secondary); margin-left: auto; }
+.nc-plat-chg { font-size: 10px; font-weight: 700; min-width: 44px; text-align: right; }
+.nc-plat-chg.up { color: var(--up); }
+.nc-plat-chg.down { color: var(--down); }
+.nc-plat-pct { font-size: 10px; color: var(--text-muted); min-width: 34px; text-align: right; font-weight: 600; }
+
+/* 统计卡 */
+.nc-stats-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.nc-stats-m { background: var(--bg-elevated); border-radius: 10px; padding: 10px 12px; text-align: center; }
+.nc-stats-m span { display: block; font-size: 9px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
+.nc-stats-m b { font-family: var(--font-display); font-size: 18px; font-weight: 800; color: var(--nc-blue); }
+.nc-chart { width: 100%; }
+
+/* 账号卡 */
+.nc-acc-group { margin-bottom: 10px; }
+.nc-acc-group:last-child { margin-bottom: 0; }
+.nc-acc-plat { font-size: 11px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.nc-acc-row { display: flex; align-items: center; gap: 8px; padding: 2.5px 0; font-size: 10px; }
+.nc-acc-name { width: 64px; flex-shrink: 0; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nc-acc-track { flex: 1; height: 6px; background: var(--bg-hover); border-radius: 3px; overflow: hidden; }
+.nc-acc-track i { display: block; height: 100%; background: linear-gradient(90deg, var(--nc-blue-2), var(--nc-blue)); border-radius: 3px; }
+.nc-acc-val { font-family: var(--font-mono); color: var(--text-muted); min-width: 44px; text-align: right; }
+
+/* 热门卡 */
+.nc-lb-group { margin-bottom: 8px; }
+.nc-lb-group:last-child { margin-bottom: 0; }
+.nc-lb-plat { font-size: 11px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+.nc-lb-row { display: flex; align-items: center; gap: 8px; padding: 2.5px 0; font-size: 10.5px; }
+.nc-lb-rank {
+  width: 18px; height: 18px; border-radius: 4px; background: var(--bg-elevated);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; color: var(--text-muted); flex-shrink: 0;
+}
+.nc-lb-rank.top { background: var(--accent-muted); color: var(--accent); }
+.nc-lb-title { flex: 1; min-width: 0; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nc-lb-val { font-family: var(--font-mono); font-size: 10px; color: var(--down); font-weight: 600; flex-shrink: 0; }
+
+/* 线索卡 */
+.nc-lead-row {
+  display: flex; align-items: center; gap: 8px; padding: 7px 0;
+  border-bottom: 1px dashed var(--border-soft); font-size: 11px;
+}
+.nc-lead-row:last-child { border-bottom: none; }
+.nc-lead-name { flex: 1; min-width: 0; color: var(--text-primary); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nc-lead-src { font-size: 10px; color: var(--text-muted); flex-shrink: 0; }
+.nc-lead-intent {
+  font-size: 9px; font-weight: 700; padding: 1px 7px; border-radius: 999px;
+  background: var(--bg-elevated); color: var(--text-muted); flex-shrink: 0;
+}
+.nc-lead-intent.i1 { background: rgba(139,92,246,.12); color: #8B5CF6; }
+.nc-lead-intent.i3 { background: rgba(6,182,212,.12); color: #06B6D4; }
+.nc-lead-intent.i5 { background: rgba(249,115,22,.14); color: #F97316; }
+.nc-lead-owner { font-size: 10px; color: var(--text-muted); flex-shrink: 0; }
+
+/* 运营总览响应式 */
+@media (max-width: 1200px) {
+  .nc-overview-top, .nc-overview-bottom { grid-template-columns: 1fr 1fr; }
+  .nc-card { min-width: 0; }
+}
+@media (max-width: 900px) {
+  .nc-overview-top, .nc-overview-bottom { grid-template-columns: 1fr; }
+  .nc-plats-body { flex-direction: column; }
+}
