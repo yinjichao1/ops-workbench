@@ -899,20 +899,35 @@ async function loadDashboardDetail(allData, platform, account) {
   } catch(e) { /* no data - silent */ }
 }
 
-// Top 5 — 「本周热门」直接抓取内容明细，按平台 TOP5
+// Top 5 — 「本周/月热门」与内容明细共享同一周期，点击条目跳转内容明细
 async function loadHotContent() {
   const top5Div = $qs("#top5-container");
   if (!top5Div) return;
   top5Div.innerHTML = '<div class="empty-state"><p>加载中…</p></div>';
   try {
-    const mode = ovCurrentMode || "week";
-    const period = mode === "month" ? getPreviousMonthValue() : getPreviousWeekDate();
+    ensureContentPeriodDefaults();
+    const mode = $qs("#content-mode")?.value || "week";
+    const week = $qs("#content-week")?.value || dateToIsoWeek(getPreviousWeekDate());
+    const month = $qs("#content-month")?.value || getPreviousMonthValue();
     const url = mode === "month"
-      ? API + `/dashboard/hot-content?mode=month&month=${period}`
-      : API + `/dashboard/hot-content?mode=week&week=${period}`;
+      ? API + `/dashboard/hot-content?mode=month&month=${month}`
+      : API + `/dashboard/hot-content?mode=week&week=${week}`;
     const r = await fetch(url);
     if (!r.ok) throw new Error("加载失败");
     const { data } = await r.json();
+    // 周期标签 + 标题
+    const titleEl = document.getElementById("hot-title");
+    if (titleEl) titleEl.textContent = mode === "month" ? "本月热门" : "本周热门";
+    const lbl = document.getElementById("hot-period-label");
+    if (lbl) {
+      if (mode === "month") {
+        const [y, m] = month.split("-");
+        lbl.textContent = `${y}年${Number(m)}月 · 与内容明细同周期`;
+      } else {
+        const [y, wk] = week.split("-W");
+        lbl.textContent = `${y}年 第${Number(wk)}周 · 与内容明细同周期`;
+      }
+    }
     const platCls = { 抖音: "douyin", 视频号: "shipinhao", 公众号: "gzh", 小红书: "xhs" };
     let html = "";
     PLATFORMS.forEach(plat => {
@@ -927,7 +942,7 @@ async function loadHotContent() {
         const rankCls = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : 'rn';
         const viral = c.is_viral ? '<span class="content-item-viral" style="font-size:9px">爆款</span>' : '';
         html += `
-        <div class="top-item">
+        <div class="top-item hot-clickable" title="点击查看内容明细" onclick="gotoContentDetail(${c.id})">
           <div class="top-rank ${rankCls}">${i + 1}</div>
           <div class="top-info">
             <div class="tt">${c.title || '未命名'} ${viral}</div>
@@ -942,6 +957,28 @@ async function loadHotContent() {
   } catch(e) {
     top5Div.innerHTML = '<div class="empty-state"><h3>暂无热门内容</h3><p>热门内容加载失败</p></div>';
   }
+}
+
+// 热门 → 内容明细 联动：切页 + 等待加载 + 滚动定位 + 高亮
+async function gotoContentDetail(id) {
+  const nav = document.querySelector('.sidebar-item[data-page="content"]');
+  if (nav) nav.click();
+  // 轮询等 loadContent 完成（异步 fetch + 渲染）
+  for (let i = 0; i < 30; i++) {
+    await new Promise(r => setTimeout(r, 100));
+    const row = document.querySelector(`.content-tbl-row[data-id="${id}"]`);
+    if (row) {
+      row.scrollIntoView({ behavior: "smooth", block: "center" });
+      row.classList.add("highlight-flash");
+      setTimeout(() => row.classList.remove("highlight-flash"), 2600);
+      return;
+    }
+  }
+  toast("该内容不在当前周期的内容明细中，请调整周期查看", "");
+}
+function gotoContentPage() {
+  const nav = document.querySelector('.sidebar-item[data-page="content"]');
+  if (nav) nav.click();
 }
 
 async function loadDashboardKPI() {
@@ -1056,6 +1093,25 @@ document.querySelectorAll(".detail-tab").forEach(tab => {
 });
 
 // ========== CONTENT ==========
+function dateToIsoWeek(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  const day = (d.getDay() + 6) % 7; // 周一=0
+  const thurs = new Date(d);
+  thurs.setDate(d.getDate() - day + 3);
+  const jan1 = new Date(thurs.getFullYear(), 0, 1);
+  const week = Math.ceil((((thurs - jan1) / 86400000) + 1) / 7);
+  return `${d.getFullYear()}-W${String(week).padStart(2, "0")}`;
+}
+function ensureContentPeriodDefaults() {
+  const mode = $qs("#content-mode")?.value || "week";
+  const week = $qs("#content-week");
+  const month = $qs("#content-month");
+  if (mode === "month") {
+    if (month && !month.value) month.value = getPreviousMonthValue();
+  } else {
+    if (week && !week.value) week.value = dateToIsoWeek(getPreviousWeekDate());
+  }
+}
 function getWeekFilterRange(value) {
   if (!value) return { start: "", end: "" };
   const [y, w] = value.split("-W").map(Number);
@@ -1090,7 +1146,7 @@ function contentRowHtml(c) {
   const title = (c.title || "未命名").replace(/</g, "&lt;");
   const date = (c.publish_date || "").slice(5); // MM-DD
   return `
-  <div class="content-tbl-row">
+  <div class="content-tbl-row" data-id="${c.id}">
     <span class="ct-date">${date}</span>
     <span class="ct-title">
       <span class="ct-title-text" title="${title.replace(/"/g, "&quot;")}">${title}</span>
@@ -1114,6 +1170,7 @@ async function loadContent() {
   const countEl = document.getElementById("content-count");
   if (countEl) countEl.textContent = "";
   try {
+    ensureContentPeriodDefaults();
     const range = getFilterRange("content");
     const params = new URLSearchParams({ page_size: "100", start_date: range.start, end_date: range.end });
     const r = await fetch(API + "/content/detail?" + params.toString());

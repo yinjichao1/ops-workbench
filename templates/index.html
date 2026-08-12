@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <title>思格教育 · 运营工作台</title>
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=0812c">
+<link rel="stylesheet" href="/static/css/style.css?v=0812d">
 </head>
 <body>
 
@@ -173,6 +173,11 @@
 
       <!-- 区块4: 本周热门 -->
       <div class="dashtab" id="dashtab-hot" style="display:none">
+        <div class="hot-head">
+          <span class="card-title" id="hot-title">本周热门</span>
+          <span class="card-subtitle" id="hot-period-label"></span>
+          <button class="btn btn-outline btn-sm" onclick="gotoContentPage()">去内容明细 →</button>
+        </div>
         <div id="top5-container"></div>
       </div>
 
@@ -347,6 +352,6 @@ document.querySelectorAll('.toggle-pill').forEach(function(pill){
   });
 });
 </script>
-<script src="/static/js/app.js?v=0812c"></script>
+<script src="/static/js/app.js?v=0812d"></script>
 </body>
 </html>
