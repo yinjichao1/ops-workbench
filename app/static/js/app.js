@@ -595,46 +595,43 @@ async function loadDashboardDetail(allData, platform, account) {
   }
 
   try {
-    const r = await fetch(API + `/dashboard/trend?platform=${encodeURIComponent(platform)}&account=${encodeURIComponent(account)}&days=28`);
+    const mode = ovCurrentMode || "week";
+    const r = await fetch(API + `/dashboard/trend?platform=${encodeURIComponent(platform)}&account=${encodeURIComponent(account)}&mode=${mode}`);
     if (!r.ok) throw new Error("趋势数据加载失败");
     const { trend } = await r.json();
     const bars = $qs("#trend-bars");
     if (trend && trend.length) {
-      const maxVal = Math.max(...trend.map(t => t.plays_reads || t.plays || t.reads || t.note_reads || 0), 1);
+      const maxVal = Math.max(...trend.map(t => t.plays_reads || 0), 1);
       bars.innerHTML = trend.map(t => {
-        const val = t.plays_reads || t.plays || t.reads || t.note_reads || 0;
+        const val = t.plays_reads || 0;
         const h = Math.max(4, (val / maxVal) * 120);
         return `
-          <div data-tooltip="${t.week_cn || t.week || t.date}: ${fmt(val)}" style="flex:1;background:var(--accent);border-radius:3px 3px 0 0;min-height:4px;height:${h}px;opacity:${0.3 + (h/120)*0.7};transition:height 0.3s"></div>`;
+          <div data-tooltip="${t.label}: ${fmt(val)}" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:4px">
+            <div style="background:var(--accent);border-radius:3px 3px 0 0;min-height:4px;height:${h}px;opacity:${0.3 + (h/120)*0.7};transition:height 0.3s"></div>
+            <div style="font-size:9px;color:var(--text-muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.label}</div>
+          </div>`;
       }).join("");
     } else {
       bars.innerHTML = '<div class="empty-state" style="flex:1"><p>该平台暂无趋势数据</p></div>';
     }
-  } catch(e) { /* no data - silent */ }
 
-  // Data table
-  showSkeleton("trend-table-body", "table");
-  try {
-    const dr = await fetch(API + `/data/metrics?platform=${platform}&limit=12`);
-    if (dr.ok) {
-      const { data: rows } = await dr.json();
-      const tbody = $qs("#trend-table tbody");
-      if (rows && rows.length) {
-        tbody.innerHTML = rows.map(r => `
-          <tr>
-            <td>${r.week_cn || r.week || r.date}</td>
-            <td>${fmt(r.plays || r.reads || r.note_reads || 0)}</td>
-            <td>${fmt(r.new_followers || 0)}</td>
-            <td>${fmt((r.likes||0)+(r.comments||0)+(r.shares||0)+(r.bookmarks||0))}</td>
-            <td>${r.publish_count || 0}</td>
-            <td>${r.completion_rate || 0}%</td>
-          </tr>
-        `).join("");
-      } else {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><p>该平台暂无数据</p></td></tr>';
-      }
+    // 数据表格与柱状图使用同一份数据
+    const tbody = $qs("#trend-table tbody");
+    if (trend && trend.length) {
+      tbody.innerHTML = trend.slice().reverse().map(t => `
+        <tr>
+          <td>${t.label}</td>
+          <td>${fmt(t.plays_reads || 0)}</td>
+          <td>${fmt(t.new_followers || 0)}</td>
+          <td>${fmt(t.engagement || 0)}</td>
+          <td>${t.publish_count || 0}</td>
+          <td>${(t.completion_rate || 0).toFixed(1)}%</td>
+        </tr>
+      `).join("");
+    } else {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><p>该平台暂无数据</p></td></tr>';
     }
-  } catch(e) {}
+  } catch(e) { /* no data - silent */ }
 }
 
 // Top 5 — 「本周热门」直接抓取内容明细，按平台 TOP5

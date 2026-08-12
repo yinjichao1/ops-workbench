@@ -216,89 +216,122 @@ def dashboard_overview(
 def dashboard_trend(
     platform: str = Query(...),
     account: str = Query(""),
-    days: int = Query(30, ge=7, le=90),
+    mode: str = Query("week", description="week 或 month"),
     db: Session = Depends(get_db),
 ):
-    """平台趋势：指定天数每周核心指标。可按账号过滤。"""
+    """平台趋势：按周显示最近 12 周度记录，按月显示最近 12 个月度记录，跟随看板维度。"""
     today = date.today()
-    since = today - timedelta(days=days)
+    from sqlalchemy import extract
 
-    q = (
-        db.query(PlatformDailyMetrics)
-        .filter(
-            PlatformDailyMetrics.platform == platform,
-            PlatformDailyMetrics.date >= since,
-            PlatformDailyMetrics.date <= today,
-        )
-    )
-    if account:
-        q = q.filter(PlatformDailyMetrics.account == account)
-    rows = q.order_by(PlatformDailyMetrics.date.asc()).all()
+    def _month_cn(d):
+        return f"{d.year}年{d.month}月"
 
-    # 按周聚合
-    from collections import defaultdict
-    if not account:
-        grouped = defaultdict(lambda: {"followers": 0, "likes": 0, "comments": 0, "shares": 0, "new_followers": 0, "plays": 0, "reads": 0, "note_reads": 0, "bookmarks": 0, "completion_rate": 0, "engagement_rate": 0, "count": 0, "accounts": set()})
+    def _agg(rows):
+        """对同一周期的多条记录聚合为单个指标 dict。"""
+        g = {"followers": 0, "new_followers": 0, "plays": 0, "reads": 0, "note_reads": 0,
+             "likes": 0, "comments": 0, "shares": 0, "bookmarks": 0, "hearts": 0,
+             "in_views": 0, "completion_rate": 0, "publish_count": 0}
         for r in rows:
-            k = r.date
-            g = grouped[k]
             g["followers"] = max(g["followers"], r.followers or 0)
-            g["likes"] += r.likes or 0
-            g["comments"] += r.comments or 0
-            g["shares"] += r.shares or 0
             g["new_followers"] += r.new_followers or 0
             g["plays"] += r.plays or 0
             g["reads"] += r.reads or 0
             g["note_reads"] += r.note_reads or 0
+            g["likes"] += r.likes or 0
+            g["comments"] += r.comments or 0
+            g["shares"] += r.shares or 0
             g["bookmarks"] += r.bookmarks or 0
+            g["hearts"] += r.hearts or 0
+            g["in_views"] += r.in_views or 0
             g["completion_rate"] = max(g["completion_rate"], r.completion_rate or 0)
-            g["engagement_rate"] = max(g["engagement_rate"], r.engagement_rate or 0)
-            g["count"] += 1
-            g["accounts"].add(r.account or "")
-        trend_data = [
-            {
-                "week": _week_str(k),
-                "week_cn": _week_cn(k),
-                "date": str(k),
-                "account": "、".join(sorted(v["accounts"])),
-                "followers": v["followers"],
-                "likes": v["likes"],
-                "comments": v["comments"],
-                "shares": v["shares"],
-                "new_followers": v["new_followers"],
-                "plays": v["plays"],
-                "reads": v["reads"],
-                "note_reads": v["note_reads"],
-                "bookmarks": v["bookmarks"],
-                "completion_rate": v["completion_rate"],
-                "engagement_rate": v["engagement_rate"],
-            }
-            for k, v in sorted(grouped.items())
-        ]
+            g["publish_count"] += r.publish_count or 0
+        return g
+
+    def _fmt(agg_map, labels):
+        out = []
+        for key in labels:
+            g = agg_map.get(key)
+            if not g:
+                continue
+            plays_reads = g["plays"] + g["reads"] + g["note_reads"]
+            engagement = g["likes"] + g["comments"] + g["shares"] + g["bookmarks"]
+            out.append({
+                "label": _month_cn(key) if mode == "month" else _week_cn(key),
+                "week_cn": _week_cn(key),
+                "month_cn": _month_cn(key),
+                "date": str(key),
+                "followers": g["followers"],
+                "new_followers": g["new_followers"],
+                "plays_reads": plays_reads,
+                "plays": g["plays"],
+                "reads": g["reads"],
+                "note_reads": g["note_reads"],
+                "likes": g["likes"],
+                "comments": g["comments"],
+                "shares": g["shares"],
+                "bookmarks": g["bookmarks"],
+                "hearts": g["hearts"],
+                "in_views": g["in_views"],
+                "completion_rate": g["completion_rate"],
+                "publish_count": g["publish_count"],
+                "engagement": engagement,
+            })
+        return out
+
+    if mode == "month":
+        # 最近 12 个月（含当前月），只看月度记录（每月 1 号）
+        month_keys = []
+        for i in range(11, -1, -1):
+            y, m = today.year, today.month - i
+            while m <= 0:
+                m += 12
+                y -= 1
+            month_keys.append(date(y, m, 1))
+        since = month_keys[0]
+        q = (
+            db.query(PlatformDailyMetrics)
+            .filter(
+                PlatformDailyMetrics.platform == platform,
+                PlatformDailyMetrics.date >= since,
+                PlatformDailyMetrics.date <= today,
+                extract("day", PlatformDailyMetrics.date) == 1,
+            )
+        )
+        if account:
+            q = q.filter(PlatformDailyMetrics.account == account)
+        rows = q.order_by(PlatformDailyMetrics.date.asc()).all()
+        by_key = defaultdict(list)
+        for r in rows:
+            by_key[date(r.date.year, r.date.month, 1)].append(r)
+        agg_map = {k: _agg(v) for k, v in by_key.items()}
+        trend_data = _fmt(agg_map, month_keys)
     else:
-        trend_data = [
-            {
-                "week": _week_str(r.date),
-                "date": str(r.date),
-                "account": r.account or "",
-                "followers": r.followers,
-                "likes": r.likes or 0,
-                "comments": r.comments or 0,
-                "shares": r.shares or 0,
-                "new_followers": r.new_followers or 0,
-                "plays": r.plays or 0,
-                "reads": r.reads or 0,
-                "note_reads": r.note_reads or 0,
-                "bookmarks": r.bookmarks or 0,
-                "completion_rate": r.completion_rate or 0,
-                "engagement_rate": r.engagement_rate or 0,
-            }
-            for r in rows
-        ]
+        # 最近 12 周，只看周度记录（非每月 1 号）
+        this_monday = today - timedelta(days=today.weekday())
+        week_keys = [this_monday - timedelta(weeks=i) for i in range(11, -1, -1)]
+        since = week_keys[0]
+        q = (
+            db.query(PlatformDailyMetrics)
+            .filter(
+                PlatformDailyMetrics.platform == platform,
+                PlatformDailyMetrics.date >= since,
+                PlatformDailyMetrics.date <= this_monday,
+                extract("day", PlatformDailyMetrics.date) != 1,
+            )
+        )
+        if account:
+            q = q.filter(PlatformDailyMetrics.account == account)
+        rows = q.order_by(PlatformDailyMetrics.date.asc()).all()
+        by_key = defaultdict(list)
+        for r in rows:
+            by_key[r.date].append(r)
+        agg_map = {k: _agg(v) for k, v in by_key.items()}
+        trend_data = _fmt(agg_map, week_keys)
 
     return {
         "platform": platform,
         "account": account or "(全部账号)",
+        "mode": mode,
         "accounts": ACCOUNTS.get(platform, ["主号"]),
         "trend": trend_data,
     }
