@@ -637,35 +637,49 @@ async function loadDashboardDetail(allData, platform, account) {
   } catch(e) {}
 }
 
-// Top 5 — 在「本周热门」tab 里跨所有平台
+// Top 5 — 「本周热门」直接抓取内容明细，按平台 TOP5
 async function loadHotContent() {
   const top5Div = $qs("#top5-container");
   if (!top5Div) return;
+  top5Div.innerHTML = '<div class="empty-state"><p>加载中…</p></div>';
   try {
-    const ov = await fetch(API + "/dashboard/overview");
-    const { data } = await ov.json();
-    const items = [];
-    data.forEach(d => {
-      (d.top5 || []).forEach(c => items.push({ ...c, platform: d.platform }));
+    const mode = ovCurrentMode || "week";
+    const period = mode === "month" ? getPreviousMonthValue() : getPreviousWeekDate();
+    const url = mode === "month"
+      ? API + `/dashboard/hot-content?mode=month&month=${period}`
+      : API + `/dashboard/hot-content?mode=week&week=${period}`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("加载失败");
+    const { data } = await r.json();
+    const platCls = { 抖音: "douyin", 视频号: "shipinhao", 公众号: "gzh", 小红书: "xhs" };
+    let html = "";
+    PLATFORMS.forEach(plat => {
+      const items = data[plat] || [];
+      if (!items.length) return;
+      html += `<div class="hot-plat-block">
+        <div class="hot-plat-header">
+          <span class="platform-badge ${platCls[plat] || ''}">${plat}</span>
+          <span class="hot-plat-count">TOP5</span>
+        </div>`;
+      items.forEach((c, i) => {
+        const rankCls = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : 'rn';
+        const viral = c.is_viral ? '<span class="content-item-viral" style="font-size:9px">爆款</span>' : '';
+        html += `
+        <div class="top-item">
+          <div class="top-rank ${rankCls}">${i + 1}</div>
+          <div class="top-info">
+            <div class="tt">${c.title || '未命名'} ${viral}</div>
+            <div class="tm">${c.author || c.platform} · ${c.publish_date} · 播放 ${fmt(c.impressions || 0)}</div>
+          </div>
+          <div class="top-stat-r">👍 ${fmt(c.likes)}</div>
+        </div>`;
+      });
+      html += `</div>`;
     });
-    if (!items.length) {
-      top5Div.innerHTML = '<div class="empty-state"><h3>暂无热门内容</h3><p>发布内容并录入数据后，排名会自动出现</p></div>';
-      return;
-    }
-    items.sort((a, b) => (b.likes || 0) - (a.likes || 0));
-    top5Div.innerHTML = items.slice(0, 10).map((c, i) => {
-      const rankCls = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : 'rn';
-      return `
-      <div class="top-item">
-        <div class="top-rank ${rankCls}">${i + 1}</div>
-        <div class="top-info">
-          <div class="tt">${c.title || '未命名'}</div>
-          <div class="tm">${c.platform}</div>
-        </div>
-        <div class="top-stat-r">${fmt(c.likes)}</div>
-      </div>`;
-    }).join("");
-  } catch(e) {}
+    top5Div.innerHTML = html || '<div class="empty-state"><h3>暂无热门内容</h3><p>录入内容数据后，各平台排名会自动出现</p></div>';
+  } catch(e) {
+    top5Div.innerHTML = '<div class="empty-state"><h3>暂无热门内容</h3><p>热门内容加载失败</p></div>';
+  }
 }
 
 async function loadDashboardKPI() {

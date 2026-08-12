@@ -394,6 +394,61 @@ def dashboard_kpi(db: Session = Depends(get_db)):
     return {"data": result, "year": today.year, "month": today.month}
 
 
+@router.get("/hot-content")
+def hot_content(
+    mode: str = Query("week", description="week 或 month"),
+    week: str = Query("", description="周次 '2026-W32' 或 'YYYY-MM-DD'"),
+    month: str = Query("", description="月份 YYYY-MM，按月时使用"),
+    db: Session = Depends(get_db),
+):
+    """本周热门：直接抓取内容明细，按平台取点赞 Top5。"""
+    today = date.today()
+    if mode == "month":
+        if month:
+            start_d = date.fromisoformat(f"{month}-01")
+        else:
+            start_d = (today.replace(day=1) - timedelta(days=1)).replace(day=1)
+        next_m = start_d.replace(day=28) + timedelta(days=4)
+        end_d = next_m - timedelta(days=next_m.day)
+    elif week:
+        start_d = parse_week(week)
+        end_d = start_d + timedelta(days=6)
+    else:
+        start_d, end_d = _last_week_range(today)
+
+    rows = (
+        db.query(ContentDetail)
+        .filter(
+            ContentDetail.publish_date >= start_d,
+            ContentDetail.publish_date <= end_d,
+        )
+        .all()
+    )
+    by_plat = defaultdict(list)
+    for r in rows:
+        by_plat[r.platform].append(r)
+
+    result = {}
+    for plat in PLATFORMS:
+        items = sorted(by_plat.get(plat, []), key=lambda r: (r.likes or 0), reverse=True)[:5]
+        result[plat] = [
+            {
+                "id": r.id,
+                "title": r.title,
+                "platform": r.platform,
+                "author": r.author or "",
+                "publish_date": str(r.publish_date),
+                "likes": r.likes or 0,
+                "impressions": r.impressions or 0,
+                "comments": r.comments or 0,
+                "shares": r.shares or 0,
+                "is_viral": r.is_viral or 0,
+            }
+            for r in items
+        ]
+    return {"period": f"{start_d} ~ {end_d}", "data": result}
+
+
 @router.get("/platform-detail")
 def platform_detail(
     platform: str = Query(...),

@@ -278,6 +278,13 @@ body {
   .content-card-grid { grid-template-columns: 1fr; }
 }
 
+/* ===== HOT CONTENT ===== */
+.hot-plat-block { margin-bottom: 18px; }
+.hot-plat-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.hot-plat-count { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: .05em; }
+.hot-plat-block .top-item { margin-bottom: 8px; }
+.hot-plat-block .top-item .tm { color: var(--text-muted); font-size: 11px; }
+
 /* Status */
 .status-dot { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; }
 .status-dot::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
