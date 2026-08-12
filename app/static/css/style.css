@@ -97,10 +97,10 @@
   --text-muted: #64748B;
   --chrome: #0F1B2D;
 
-  --douyin: #FF5A7A; --douyin-muted: rgba(255,90,122,0.10);
-  --shipinhao: #34D399; --shipinhao-muted: rgba(52,211,153,0.10);
-  --gzh: #60A5FA; --gzh-muted: rgba(96,165,250,0.10);
-  --xhs: #F87171; --xhs-muted: rgba(248,113,113,0.10);
+  --douyin: #2563EB; --douyin-muted: rgba(37,99,235,0.10);
+  --shipinhao: #D97706; --shipinhao-muted: rgba(217,119,6,0.12);
+  --gzh: #059669; --gzh-muted: rgba(5,150,105,0.12);
+  --xhs: #DC2626; --xhs-muted: rgba(220,38,38,0.12);
   --up: #34D399; --down: #F87171;
 
   --sidebar-width: 200px;
@@ -222,8 +222,8 @@ body {
 .kpi-track { height: 4px; background: var(--bg-hover); border-radius: 2px; overflow: hidden; }
 .kpi-fill { height: 100%; border-radius: 2px; transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
 .kpi-fill.accent { background: var(--accent); }
-.kpi-fill.green { background: var(--shipinhao); }
-.kpi-fill.blue { background: var(--gzh); }
+.kpi-fill.green { background: #10B981; }
+.kpi-fill.blue { background: #60A5FA; }
 
 /* ===== TABLE ===== */
 .data-table { width: 100%; border-collapse: collapse; }
@@ -255,10 +255,10 @@ body {
   border-top: 4px solid var(--accent);
   position: relative; overflow: hidden;
 }
-.content-plat-card.douyin { border-top-color: #FF5A7A; }
-.content-plat-card.shipinhao { border-top-color: #10B981; }
-.content-plat-card.gzh { border-top-color: #2563EB; }
-.content-plat-card.xhs { border-top-color: #F97316; }
+.content-plat-card.douyin { border-top-color: var(--douyin); }
+.content-plat-card.shipinhao { border-top-color: var(--shipinhao); }
+.content-plat-card.gzh { border-top-color: var(--gzh); }
+.content-plat-card.xhs { border-top-color: var(--xhs); }
 .content-plat-card-head {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 12px; flex-wrap: wrap; gap: 6px;
@@ -278,6 +278,10 @@ body {
   display: flex; align-items: center; justify-content: center;
   font-size: 11px; font-weight: 700;
 }
+.content-plat-card.douyin .content-acct-dot { background: var(--douyin-muted); color: var(--douyin); }
+.content-plat-card.shipinhao .content-acct-dot { background: var(--shipinhao-muted); color: #B45309; }
+.content-plat-card.gzh .content-acct-dot { background: var(--gzh-muted); color: #047857; }
+.content-plat-card.xhs .content-acct-dot { background: var(--xhs-muted); color: #B91C1C; }
 .content-acct-name { font-size: 12px; font-weight: 700; color: var(--text-primary); }
 .content-acct-count { font-size: 10px; color: var(--text-muted); margin-left: auto; font-family: var(--font-mono); }
 
@@ -571,7 +575,7 @@ body {
 .lead-bar-fill.region { background: #8B5CF6; }
 .lead-bar-fill.gold { background: #F59E0B; }
 .lead-bar-fill.invalid { background: #EF4444; }
-.lead-bar-fill.gzh { background: #10B981; }
+.lead-bar-fill.gzh { background: var(--gzh); }
 .lead-bar-fill.shipin { background: #F59E0B; }
 
 /* ===== LEADS CROSS ANALYSIS ===== */
@@ -922,10 +926,10 @@ body {
   transform: translateY(-1px);
 }
 .stat-card::before { width: 4px; }
-.stat-card.douyin::before { background: linear-gradient(180deg, #FF5A7A, #FB7185); }
-.stat-card.shipinhao::before { background: linear-gradient(180deg, #10B981, #34D399); }
-.stat-card.gzh::before { background: linear-gradient(180deg, #2563EB, #60A5FA); }
-.stat-card.xhs::before { background: linear-gradient(180deg, #F97316, #F87171); }
+.stat-card.douyin::before { background: linear-gradient(180deg, #3B82F6, #2563EB); }
+.stat-card.shipinhao::before { background: linear-gradient(180deg, #F59E0B, #D97706); }
+.stat-card.gzh::before { background: linear-gradient(180deg, #10B981, #059669); }
+.stat-card.xhs::before { background: linear-gradient(180deg, #EF4444, #DC2626); }
 .stat-value { font-size: 28px; }
 
 /* ---- 平台数据筛选区 ---- */
@@ -989,9 +993,9 @@ body {
   background: var(--bg-elevated); border-radius: 10px; padding: 12px 14px;
   border-left: 3px solid var(--nc-blue);
 }
-.nc-team-item:nth-child(2) { border-left-color: #10B981; }
-.nc-team-item:nth-child(3) { border-left-color: #F97316; }
-.nc-team-item:nth-child(4) { border-left-color: #8B5CF6; }
+.nc-team-item:nth-child(2) { border-left-color: var(--shipinhao); }
+.nc-team-item:nth-child(3) { border-left-color: var(--gzh); }
+.nc-team-item:nth-child(4) { border-left-color: var(--xhs); }
 .nc-team-label { font-size: 9px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.06em; margin-bottom: 4px; }
 .nc-team-val { font-family: var(--font-display); font-size: 22px; font-weight: 800; color: var(--text-primary); line-height: 1; }
 .nc-team-foot { margin-top: 12px; font-size: 10px; color: var(--text-muted); text-align: center; }
@@ -1006,10 +1010,10 @@ body {
 }
 .nc-plat-row:last-child { border-bottom: none; }
 .nc-plat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--accent); }
-.nc-plat-dot.douyin { background: #FF5A7A; }
-.nc-plat-dot.shipinhao { background: #10B981; }
-.nc-plat-dot.gzh { background: #2563EB; }
-.nc-plat-dot.xhs { background: #F97316; }
+.nc-plat-dot.douyin { background: var(--douyin); }
+.nc-plat-dot.shipinhao { background: var(--shipinhao); }
+.nc-plat-dot.gzh { background: var(--gzh); }
+.nc-plat-dot.xhs { background: var(--xhs); }
 .nc-plat-name { font-weight: 600; color: var(--text-primary); width: 52px; flex-shrink: 0; }
 .nc-plat-val { font-family: var(--font-mono); font-weight: 600; color: var(--text-secondary); margin-left: auto; }
 .nc-plat-chg { font-size: 10px; font-weight: 700; min-width: 44px; text-align: right; }
@@ -1032,6 +1036,10 @@ body {
 .nc-acc-name { width: 64px; flex-shrink: 0; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nc-acc-track { flex: 1; height: 6px; background: var(--bg-hover); border-radius: 3px; overflow: hidden; }
 .nc-acc-track i { display: block; height: 100%; background: linear-gradient(90deg, var(--nc-blue-2), var(--nc-blue)); border-radius: 3px; }
+.nc-acc-group.g-douyin .nc-acc-track i { background: linear-gradient(90deg, #3B82F6, #2563EB); }
+.nc-acc-group.g-shipinhao .nc-acc-track i { background: linear-gradient(90deg, #F59E0B, #D97706); }
+.nc-acc-group.g-gzh .nc-acc-track i { background: linear-gradient(90deg, #10B981, #059669); }
+.nc-acc-group.g-xhs .nc-acc-track i { background: linear-gradient(90deg, #EF4444, #DC2626); }
 .nc-acc-val { font-family: var(--font-mono); color: var(--text-muted); min-width: 44px; text-align: right; }
 
 /* 热门卡 */

@@ -156,7 +156,7 @@ function switchNcMode(mode) {
 }
 
 function platColor(p) {
-  return { 抖音: "#FF5A7A", 视频号: "#10B981", 公众号: "#2563EB", 小红书: "#F97316" }[p] || "#2563EB";
+  return { 抖音: "#2563EB", 视频号: "#D97706", 公众号: "#059669", 小红书: "#DC2626" }[p] || "#2563EB";
 }
 
 async function loadOverviewNC() {
@@ -289,6 +289,8 @@ function renderNcStats(data, trendResults, mode) {
 function renderNcAccounts(accResults, mode) {
   const el = document.getElementById("nc-accounts");
   if (!el) return;
+  const gCls = { 抖音: "g-douyin", 视频号: "g-shipinhao", 公众号: "g-gzh", 小红书: "g-xhs" };
+  const dCls = { 抖音: "douyin", 视频号: "shipinhao", 公众号: "gzh", 小红书: "xhs" };
   let html = `<div class="nc-card-head"><span class="nc-card-title">各平台账号</span><span class="nc-card-badge">${mode === "month" ? "月度" : "周度"}</span></div>`;
   PLATFORMS.forEach(p => {
     const list = accResults[p] || [];
@@ -302,8 +304,8 @@ function renderNcAccounts(accResults, mode) {
           <span class="nc-acc-val">${fmt(a.plays_reads)}</span>
         </div>`;
     }).join("");
-    html += `<div class="nc-acc-group">
-      <div class="nc-acc-plat"><span class="nc-plat-dot ${p === "抖音" ? "douyin" : p === "视频号" ? "shipinhao" : p === "公众号" ? "gzh" : "xhs"}"></span>${p}</div>
+    html += `<div class="nc-acc-group ${gCls[p] || ''}">
+      <div class="nc-acc-plat"><span class="nc-plat-dot ${dCls[p] || ''}"></span>${p}</div>
       ${block || '<div class="nc-empty">暂无数据</div>'}
     </div>`;
   });
@@ -862,6 +864,7 @@ async function loadDashboardDetail(allData, platform, account) {
     if (!r.ok) throw new Error("趋势数据加载失败");
     const { trend } = await r.json();
     const bars = $qs("#trend-bars");
+    const barColor = platColor(platform);
     if (trend && trend.length) {
       const maxVal = Math.max(...trend.map(t => t.plays_reads || 0), 1);
       bars.innerHTML = trend.map(t => {
@@ -869,7 +872,7 @@ async function loadDashboardDetail(allData, platform, account) {
         const h = Math.max(4, (val / maxVal) * 120);
         return `
           <div data-tooltip="${t.label}: ${fmt(val)}" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:4px">
-            <div style="background:var(--accent);border-radius:3px 3px 0 0;min-height:4px;height:${h}px;opacity:${0.3 + (h/120)*0.7};transition:height 0.3s"></div>
+            <div style="background:${barColor};border-radius:3px 3px 0 0;min-height:4px;height:${h}px;opacity:${0.3 + (h/120)*0.7};transition:height 0.3s"></div>
             <div style="font-size:9px;color:var(--text-muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.label}</div>
           </div>`;
       }).join("");
