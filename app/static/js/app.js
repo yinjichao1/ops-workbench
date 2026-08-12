@@ -780,39 +780,109 @@ document.querySelectorAll(".detail-tab").forEach(tab => {
 });
 
 // ========== CONTENT ==========
+function getWeekFilterRange(value) {
+  if (!value) return { start: "", end: "" };
+  const [y, w] = value.split("-W").map(Number);
+  const jan4 = new Date(y, 0, 4);
+  const monday = new Date(jan4); monday.setDate(jan4.getDate() - ((jan4.getDay() || 7) - 1) + (w - 1) * 7);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  return { start: iso(monday), end: iso(sunday) };
+}
+function getMonthFilterRange(value) {
+  if (!value) return { start: "", end: "" };
+  const [y, m] = value.split("-").map(Number);
+  const last = new Date(y, m, 0);
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  return { start: `${value}-01`, end: iso(last) };
+}
+function getFilterRange(prefix) {
+  const mode = document.getElementById(`${prefix}-mode`)?.value || "week";
+  if (mode === "month") return getMonthFilterRange(document.getElementById(`${prefix}-month`)?.value);
+  return getWeekFilterRange(document.getElementById(`${prefix}-week`)?.value);
+}
+function onPeriodFilterChange(prefix, loader) {
+  const mode = document.getElementById(`${prefix}-mode`)?.value || "week";
+  const week = document.getElementById(`${prefix}-week`), month = document.getElementById(`${prefix}-month`);
+  if (week) week.style.display = mode === "week" ? "" : "none";
+  if (month) month.style.display = mode === "month" ? "" : "none";
+  loader();
+}
+function contentCardHtml(c) {
+  const platCls = { 抖音: "douyin", 视频号: "shipinhao", 公众号: "gzh", 小红书: "xhs" };
+  return `
+  <div class="content-item-card">
+    <div class="content-item-top">
+      <span class="content-item-date">${c.publish_date}</span>
+      <span class="content-item-type">${c.content_type}</span>
+      ${c.is_viral ? '<span class="content-item-viral">爆款</span>' : ''}
+    </div>
+    <div class="content-item-title" title="${(c.title || '未命名').replace(/"/g, "&quot;")}">${c.title || '未命名'}</div>
+    <div class="content-item-stats">
+      <span>播放 ${fmt(c.impressions || 0)}</span>
+      <span>赞 ${fmt(c.likes || 0)}</span>
+      <span>评 ${fmt(c.comments || 0)}</span>
+      <span>转 ${fmt(c.shares || 0)}</span>
+    </div>
+    <div class="content-item-actions">
+      <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation();editContent(${c.id})">编辑</button>
+      <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteContent(${c.id})">删除</button>
+    </div>
+  </div>`;
+}
+
 async function loadContent() {
-  showSkeleton("content-table-body", "table");
+  const container = $qs("#content-cards");
+  if (!container) return;
+  container.innerHTML = '<div class="empty-state"><p>加载中…</p></div>';
   try {
-    const r = await fetch(API + "/content/detail?page_size=50");
+    const range = getFilterRange("content");
+    const params = new URLSearchParams({ page_size: "200", start_date: range.start, end_date: range.end });
+    const r = await fetch(API + "/content/detail?" + params.toString());
     if (!r.ok) throw new Error("加载失败");
     const { data } = await r.json();
-    const tbody = $qs("#content-table tbody");
     if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="7">
-        <div class="empty-state">
-          <div class="empty-icon">&#128196;</div>
-          <h3>暂无内容数据</h3>
-          <p>录入已发布内容的播放量、点赞等数据，开始追踪表现</p>
-          <button class="btn btn-primary btn-sm empty-cta" onclick="openContentForm()">录入第一条内容</button>
-        </div>
-      </td></tr>`;
+      container.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">&#128196;</div>
+        <h3>暂无内容数据</h3>
+        <p>录入已发布内容的播放量、点赞等数据，开始追踪表现</p>
+        <button class="btn btn-primary btn-sm empty-cta" onclick="openContentForm()">录入第一条内容</button>
+      </div>`;
       return;
     }
     const platMap = { 抖音: "douyin", 视频号: "shipinhao", 公众号: "gzh", 小红书: "xhs" };
-    tbody.innerHTML = data.map(d => `
-      <tr>
-        <td>${d.publish_date}</td>
-        <td><span class="platform-badge ${platMap[d.platform]||''}">${d.platform}</span></td>
-        <td>${d.content_type}</td>
-        <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.title}</td>
-        <td>${d.is_viral ? '🔥 爆款' : '常规'}</td>
-        <td>${d.likes || 0}</td>
-        <td>${d.author || '-'}</td>
-        <td><button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation();editContent(${d.id})">编辑</button> <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteContent(${d.id})">删除</button></td>
-      </tr>
-    `).join("");
+    // 按平台分组
+    const byPlat = {};
+    data.forEach(d => { (byPlat[d.platform] = byPlat[d.platform] || []).push(d); });
+    let html = "";
+    PLATFORMS.forEach(plat => {
+      const list = byPlat[plat] || [];
+      if (!list.length) return;
+      // 平台内按账号分组
+      const byAcct = {};
+      list.forEach(d => { const a = d.author || "未分配账号"; (byAcct[a] = byAcct[a] || []).push(d); });
+      const acctHtml = Object.keys(byAcct).map(acct => `
+        <div class="content-acct-group">
+          <div class="content-acct-header">
+            <span class="content-acct-name">${acct}</span>
+            <span class="content-acct-count">${byAcct[acct].length} 条</span>
+          </div>
+          <div class="content-card-grid">
+            ${byAcct[acct].map(contentCardHtml).join("")}
+          </div>
+        </div>`).join("");
+      html += `<div class="content-plat-block">
+        <div class="content-plat-header">
+          <span class="platform-badge ${platMap[plat] || ''}">${plat}</span>
+          <span class="content-plat-count">${list.length} 条内容</span>
+        </div>
+        ${acctHtml}
+      </div>`;
+    });
+    container.innerHTML = html || '<div class="empty-state"><p>当前周期暂无内容</p></div>';
   } catch(e) {
     toast("内容数据加载失败", "error");
+    container.innerHTML = '<div class="empty-state"><p>内容数据加载失败</p></div>';
   }
 }
 
@@ -833,8 +903,11 @@ async function editContent(id) {
   } catch(e) { toast("获取内容详情失败", "error"); return; }
   if (!item) { toast("未找到该内容", "error"); return; }
   const mid = "content-edit-" + Date.now();
+  const acctOpts = (ACCOUNTS[item.platform] || ["未分配账号"]).map(a => `<option ${item.author === a ? "selected" : ""}>${a}</option>`).join("");
   const html = `<div class="modal-overlay show" id="${mid}"><div class="modal"><h2>编辑内容明细</h2>
     <div class="form-group"><label>标题</label><input id="ec-title" value="${(item.title || "").replace(/"/g, "&quot;")}"></div>
+    <div class="form-group"><label>平台</label><select id="ec-plat" onchange="updateAccountSelect('ec-plat','ec-acct')">${PLATFORMS.map(p=>`<option ${p===item.platform?"selected":""}>${p}</option>`).join("")}</select></div>
+    <div class="form-group"><label>账号</label><select id="ec-acct">${acctOpts}</select></div>
     <div class="form-group"><label>发布日期</label><input type="date" id="ec-date" value="${item.publish_date || ""}"></div>
     <div class="form-group"><label>播放/曝光</label><input type="number" id="ec-imp" value="${item.impressions || 0}"></div>
     <div class="form-group"><label>点赞</label><input type="number" id="ec-likes" value="${item.likes || 0}"></div>
@@ -847,12 +920,16 @@ async function editContent(id) {
     </div>
   </div></div>`;
   document.body.insertAdjacentHTML("beforeend", html);
+  updateAccountSelect("ec-plat", "ec-acct");
 }
 
 async function saveContentEdit(id, modalId) {
+  const acctEl = $qs("#ec-acct");
   const body = {
     title: $qs("#ec-title").value,
+    platform: $qs("#ec-plat").value,
     publish_date: $qs("#ec-date").value || undefined,
+    author: acctEl ? acctEl.value : undefined,
     impressions: +($qs("#ec-imp").value) || 0,
     likes: +($qs("#ec-likes").value) || 0,
     comments: +($qs("#ec-comments").value) || 0,
@@ -1389,7 +1466,8 @@ function openContentForm() {
   const mid = "cf-" + Date.now();
   const html = `<div class="modal-overlay show" id="${mid}"><div class="modal"><h2>录入内容明细</h2>
     <div class="form-group"><label>标题 <span class="required">*</span></label><input id="cf-title" placeholder="内容标题"><span class="error-msg">请输入标题</span></div>
-    <div class="form-group"><label>平台 <span class="required">*</span></label><select id="cf-plat">${PLATFORMS.map(p=>`<option>${p}</option>`).join("")}</select></div>
+    <div class="form-group"><label>平台 <span class="required">*</span></label><select id="cf-plat" onchange="updateAccountSelect('cf-plat','cf-acct')">${PLATFORMS.map(p=>`<option>${p}</option>`).join("")}</select></div>
+    <div class="form-group"><label>账号 <span class="required">*</span></label><select id="cf-acct"></select></div>
     <div class="form-group"><label>类型</label><select id="cf-type"><option>短视频</option><option>图文</option><option>长文章</option><option>笔记</option></select></div>
     <div class="form-group"><label>发布日期 <span class="required">*</span></label><input type="date" id="cf-date" value="${new Date().toISOString().split('T')[0]}"><span class="error-msg">请选择日期</span></div>
     <div class="form-group"><label>链接</label><input id="cf-url" placeholder="https://..."></div>
@@ -1405,17 +1483,19 @@ function openContentForm() {
     </div>
   </div></div>`;
   document.body.insertAdjacentHTML("beforeend", html);
+  updateAccountSelect("cf-plat", "cf-acct");
 }
 
 async function saveContent(modalId) {
   if (!validateForm(modalId, ["cf-title", "cf-plat", "cf-date"])) {
     toast("请填写标题、平台和日期", "error"); return;
   }
+  const acctEl = $qs("#cf-acct");
   const body = {
     title: $qs("#cf-title").value, platform: $qs("#cf-plat").value,
     content_type: $qs("#cf-type").value, publish_date: $qs("#cf-date").value,
     url: $qs("#cf-url").value, impressions: +$qs("#cf-imp").value||0,
-    likes: +$qs("#cf-likes").value||0, author: $qs("#cf-author").value,
+    likes: +$qs("#cf-likes").value||0, author: acctEl ? acctEl.value : $qs("#cf-author").value,
     notes: $qs("#cf-notes").value,
   };
   try {

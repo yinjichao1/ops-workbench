@@ -35,6 +35,7 @@ class ContentIn(BaseModel):
 
 class ContentUpdateIn(BaseModel):
     title: Optional[str] = None
+    platform: Optional[str] = None
     publish_date: Optional[str] = None
     impressions: Optional[int] = None
     likes: Optional[int] = None
@@ -45,6 +46,7 @@ class ContentUpdateIn(BaseModel):
     reads: Optional[int] = None
     conversion_count: Optional[int] = None
     is_viral: Optional[int] = None
+    author: Optional[str] = None
     notes: Optional[str] = None
 
 
