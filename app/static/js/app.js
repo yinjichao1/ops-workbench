@@ -823,6 +823,51 @@ async function deleteContent(id) {
   loadContent(); toast("内容已删除", "success");
 }
 
+async function editContent(id) {
+  let item = null;
+  try {
+    const r = await fetch(API + `/content/detail?page_size=100`);
+    if (!r.ok) throw new Error("加载失败");
+    const { data } = await r.json();
+    item = data.find(x => x.id === id);
+  } catch(e) { toast("获取内容详情失败", "error"); return; }
+  if (!item) { toast("未找到该内容", "error"); return; }
+  const mid = "content-edit-" + Date.now();
+  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal"><h2>编辑内容明细</h2>
+    <div class="form-group"><label>标题</label><input id="ec-title" value="${(item.title || "").replace(/"/g, "&quot;")}"></div>
+    <div class="form-group"><label>发布日期</label><input type="date" id="ec-date" value="${item.publish_date || ""}"></div>
+    <div class="form-group"><label>播放/曝光</label><input type="number" id="ec-imp" value="${item.impressions || 0}"></div>
+    <div class="form-group"><label>点赞</label><input type="number" id="ec-likes" value="${item.likes || 0}"></div>
+    <div class="form-group"><label>评论</label><input type="number" id="ec-comments" value="${item.comments || 0}"></div>
+    <div class="form-group"><label>分享</label><input type="number" id="ec-shares" value="${item.shares || 0}"></div>
+    <div class="form-group"><label>备注</label><textarea id="ec-notes">${(item.notes || "").replace(/</g, "&lt;")}</textarea></div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('${mid}')">取消</button>
+      <button type="button" class="btn btn-primary btn-sm" onclick="saveContentEdit(${id},'${mid}')">保存修改</button>
+    </div>
+  </div></div>`;
+  document.body.insertAdjacentHTML("beforeend", html);
+}
+
+async function saveContentEdit(id, modalId) {
+  const body = {
+    title: $qs("#ec-title").value,
+    publish_date: $qs("#ec-date").value || undefined,
+    impressions: +($qs("#ec-imp").value) || 0,
+    likes: +($qs("#ec-likes").value) || 0,
+    comments: +($qs("#ec-comments").value) || 0,
+    shares: +($qs("#ec-shares").value) || 0,
+    notes: $qs("#ec-notes").value,
+  };
+  try {
+    const r = await fetch(API + `/content/detail/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error("保存失败");
+    closeModal(modalId);
+    loadContent();
+    toast("内容已更新", "success");
+  } catch(e) { toast("保存失败，请重试", "error"); }
+}
+
 // ========== CALENDAR ==========
 async function loadCalendar() { loadMonthCalendar(); }
 

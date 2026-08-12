@@ -35,6 +35,7 @@ class ContentIn(BaseModel):
 
 class ContentUpdateIn(BaseModel):
     title: Optional[str] = None
+    publish_date: Optional[str] = None
     impressions: Optional[int] = None
     likes: Optional[int] = None
     comments: Optional[int] = None
@@ -109,6 +110,8 @@ def update_content(content_id: int, body: ContentUpdateIn, db: Session = Depends
     if not record:
         return {"ok": False, "error": "not found"}
     for k, v in body.model_dump(exclude_unset=True).items():
+        if k == "publish_date" and v:
+            v = date.fromisoformat(v)
         setattr(record, k, v)
     db.commit()
     return {"ok": True}
