@@ -98,7 +98,10 @@ def list_content(
 @router.post("/detail")
 def create_content(body: ContentIn, db: Session = Depends(get_db)):
     """录入内容明细。"""
-    record = ContentDetail(**body.model_dump())
+    data = body.model_dump()
+    if data.get("publish_date"):
+        data["publish_date"] = date.fromisoformat(data["publish_date"])
+    record = ContentDetail(**data)
     db.add(record)
     db.commit()
     db.refresh(record)

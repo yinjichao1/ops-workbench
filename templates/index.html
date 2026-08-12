@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <title>思格教育 · 运营工作台</title>
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=0812a">
+<link rel="stylesheet" href="/static/css/style.css?v=0812b">
 </head>
 <body>
 
@@ -270,10 +270,13 @@
         <div class="card-body" style="padding:0">
           <div class="card-header" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <span class="card-title">内容明细</span>
-            <select id="content-mode" onchange="onPeriodFilterChange('content',loadContent)"><option value="week">按周</option><option value="month">按月</option></select>
-            <input type="week" id="content-week" aria-label="内容周次">
-            <input type="month" id="content-month" aria-label="内容月份" style="display:none">
-            <button class="btn btn-outline btn-sm" onclick="loadContent()">查询</button>
+            <span id="content-count" style="font-size:11px;color:var(--text-muted);font-weight:600"></span>
+            <div style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <select id="content-mode" onchange="onPeriodFilterChange('content',loadContent)"><option value="week">按周</option><option value="month">按月</option></select>
+              <input type="week" id="content-week" aria-label="内容周次">
+              <input type="month" id="content-month" aria-label="内容月份" style="display:none">
+              <button class="btn btn-outline btn-sm" onclick="loadContent()">查询</button>
+            </div>
           </div>
           <div id="content-cards" style="padding:16px"></div>
         </div>
@@ -344,6 +347,6 @@ document.querySelectorAll('.toggle-pill').forEach(function(pill){
   });
 });
 </script>
-<script src="/static/js/app.js?v=0812a"></script>
+<script src="/static/js/app.js?v=0812b"></script>
 </body>
 </html>

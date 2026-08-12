@@ -1081,26 +1081,26 @@ function onPeriodFilterChange(prefix, loader) {
   if (month) month.style.display = mode === "month" ? "" : "none";
   loader();
 }
-function contentCardHtml(c) {
-  const platCls = { 抖音: "douyin", 视频号: "shipinhao", 公众号: "gzh", 小红书: "xhs" };
+function contentRowHtml(c) {
+  const viral = c.is_viral ? '<span class="content-item-viral">爆款</span>' : '';
+  const type = c.content_type ? `<span class="content-item-type">${c.content_type}</span>` : '';
+  const title = (c.title || "未命名").replace(/</g, "&lt;");
+  const date = (c.publish_date || "").slice(5); // MM-DD
   return `
-  <div class="content-item-card">
-    <div class="content-item-top">
-      <span class="content-item-date">${c.publish_date}</span>
-      <span class="content-item-type">${c.content_type}</span>
-      ${c.is_viral ? '<span class="content-item-viral">爆款</span>' : ''}
-    </div>
-    <div class="content-item-title" title="${(c.title || '未命名').replace(/"/g, "&quot;")}">${c.title || '未命名'}</div>
-    <div class="content-item-stats">
-      <span>播放 ${fmt(c.impressions || 0)}</span>
-      <span>赞 ${fmt(c.likes || 0)}</span>
-      <span>评 ${fmt(c.comments || 0)}</span>
-      <span>转 ${fmt(c.shares || 0)}</span>
-    </div>
-    <div class="content-item-actions">
-      <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation();editContent(${c.id})">编辑</button>
-      <button type="button" class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteContent(${c.id})">删除</button>
-    </div>
+  <div class="content-tbl-row">
+    <span class="ct-date">${date}</span>
+    <span class="ct-title">
+      <span class="ct-title-text" title="${title.replace(/"/g, "&quot;")}">${title}</span>
+      ${type}${viral}
+    </span>
+    <span class="ct-num">${fmt(c.impressions || 0)}</span>
+    <span class="ct-num">${fmt(c.likes || 0)}</span>
+    <span class="ct-num">${fmt(c.comments || 0)}</span>
+    <span class="ct-num">${fmt(c.shares || 0)}</span>
+    <span class="ct-act">
+      <button type="button" class="ct-btn edit" title="编辑" aria-label="编辑这条内容" onclick="event.stopPropagation();editContent(${c.id})">✎</button>
+      <button type="button" class="ct-btn del" title="删除" aria-label="删除这条内容" onclick="event.stopPropagation();deleteContent(${c.id})">🗑</button>
+    </span>
   </div>`;
 }
 
@@ -1108,6 +1108,8 @@ async function loadContent() {
   const container = $qs("#content-cards");
   if (!container) return;
   container.innerHTML = '<div class="empty-state"><p>加载中…</p></div>';
+  const countEl = document.getElementById("content-count");
+  if (countEl) countEl.textContent = "";
   try {
     const range = getFilterRange("content");
     const params = new URLSearchParams({ page_size: "100", start_date: range.start, end_date: range.end });
@@ -1115,6 +1117,7 @@ async function loadContent() {
     if (!r.ok) throw new Error("加载失败");
     const { data } = await r.json();
     if (!data.length) {
+      if (countEl) countEl.textContent = "共 0 条";
       container.innerHTML = `<div class="empty-state">
         <div class="empty-icon">&#128196;</div>
         <h3>暂无内容数据</h3>
@@ -1123,6 +1126,7 @@ async function loadContent() {
       </div>`;
       return;
     }
+    if (countEl) countEl.textContent = `共 ${data.length} 条内容`;
     const platMap = { 抖音: "douyin", 视频号: "shipinhao", 公众号: "gzh", 小红书: "xhs" };
     // 按平台分组
     const byPlat = {};
@@ -1134,20 +1138,41 @@ async function loadContent() {
       // 平台内按账号分组
       const byAcct = {};
       list.forEach(d => { const a = d.author || "未分配账号"; (byAcct[a] = byAcct[a] || []).push(d); });
-      const acctHtml = Object.keys(byAcct).map(acct => `
-        <div class="content-acct-group">
-          <div class="content-acct-header">
+      const platPlays = list.reduce((s, d) => s + (d.impressions || 0), 0);
+      const platLikes = list.reduce((s, d) => s + (d.likes || 0), 0);
+      const platEng = list.reduce((s, d) => s + (d.likes || 0) + (d.comments || 0) + (d.shares || 0), 0);
+      const acctHtml = Object.keys(byAcct).map(acct => {
+        const items = byAcct[acct];
+        const acctPlays = items.reduce((s, d) => s + (d.impressions || 0), 0);
+        const acctLikes = items.reduce((s, d) => s + (d.likes || 0), 0);
+        return `
+        <div class="content-acct-section">
+          <div class="content-acct-section-head">
+            <span class="content-acct-dot">${acct.slice(0, 1)}</span>
             <span class="content-acct-name">${acct}</span>
-            <span class="content-acct-count">${byAcct[acct].length} 条</span>
+            <span class="content-acct-count">${items.length} 条 · 播放 ${fmt(acctPlays)} · 赞 ${fmt(acctLikes)}</span>
           </div>
-          <div class="content-card-grid">
-            ${byAcct[acct].map(contentCardHtml).join("")}
+          <div class="content-tbl">
+            <div class="content-tbl-head">
+              <span class="ct-date">日期</span>
+              <span class="ct-title">标题 / 类型</span>
+              <span class="ct-num">播放</span>
+              <span class="ct-num">点赞</span>
+              <span class="ct-num">评论</span>
+              <span class="ct-num">分享</span>
+              <span class="ct-act">操作</span>
+            </div>
+            ${items.map(contentRowHtml).join("")}
           </div>
-        </div>`).join("");
-      html += `<div class="content-plat-block">
-        <div class="content-plat-header">
-          <span class="platform-badge ${platMap[plat] || ''}">${plat}</span>
-          <span class="content-plat-count">${list.length} 条内容</span>
+        </div>`;
+      }).join("");
+      html += `<div class="content-plat-card ${platMap[plat] || ''}">
+        <div class="content-plat-card-head">
+          <span class="content-plat-card-name">
+            <span class="platform-badge ${platMap[plat] || ''}">${plat}</span>
+            <span class="content-plat-card-count">${list.length} 条内容</span>
+          </span>
+          <span class="content-plat-card-sum">播放 ${fmt(platPlays)} · 赞 ${fmt(platLikes)} · 互动 ${fmt(platEng)}</span>
         </div>
         ${acctHtml}
       </div>`;
