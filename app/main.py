@@ -10,6 +10,21 @@ from .models import Base, engine
 # Create tables
 Base.metadata.create_all(bind=engine)
 
+# 轻量迁移：为已存在的表补充新增列（create_all 不会改已有表）
+from sqlalchemy import inspect, text  # noqa: E402
+
+
+def _migrate_columns():
+    insp = inspect(engine)
+    if "content_calendar" in insp.get_table_names():
+        cols = {c["name"] for c in insp.get_columns("content_calendar")}
+        if "account" not in cols:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE content_calendar ADD COLUMN account VARCHAR(50) DEFAULT ''"))
+
+
+_migrate_columns()
+
 app = FastAPI(title="新媒体运营工作台", version="0.2.0")
 
 # CORS

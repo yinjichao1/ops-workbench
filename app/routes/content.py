@@ -426,6 +426,7 @@ class CalendarIn(BaseModel):
     content_type: str
     status: str = "待策划"
     scheduled_date: str
+    account: str = ""
     assignee: str = ""
     description: str = ""
     related_topic_id: Optional[int] = None
@@ -437,6 +438,7 @@ class CalendarUpdateIn(BaseModel):
     content_type: Optional[str] = None
     status: Optional[str] = None
     scheduled_date: Optional[str] = None
+    account: Optional[str] = None
     assignee: Optional[str] = None
     description: Optional[str] = None
     related_topic_id: Optional[int] = None
@@ -470,6 +472,7 @@ def list_calendar(
                 "content_type": r.content_type,
                 "status": r.status,
                 "scheduled_date": str(r.scheduled_date),
+                "account": r.account,
                 "assignee": r.assignee,
                 "description": r.description,
                 "related_topic_id": r.related_topic_id,

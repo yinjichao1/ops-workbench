@@ -1402,7 +1402,7 @@ async function loadCalendarList() {
       const list = byPlat[p] || [];
       if (!list.length) return;
       const byAcct = {};
-      list.forEach(d => { const a = d.assignee || "未分配"; (byAcct[a] = byAcct[a] || []).push(d); });
+      list.forEach(d => { const a = d.account || d.assignee || "未分配"; (byAcct[a] = byAcct[a] || []).push(d); });
       const waitPublish = list.filter(x => x.status === "待发布").length;
       const making = list.filter(x => x.status === "制作中").length;
       const acctHtml = Object.keys(byAcct).map(acct => `
@@ -1467,7 +1467,7 @@ function loadMonthCalendar(year, month) {
         const isToday = ds === todayStr;
         html += `<div class="calendar-day ${isToday ? 'today' : ''}" onclick="openCreateCalendar('${ds}')">
           <div class="day-num">${d}</div>
-          ${evts.map(e => `<div class="calendar-event ${platCls[e.platform]||''}" onclick="event.stopPropagation();editCalendar(${e.id})" title="${e.platform} · ${e.status}"><span class="cal-platform">${e.platform}</span><span class="cal-title">${e.title}</span></div>`).join("")}
+          ${evts.map(e => `<div class="calendar-event ${platCls[e.platform]||''}" onclick="event.stopPropagation();editCalendar(${e.id})" title="${e.platform} · ${e.account||'未定账号'} · ${e.status}"><span class="cal-platform">${e.platform}</span>${e.account ? `<span class="cal-account">${e.account}</span>` : ''}<span class="cal-title">${e.title}</span></div>`).join("")}
         </div>`;
       }
       document.getElementById("cal-grid").innerHTML = html;
@@ -1494,7 +1494,8 @@ function openCreateCalendar(ds) {
   const id = "cal-modal-" + Date.now();
   const html = `<div class="modal-overlay show" id="${id}"><div class="modal"><h2>新建排期 — ${ds}</h2>
     <div class="form-group"><label>标题 <span class="required">*</span></label><input id="ci-title" placeholder="输入内容标题"><span class="error-msg">请输入标题</span></div>
-    <div class="form-group"><label>平台</label><select id="ci-platform">${PLATFORMS.map(p=>`<option>${p}</option>`).join("")}</select></div>
+    <div class="form-group"><label>平台</label><select id="ci-platform" onchange="updateAccountSelect('ci-platform','ci-account')">${PLATFORMS.map(p=>`<option>${p}</option>`).join("")}</select></div>
+    <div class="form-group"><label>账号</label><select id="ci-account">${(ACCOUNTS["抖音"]||[]).map(a=>`<option>${a}</option>`).join("")}</select></div>
     <div class="form-group"><label>内容类型</label><select id="ci-type"><option>短视频</option><option>图文</option><option>长文章</option><option>笔记</option></select></div>
     <div class="form-group"><label>负责人</label><input id="ci-assignee" placeholder="负责人姓名"></div>
     <div class="form-actions">
@@ -1512,6 +1513,7 @@ async function saveCalendar(ds, modalId) {
   const body = {
     title: $qs("#ci-title").value, platform: $qs("#ci-platform").value,
     content_type: $qs("#ci-type").value, scheduled_date: ds,
+    account: $qs("#ci-account").value,
     assignee: $qs("#ci-assignee").value, status: "待策划"
   };
   try {
@@ -1528,9 +1530,11 @@ async function editCalendar(id) {
     const item = data.find(d => d.id === id);
     if (!item) { toast("未找到该排期", "error"); return; }
     const mid = "cal-edit-" + Date.now();
+    const acctOpts = (ACCOUNTS[item.platform] || ["主号"]).map(a => `<option ${a===item.account?"selected":""}>${a}</option>`).join("");
     const html = `<div class="modal-overlay show" id="${mid}"><div class="modal"><h2>编辑排期</h2>
       <div class="form-group"><label>标题</label><input id="ce-title" value="${(item.title || "").replace(/"/g, "&quot;")}"></div>
-      <div class="form-group"><label>平台</label><select id="ce-platform">${PLATFORMS.map(p=>`<option ${p===item.platform?"selected":""}>${p}</option>`).join("")}</select></div>
+      <div class="form-group"><label>平台</label><select id="ce-platform" onchange="updateAccountSelect('ce-platform','ce-account')">${PLATFORMS.map(p=>`<option ${p===item.platform?"selected":""}>${p}</option>`).join("")}</select></div>
+      <div class="form-group"><label>账号</label><select id="ce-account">${acctOpts}</select></div>
       <div class="form-group"><label>内容类型</label><select id="ce-type">${["短视频","图文","长文章","笔记"].map(t=>`<option ${t===item.content_type?"selected":""}>${t}</option>`).join("")}</select></div>
       <div class="form-group"><label>排期日期</label><input type="date" id="ce-date" value="${item.scheduled_date || ""}"></div>
       <div class="form-group"><label>状态</label><select id="ce-status">
@@ -1551,6 +1555,7 @@ async function updateCalendar(id, modalId) {
   const body = {
     title: $qs("#ce-title").value,
     platform: $qs("#ce-platform").value,
+    account: $qs("#ce-account").value,
     content_type: $qs("#ce-type").value,
     scheduled_date: $qs("#ce-date").value,
     status: $qs("#ce-status").value,
@@ -2092,20 +2097,22 @@ function openBatchCalendarForm() {
   const PLAT = ["抖音","视频号","公众号","小红书"];
   const TYPES = ["短视频","图文","长文章","笔记"];
   const today = new Date().toISOString().split('T')[0];
+  const defAcct = (ACCOUNTS["抖音"] || ["主号"]).map(a=>`<option>${a}</option>`).join("");
   const rows = Array(10).fill(0).map((_, i) => `
     <div class="batch-row">
-      <input class="bc-title" placeholder="事件标题" style="flex:2">
-      <select class="bc-plat" style="flex:1">${PLAT.map(p=>`<option>${p}</option>`).join("")}</select>
-      <select class="bc-type" style="flex:0.9">${TYPES.map(t=>`<option>${t}</option>`).join("")}</select>
-      <input type="date" class="bc-date" value="${today}" style="flex:1.3">
-      <input class="bc-person" placeholder="负责人" style="flex:1">
-      <select class="bc-status" style="flex:1"><option>待策划</option><option>制作中</option><option>待审核</option><option>待发布</option></select>
-      <input class="bc-desc" placeholder="描述(选填)" style="flex:2">
+      <input class="bc-title" placeholder="事件标题" style="flex:1.8">
+      <select class="bc-plat" style="flex:0.9" onchange="batchPlatChange(this)">${PLAT.map(p=>`<option>${p}</option>`).join("")}</select>
+      <select class="bc-account" style="flex:1">${defAcct}</select>
+      <select class="bc-type" style="flex:0.8">${TYPES.map(t=>`<option>${t}</option>`).join("")}</select>
+      <input type="date" class="bc-date" value="${today}" style="flex:1.1">
+      <input class="bc-person" placeholder="负责人" style="flex:0.9">
+      <select class="bc-status" style="flex:0.9"><option>待策划</option><option>制作中</option><option>待审核</option><option>待发布</option></select>
+      <input class="bc-desc" placeholder="描述(选填)" style="flex:1.6">
     </div>`).join("");
-  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal" style="max-width:820px">
+  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal" style="max-width:960px">
     <h2>批量录入内容排期</h2>
     <div class="batch-head" style="display:flex;gap:6px;margin-bottom:6px;font-size:10px;font-weight:700;color:var(--text-muted)">
-      <span style="flex:2">标题</span><span style="flex:1">平台</span><span style="flex:0.9">类型</span><span style="flex:1.3">排期日期</span><span style="flex:1">负责人</span><span style="flex:1">状态</span><span style="flex:2">描述</span>
+      <span style="flex:1.8">标题</span><span style="flex:0.9">平台</span><span style="flex:1">账号</span><span style="flex:0.8">类型</span><span style="flex:1.1">排期日期</span><span style="flex:0.9">负责人</span><span style="flex:0.9">状态</span><span style="flex:1.6">描述</span>
     </div>
     <div class="batch-container">${rows}</div>
     <div class="form-actions">
@@ -2116,6 +2123,16 @@ function openBatchCalendarForm() {
   document.body.insertAdjacentHTML("beforeend", html);
 }
 
+// 批量录入：平台变化时联动该行的账号下拉
+function batchPlatChange(platSelect) {
+  const row = platSelect.closest(".batch-row");
+  if (!row) return;
+  const acct = row.querySelector(".bc-account");
+  if (!acct) return;
+  const accounts = ACCOUNTS[platSelect.value] || ["主号"];
+  acct.innerHTML = accounts.map(a => `<option>${a}</option>`).join("");
+}
+
 async function saveBatchCalendar(modalId) {
   const items = [];
   document.querySelectorAll(`#${modalId} .batch-row`).forEach(row => {
@@ -2124,6 +2141,7 @@ async function saveBatchCalendar(modalId) {
     items.push({
       title,
       platform: row.querySelector(".bc-plat").value,
+      account: row.querySelector(".bc-account").value,
       content_type: row.querySelector(".bc-type").value,
       scheduled_date: row.querySelector(".bc-date").value,
       status: row.querySelector(".bc-status").value,

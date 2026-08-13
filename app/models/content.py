@@ -75,6 +75,7 @@ class ContentCalendar(Base):
     )
     scheduled_date = Column(Date, nullable=False, index=True)
     published_date = Column(Date, nullable=True)
+    account = Column(String(50), default="", comment="发布账号（思格电网/安哥/范校等）")
     assignee = Column(String(50), default="")
     description = Column(Text, default="")
     related_topic_id = Column(Integer, ForeignKey("topic_ideas.id"), nullable=True)
