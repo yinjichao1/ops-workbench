@@ -303,28 +303,34 @@ class DealIn(BaseModel):
 
 @router.get("/leads/deals")
 def lead_deals(
-    mode: str = Query("week"),
+    mode: str = Query("recent"),
     week_val: str = Query(""),
     month_val: str = Query(""),
     year_val: int = Query(0),
+    days: int = Query(90, ge=1, le=730, description="最近 N 天，默认 90 天"),
     db: SqlSession = Depends(get_db),
 ):
-    """成单统计：列表 + 汇总（成单总数/金额、当月成单数/金额）。"""
+    """成单统计：默认查最近 90 天（保证录入即看到），支持按周/月/年筛选。"""
     today = date.today()
-    if mode == "month" and month_val:
-        y, m = int(month_val.split("-")[0]), int(month_val.split("-")[1])
-    else:
-        y, m = today.year, today.month
+    # 兜底：默认最近 N 天
+    start, end = today - timedelta(days=days), today
+    # 精确周期覆盖
     if mode == "year" and year_val:
         start, end = date(year_val, 1, 1), date(year_val, 12, 31)
-    elif mode == "month":
+    elif mode == "month" and month_val:
+        y, m = int(month_val.split("-")[0]), int(month_val.split("-")[1])
         start = date(y, m, 1)
         end = (date(y + 1, 1, 1) - timedelta(days=1)) if m == 12 else (date(y, m + 1, 1) - timedelta(days=1))
-    elif week_val:
-        start = date.fromisoformat(week_val)
-        end = start + timedelta(days=6)
-    else:
-        start, end = _last_week_range(today)
+    elif mode == "week" and week_val:
+        try:
+            if "-W" in week_val:
+                y, wk = week_val.split("-W")
+                start = date.fromisocalendar(int(y), int(wk), 1)  # 周一
+            else:
+                start = date.fromisoformat(week_val)
+            end = start + timedelta(days=6)
+        except Exception:
+            pass  # 解析失败保留最近 N 天
 
     rows = db.query(LeadDeal).filter(LeadDeal.deal_date >= start, LeadDeal.deal_date <= end).order_by(LeadDeal.deal_date.desc()).all()
     cur_month = (today.year, today.month)

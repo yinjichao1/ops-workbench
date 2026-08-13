@@ -2489,12 +2489,12 @@ async function loadLeads() {
       </div>`
     : '<div class="empty-state"><p>暂无数据</p></div>';
 
-  // 成单统计
-  loadDeals(mode, week, month, year);
+  // 成单统计：独立查最近 90 天（不依赖 loadLeads 的周/月维度，录入即看到）
+  loadDeads();
 }
 
-async function loadDeals(mode, week, month, year) {
-  const params = new URLSearchParams({ mode, week_val: week || "", month_val: month || "", year_val: year || 0 });
+async function loadDeads() {
+  const params = new URLSearchParams({ days: "90" });
   let d;
   try {
     const r = await fetch(API + "/leads/deals?" + params);
@@ -2505,7 +2505,7 @@ async function loadDeals(mode, week, month, year) {
     return;
   }
   const lbl = document.getElementById("deals-period-label");
-  if (lbl) lbl.textContent = `当前筛选：成单 ${d.total} 笔 · 金额 ¥${(d.total_amount||0).toLocaleString()}`;
+  if (lbl) lbl.textContent = `当前筛选：最近 90 天 · 成单 ${d.total} 笔 · 金额 ¥${(d.total_amount||0).toLocaleString()}`;
   document.getElementById("deals-cards").innerHTML = [
     { label: "成单总数", val: d.total, cls: "" },
     { label: "成单总金额", val: "¥" + (d.total_amount||0).toLocaleString(), cls: "up" },
