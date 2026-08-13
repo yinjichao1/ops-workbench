@@ -47,6 +47,13 @@ app.include_router(batch.router, prefix="/api", tags=["批量导入"])
 
 @app.get("/")
 async def index():
-    """Serve main SPA page."""
+    """Serve main SPA page. HTML 永不缓存，静态资源由 ?v= 版本号控制缓存。"""
     templates_dir = os.path.join(os.path.dirname(__file__), "..", "templates")
-    return FileResponse(os.path.join(templates_dir, "index.html"))
+    return FileResponse(
+        os.path.join(templates_dir, "index.html"),
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
