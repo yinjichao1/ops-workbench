@@ -79,6 +79,15 @@ function getPreviousWeekDate() {
   d.setDate(d.getDate() - (d.getDay() || 7) - 6);
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
+function getCurrentWeekDate() {
+  const d = new Date();
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function getCurrentMonthValue() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
 function switchOvMode(mode) {
   ovCurrentMode = mode;
   const w = document.getElementById("ov-mode-week");
@@ -2389,8 +2398,8 @@ function onLeadsModeChange() {
 async function loadLeads() {
   const mode = $qs("#leads-mode")?.value || "week";
   let week = "", month = "", year = 0;
-  if (mode === "week") week = $qs("#leads-week")?.value || getPreviousWeekDate();
-  else if (mode === "month") month = $qs("#leads-month")?.value || getPreviousMonthValue();
+  if (mode === "week") week = $qs("#leads-week")?.value || getCurrentWeekDate();
+  else if (mode === "month") month = $qs("#leads-month")?.value || getCurrentMonthValue();
   else if (mode === "year") {
     const yv = parseInt($qs("#leads-year")?.value);
     year = (yv >= 2020 && yv <= 2030) ? yv : new Date().getFullYear();
@@ -2489,12 +2498,12 @@ async function loadLeads() {
       </div>`
     : '<div class="empty-state"><p>暂无数据</p></div>';
 
-  // 成单统计：独立查最近 90 天（不依赖 loadLeads 的周/月维度，录入即看到）
-  loadDeads();
+  // 成单统计：与线索数据共用同一筛选维度（周/月/年联动）
+  loadDeads(mode, week, month, year);
 }
 
-async function loadDeads() {
-  const params = new URLSearchParams({ days: "90" });
+async function loadDeads(mode, week, month, year) {
+  const params = new URLSearchParams({ mode, week_val: week || "", month_val: month || "", year_val: year || 0 });
   let d;
   try {
     const r = await fetch(API + "/leads/deals?" + params);
@@ -2505,7 +2514,8 @@ async function loadDeads() {
     return;
   }
   const lbl = document.getElementById("deals-period-label");
-  if (lbl) lbl.textContent = `当前筛选：最近 90 天 · 成单 ${d.total} 笔 · 金额 ¥${(d.total_amount||0).toLocaleString()}`;
+  const periodTxt = mode === "month" ? (month || getCurrentMonthValue()) : mode === "year" ? (year || new Date().getFullYear()) : (week || getCurrentWeekDate());
+  if (lbl) lbl.textContent = `与线索同周期（${periodTxt}）· 成单 ${d.total} 笔 · 金额 ¥${(d.total_amount||0).toLocaleString()}`;
   document.getElementById("deals-cards").innerHTML = [
     { label: "成单总数", val: d.total, cls: "" },
     { label: "成单总金额", val: "¥" + (d.total_amount||0).toLocaleString(), cls: "up" },
