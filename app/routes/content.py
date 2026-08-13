@@ -137,19 +137,19 @@ def delete_content(content_id: int, db: Session = Depends(get_db)):
 
 # ---------- Content Import (CSV / Excel 智能导入) ----------
 FIELD_ALIASES = {
-    "title": ["标题", "内容标题", "内容名称", "标题名称", "标题内容", "title"],
-    "publish_date": ["日期", "发布日期", "发布时间", "发博时间", "发布时间点", "发布", "publish_date", "时间"],
+    "title": ["标题", "内容标题", "内容名称", "标题名称", "标题内容", "笔记标题", "作品名称", "视频描述", "内容", "title"],
+    "publish_date": ["日期", "发布日期", "发布时间", "发博时间", "发布时间点", "首次发布时间", "发表日期", "发布", "publish_date", "时间"],
     "platform": ["平台", "所属平台", "渠道", "平台名称", "platform"],
-    "content_type": ["类型", "内容类型", "形式", "体裁", "content_type"],
-    "impressions": ["播放量", "播放", "曝光量", "曝光", "阅读量", "阅读", "浏览量", "浏览", "观看量", "播放/阅读", "impressions"],
-    "likes": ["点赞", "点赞量", "获赞", "赞", "点赞数", "likes"],
+    "content_type": ["类型", "内容类型", "形式", "体裁", "内容形式", "content_type"],
+    "impressions": ["播放量", "播放", "曝光量", "曝光", "阅读量", "阅读人数", "阅读", "浏览量", "浏览", "观看量", "观看", "播放/阅读", "impressions"],
+    "likes": ["点赞", "点赞量", "获赞", "获赞数", "赞", "点赞数", "喜欢", "likes"],
     "comments": ["评论", "评论量", "评论数", "comments"],
-    "shares": ["分享", "转发", "分享量", "转发量", "shares"],
+    "shares": ["分享", "转发", "分享量", "分享数", "转发量", "shares"],
     "bookmarks": ["收藏", "收藏量", "收藏数", "笔记收藏", "bookmarks"],
     "completion_rate": ["完播率", "完播", "播放完成率", "completion_rate"],
     "conversion_count": ["转化", "转化数", "转化量", "线索数", "conversion_count"],
     "is_viral": ["爆款", "是否爆款", "is_viral"],
-    "author": ["账号", "作者", "账号名称", "负责人", "博主", "发布账号", "author"],
+    "author": ["账号", "作者", "账号名称", "负责人", "博主", "发布账号", "视频作者", "作者名", "author"],
     "notes": ["备注", "说明", "附注", "notes"],
 }
 
@@ -161,13 +161,13 @@ PLATFORM_ALIASES = {
 }
 
 TYPE_ALIASES = {
-    "短视频": ["短视频", "视频", "video", "作品"],
-    "图文": ["图文", "图集", "图文内容"],
+    "短视频": ["短视频", "视频", "1-3min视频", "3-5min视频", "1-5min视频", "video", "作品"],
+    "图文": ["图文", "图集", "图文内容", "文字"],
     "长文章": ["长文章", "文章", "推文", "article"],
     "笔记": ["笔记", "note", "种草"],
 }
 
-TYPE_FALLBACK = {"抖音": "短视频", "视频号": "短视频", "公众号": "长文章", "小红书": "笔记"}
+TYPE_FALLBACK = {"抖音": "短视频", "视频号": "短视频", "公众号": "长文章", "小红书": "图文"}
 
 
 def _norm(s):
@@ -175,26 +175,30 @@ def _norm(s):
 
 
 def _build_field_map(headers):
-    """将文件列名归一化后映射到标准字段（精确匹配优先，包含匹配兜底）。"""
+    """两轮匹配：先精确（列名==别名），再包含（别名in列名，长别名优先）。
+    避免"平均播放时长"抢占"播放量"这类包含匹配顺序问题。"""
     alias = {}
     for field, names in FIELD_ALIASES.items():
         for n in names:
             alias[_norm(n)] = field
-    mapping = {}
+    keys = [_norm(h) for h in headers]
     used = set()
-    for h in headers:
-        key = _norm(h)
-        field = None
+    mapping = {}
+    # 第一轮：精确匹配
+    for h, key in zip(headers, keys):
         if key in alias and alias[key] not in used:
-            field = alias[key]
-        else:
-            for n, f in alias.items():
-                if n and (n in key or key in n) and f not in used:
-                    field = f
-                    break
-        if field:
-            mapping[h] = field
-            used.add(field)
+            mapping[h] = alias[key]
+            used.add(alias[key])
+    # 第二轮：包含匹配（别名长度降序，先长后短）
+    sorted_alias = sorted(alias.items(), key=lambda x: -len(x[0]))
+    for h, key in zip(headers, keys):
+        if h in mapping:
+            continue
+        for n, f in sorted_alias:
+            if n and n in key and f not in used:
+                mapping[h] = f
+                used.add(f)
+                break
     return mapping
 
 
@@ -225,6 +229,10 @@ def _parse_date(v):
     if not s or s.lower() in ("nan", "none", "-"):
         return None
     s = re.sub(r"\.0$", "", s)
+    # 中文长格式：2026年08月12日16时05分00秒 / 2026年8月12日
+    m_cn = re.search(r"(\d{4})年(\d{1,2})月(\d{1,2})日", s)
+    if m_cn:
+        return date(int(m_cn[1]), int(m_cn[2]), int(m_cn[3]))
     for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y/%m/%d %H:%M:%S", "%Y-%m-%d", "%Y/%m/%d", "%Y.%m.%d", "%Y年%m月%d日", "%Y年%m月"):
         try:
             return datetime.strptime(s, fmt).date()
@@ -243,14 +251,48 @@ def _parse_int(v):
             return 0
     except Exception:
         pass
-    s = re.sub(r"[^\d.\-]", "", str(v))
+    s = str(v).strip()
+    # 万 单位：1.2万 / 3.5w
+    if "万" in s or s.lower().endswith("w"):
+        num = re.sub(r"[^\d.]", "", s)
+        try:
+            return int(float(num) * 10000) if num else 0
+        except ValueError:
+            return 0
+    s2 = re.sub(r"[^\d.\-]", "", s)
     try:
-        return int(float(s))
+        return int(float(s2))
     except ValueError:
         return 0
 
 
-def _row_to_content(row, mapping, platform_fallback=""):
+def _parse_completion(v):
+    """完播率：19.98%（视频号）/ 0.037311 小数比例（抖音）→ 统一百分比数字。"""
+    if v is None:
+        return 0.0
+    try:
+        import pandas as pd
+        if pd.isna(v):
+            return 0.0
+        if isinstance(v, (float, int)):
+            f = float(v)
+            return round(f * 100, 1) if 0 < f <= 1 else round(f, 1)
+    except Exception:
+        pass
+    s = str(v).strip()
+    if not s or s.lower() in ("nan", "none", "-"):
+        return 0.0
+    m = re.search(r"([\d.]+)\s*%", s)
+    if m:
+        return float(m.group(1))
+    try:
+        f = float(s)
+        return round(f * 100, 1) if 0 < f <= 1 else round(f, 1)
+    except ValueError:
+        return 0.0
+
+
+def _row_to_content(row, mapping, platform_fallback="", account_fallback=""):
     """把一行记录转换为 ContentDetail；无法识别标题/平台的行返回 None。"""
     def val(field):
         for col, f in mapping.items():
@@ -268,41 +310,63 @@ def _row_to_content(row, mapping, platform_fallback=""):
     pd_ = _parse_date(val("publish_date")) or date.today()
     viral_raw = _norm(val("is_viral"))
     is_viral = 1 if viral_raw in ("1", "是", "true", "yes", "爆款") else 0
-    completion_raw = _parse_int(val("completion_rate"))
-    completion_rate = float(completion_raw / 100 if completion_raw > 100 else completion_raw)
+    author = str(val("author") or "").strip() or account_fallback
     return ContentDetail(
         title=title[:200],
         platform=platform,
         content_type=content_type,
         publish_date=pd_,
-        author=str(val("author") or "").strip()[:50],
+        author=author[:50],
         impressions=_parse_int(val("impressions")),
         likes=_parse_int(val("likes")),
         comments=_parse_int(val("comments")),
         shares=_parse_int(val("shares")),
         bookmarks=_parse_int(val("bookmarks")),
-        completion_rate=completion_rate,
+        completion_rate=_parse_completion(val("completion_rate")),
         conversion_count=_parse_int(val("conversion_count")),
         is_viral=is_viral,
         notes=str(val("notes") or "").strip()[:500],
     )
 
 
+def _load_df(filename, contents):
+    """按文件类型读取，并自动探测真实表头行（跳过横幅/标题行）。"""
+    import pandas as pd
+    if filename.lower().endswith(".csv"):
+        last_err = None
+        for enc in ("utf-8-sig", "gbk", "gb18030", "utf-8"):
+            try:
+                return pd.read_csv(io.BytesIO(contents), encoding=enc)
+            except Exception as e:
+                last_err = e
+        raise last_err if last_err else ValueError("csv 解析失败")
+    # Excel：尝试 header 0/1/2，选字段命中率最高者（兼容双层表头）
+    best_df, best_score = None, -1
+    for header in (0, 1, 2):
+        try:
+            df = pd.read_excel(io.BytesIO(contents), header=header)
+            score = len(_build_field_map(list(df.columns)))
+            if score > best_score:
+                best_df, best_score = df, score
+        except Exception:
+            continue
+    if best_df is not None and best_score >= 0:
+        return best_df
+    return pd.read_excel(io.BytesIO(contents))
+
+
 @router.post("/import")
 async def import_content(
     file: UploadFile = File(...),
     platform: str = Query("", description="文件无平台列时指定：抖音/视频号/公众号/小红书"),
+    account: str = Query("", description="文件无账号列时指定默认账号（负责人）"),
     db: Session = Depends(get_db),
 ):
     """上传 CSV / XLSX / XLS，智能识别列名后批量写入内容明细。"""
     contents = await file.read()
     filename = file.filename or ""
     try:
-        import pandas as pd
-        if filename.lower().endswith(".csv"):
-            df = pd.read_csv(io.BytesIO(contents))
-        else:
-            df = pd.read_excel(io.BytesIO(contents))
+        df = _load_df(filename, contents)
     except Exception:
         return {"ok": False, "error": "文件解析失败，请上传 CSV / XLSX / XLS 格式"}
     if df is None or df.empty:
@@ -319,7 +383,7 @@ async def import_content(
     errors = []
     for idx, row in df.iterrows():
         try:
-            rec = _row_to_content(row, mapping, fallback)
+            rec = _row_to_content(row, mapping, fallback, account.strip())
             if rec is None:
                 skipped += 1
                 continue
@@ -334,6 +398,7 @@ async def import_content(
         "imported": imported,
         "skipped": skipped,
         "total": int(len(df)),
+        "mapping": mapping,
         "errors": errors[:20],
     }
 

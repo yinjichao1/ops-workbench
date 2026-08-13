@@ -2195,8 +2195,12 @@ function openContentImport() {
       </select>
     </div>
     <div class="form-group">
+      <label>默认账号（可选，文件无"账号"列时写入该负责人）</label>
+      <input id="ci-account" placeholder="如：思格电网" style="font-size:12px">
+    </div>
+    <div class="form-group">
       <label>选择文件</label>
-      <input type="file" id="ci-file" accept=".xlsx,.xls,.csv" style="font-size:12px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface)">
+      <input type="file" id="ci-file" accept=".xlsx,.xls,.csv" style="font-size:12px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface)" onchange="guessPlatformByFilename(this)">
     </div>
     <div class="import-hint" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-elevated);border-radius:10px;font-size:11px;color:var(--text-muted)">
       <span>&#128161;</span>
@@ -2212,6 +2216,17 @@ function openContentImport() {
   document.body.insertAdjacentHTML("beforeend", html);
 }
 
+// 根据文件名自动预选平台（视频号动态数据明细.csv → 视频号）
+function guessPlatformByFilename(input) {
+  const f = input && input.files && input.files[0];
+  if (!f) return;
+  const name = f.name;
+  const sel = document.getElementById("ci-platform");
+  if (!sel || sel.value) return;
+  const guess = ["抖音", "视频号", "公众号", "小红书"].find(p => name.includes(p));
+  if (guess) sel.value = guess;
+}
+
 async function uploadContentImport(modalId) {
   const input = document.getElementById("ci-file");
   const resultEl = document.getElementById("ci-result");
@@ -2221,9 +2236,12 @@ async function uploadContentImport(modalId) {
   const fd = new FormData();
   fd.append("file", file);
   const platEl = document.getElementById("ci-platform");
-  const plat = platEl && platEl.value ? "&platform=" + encodeURIComponent(platEl.value) : "";
+  const acctEl = document.getElementById("ci-account");
+  const qs = [];
+  if (platEl && platEl.value) qs.push("platform=" + encodeURIComponent(platEl.value));
+  if (acctEl && acctEl.value.trim()) qs.push("account=" + encodeURIComponent(acctEl.value.trim()));
   try {
-    const r = await fetch(API + "/content/import?" + plat.replace(/^&/, ""), { method: "POST", body: fd });
+    const r = await fetch(API + "/content/import" + (qs.length ? "?" + qs.join("&") : ""), { method: "POST", body: fd });
     const j = await r.json();
     if (!r.ok || j.ok === false) {
       resultEl.innerHTML = `<div style="padding:12px;background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.2);border-radius:10px;font-size:12px;color:var(--text-secondary)">
