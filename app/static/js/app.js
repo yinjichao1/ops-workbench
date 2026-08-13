@@ -2543,7 +2543,10 @@ async function loadDeads(mode, week, month, year) {
         <span class="dt-amount">¥${(x.amount||0).toLocaleString()}</span>
         <span class="dt-date">${x.deal_date}</span>
         <span>${x.is_current_month ? '<span class="cal-status done">当月</span>' : '<span class="cal-status muted">历史</span>'}</span>
-        <span class="dt-act"><button type="button" class="ct-btn del" title="删除" onclick="deleteDeal(${x.id})">🗑</button></span>
+        <span class="dt-act">
+          <button type="button" class="ct-btn edit" title="编辑" aria-label="编辑这条成单" onclick="openEditDeal(${x.id})">✎</button>
+          <button type="button" class="ct-btn del" title="删除" aria-label="删除这条成单" onclick="deleteDeal(${x.id})">🗑</button>
+        </span>
       </div>`).join("")}`
     : '<div class="empty-state"><p>当前周期暂无成单，点击右上角"＋ 录入成单"添加</p></div>';
 }
@@ -2597,6 +2600,57 @@ async function deleteDeal(id) {
   if (!r.ok || j.ok === false) { toast("删除失败", "error"); return; }
   toast("成单已删除", "success");
   loadLeads();
+}
+
+// 编辑成单：拉取详情后预填弹窗
+async function openEditDeal(id) {
+  let d;
+  try {
+    const r = await fetch(API + `/leads/deals/${id}`);
+    const j = await r.json();
+    if (!j.ok || !j.data) { toast("未找到该成单", "error"); return; }
+    d = j.data;
+  } catch(e) { toast("获取成单详情失败", "error"); return; }
+  const mid = "deal-edit-" + Date.now();
+  const gradeOpts = ["大一","大二","大三","大四","研究生"].map(g => `<option ${g===d.grade?"selected":""}>${g}</option>`).join("");
+  const srcOpts = ["抖音","微信视频号","微信公众号","小红书"].map(s => `<option ${s===d.source?"selected":""}>${s}</option>`).join("");
+  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal" style="max-width:460px">
+    <h2>编辑成单</h2>
+    <div class="form-group"><label>姓名 <span class="required">*</span></label><input id="dl-name" value="${(d.name||"").replace(/"/g,"&quot;")}" placeholder="学员姓名"><span class="error-msg">请输入姓名</span></div>
+    <div class="form-group"><label>学校</label><input id="dl-school" value="${(d.school||"").replace(/"/g,"&quot;")}" placeholder="如：华中科技大学"></div>
+    <div class="form-group"><label>年级</label><select id="dl-grade"><option value="">未选择</option>${gradeOpts}</select></div>
+    <div class="form-group"><label>渠道来源</label><select id="dl-source">${srcOpts}</select></div>
+    <div class="form-group"><label>成单校区</label><input id="dl-campus" value="${(d.campus||"").replace(/"/g,"&quot;")}" placeholder="如：武汉校区 / 郑州校区"></div>
+    <div class="form-group"><label>成单金额（元）</label><input type="number" id="dl-amount" value="${d.amount||0}" min="0"></div>
+    <div class="form-group"><label>成单日期</label><input type="date" id="dl-date" value="${d.deal_date||""}"></div>
+    <div class="form-group"><label>负责人</label><input id="dl-owner" value="${(d.owner||"").replace(/"/g,"&quot;")}" placeholder="可选"></div>
+    <div class="form-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('${mid}')">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveDealEdit(${id},'${mid}')">保存修改</button>
+    </div>
+  </div></div>`;
+  document.body.insertAdjacentHTML("beforeend", html);
+}
+
+async function saveDealEdit(id, modalId) {
+  if (!validateForm(modalId, ["dl-name"])) { toast("请填写姓名", "error"); return; }
+  const body = {
+    name: $qs("#dl-name").value,
+    school: $qs("#dl-school").value,
+    grade: $qs("#dl-grade").value,
+    source: $qs("#dl-source").value,
+    campus: $qs("#dl-campus").value,
+    amount: +($qs("#dl-amount").value) || 0,
+    deal_date: $qs("#dl-date").value,
+    owner: $qs("#dl-owner").value,
+  };
+  try {
+    const r = await fetch(API + `/leads/deals/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error("更新失败");
+    closeModal(modalId);
+    toast("成单已更新", "success");
+    loadLeads();
+  } catch(e) { toast("保存失败，请重试", "error"); }
 }
 
 // ========== INIT ==========

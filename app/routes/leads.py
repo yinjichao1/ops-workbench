@@ -379,6 +379,42 @@ def create_deal(body: DealIn, db: SqlSession = Depends(get_db)):
     return {"ok": True, "id": deal.id}
 
 
+@router.get("/leads/deals/{deal_id}")
+def get_deal(deal_id: int, db: SqlSession = Depends(get_db)):
+    """单条成单详情（编辑预填用）。"""
+    rec = db.query(LeadDeal).filter(LeadDeal.id == deal_id).first()
+    if not rec:
+        return {"ok": False, "error": "not found"}
+    return {
+        "ok": True,
+        "data": {
+            "id": rec.id, "name": rec.name or "", "school": rec.school or "",
+            "grade": rec.grade or "", "source": rec.source or "",
+            "campus": rec.campus or "", "amount": rec.amount or 0,
+            "deal_date": str(rec.deal_date), "owner": rec.owner or "", "note": rec.note or "",
+        },
+    }
+
+
+@router.put("/leads/deals/{deal_id}")
+def update_deal(deal_id: int, body: DealIn, db: SqlSession = Depends(get_db)):
+    rec = db.query(LeadDeal).filter(LeadDeal.id == deal_id).first()
+    if not rec:
+        return {"ok": False, "error": "not found"}
+    rec.name = body.name
+    rec.school = body.school
+    rec.grade = body.grade
+    rec.source = body.source
+    rec.campus = body.campus
+    rec.amount = body.amount
+    if body.deal_date:
+        rec.deal_date = date.fromisoformat(body.deal_date)
+    rec.owner = body.owner
+    rec.note = body.note
+    db.commit()
+    return {"ok": True}
+
+
 @router.delete("/leads/deals/{deal_id}")
 def delete_deal(deal_id: int, db: SqlSession = Depends(get_db)):
     rec = db.query(LeadDeal).filter(LeadDeal.id == deal_id).first()
