@@ -5,7 +5,7 @@ from collections import defaultdict
 from fastapi import APIRouter, Depends, Query, UploadFile, File
 from pydantic import BaseModel
 from sqlalchemy.orm import Session as SqlSession
-from ..models import get_db, Lead
+from ..models import get_db, Lead, LeadDeal
 from io import BytesIO
 import re
 
@@ -177,6 +177,8 @@ def leads_summary(
     # 渠道×有效性、地区×有效性 交叉分析 + 意向级别 1/3/5 统计
     src_valid = defaultdict(lambda: {"有效": 0, "无效": 0, "待定": 0, "total": 0, "intent1": 0, "intent3": 0, "intent5": 0})
     reg_valid = defaultdict(lambda: {"有效": 0, "无效": 0, "待定": 0, "total": 0, "intent1": 0, "intent3": 0, "intent5": 0})
+    # 渠道 → 备注细分 两级结构
+    src_note = defaultdict(lambda: {"有效": 0, "无效": 0, "待定": 0, "total": 0, "subs": defaultdict(lambda: {"有效": 0, "无效": 0, "待定": 0, "total": 0})})
 
     for r in rows:
         by_source[r.source or "其他"] += 1
@@ -188,10 +190,12 @@ def leads_summary(
         note = r.note or ""
         v = r.validity or "待定"
         it = r.intent or 0
+        src = r.source or "其他"
 
         # 渠道按备注细分：优先取第一个细分结果（保持与线索总数一致）
         subs = _parse_sub_source(r.source, note)
         chan = subs[0][1] if subs else (r.source or "其他")
+        sub_val = chan
 
         src_valid[chan][v] += 1
         src_valid[chan]["total"] += 1
@@ -201,6 +205,12 @@ def leads_summary(
             src_valid[chan]["intent3"] += 1
         elif it == 5:
             src_valid[chan]["intent5"] += 1
+
+        # 两级：渠道(录入 source) → 备注细分
+        src_note[src][v] += 1
+        src_note[src]["total"] += 1
+        src_note[src]["subs"][sub_val][v] += 1
+        src_note[src]["subs"][sub_val]["total"] += 1
 
         reg_valid[r.owner or "未知"][v] += 1
         reg_valid[r.owner or "未知"]["total"] += 1
@@ -258,7 +268,116 @@ def leads_summary(
             }
             for k, v in sorted(reg_valid.items(), key=lambda x: -x[1]["total"])
         ],
+        "by_source_note": [
+            {
+                "name": k,
+                "valid": v["有效"], "invalid": v["无效"], "pending": v["待定"],
+                "total": v["total"],
+                "valid_rate": round(v["有效"] / v["total"] * 100, 1) if v["total"] else 0,
+                "subs": [
+                    {
+                        "name": sn,
+                        "valid": sv["有效"], "invalid": sv["无效"], "pending": sv["待定"],
+                        "total": sv["total"],
+                        "valid_rate": round(sv["有效"] / sv["total"] * 100, 1) if sv["total"] else 0,
+                    }
+                    for sn, sv in sorted(v["subs"].items(), key=lambda x: -x[1]["total"])
+                ],
+            }
+            for k, v in sorted(src_note.items(), key=lambda x: -x[1]["total"])
+        ],
     }
+
+
+class DealIn(BaseModel):
+    name: str = ""
+    school: str = ""
+    grade: str = ""
+    source: str = ""
+    campus: str = ""
+    amount: float = 0.0
+    deal_date: str = ""
+    owner: str = ""
+    note: str = ""
+
+
+@router.get("/leads/deals")
+def lead_deals(
+    mode: str = Query("week"),
+    week_val: str = Query(""),
+    month_val: str = Query(""),
+    year_val: int = Query(0),
+    db: SqlSession = Depends(get_db),
+):
+    """成单统计：列表 + 汇总（成单总数/金额、当月成单数/金额）。"""
+    today = date.today()
+    if mode == "month" and month_val:
+        y, m = int(month_val.split("-")[0]), int(month_val.split("-")[1])
+    else:
+        y, m = today.year, today.month
+    if mode == "year" and year_val:
+        start, end = date(year_val, 1, 1), date(year_val, 12, 31)
+    elif mode == "month":
+        start = date(y, m, 1)
+        end = (date(y + 1, 1, 1) - timedelta(days=1)) if m == 12 else (date(y, m + 1, 1) - timedelta(days=1))
+    elif week_val:
+        start = date.fromisoformat(week_val)
+        end = start + timedelta(days=6)
+    else:
+        start, end = _last_week_range(today)
+
+    rows = db.query(LeadDeal).filter(LeadDeal.deal_date >= start, LeadDeal.deal_date <= end).order_by(LeadDeal.deal_date.desc()).all()
+    cur_month = (today.year, today.month)
+    total_amount = round(sum(r.amount or 0 for r in rows), 2)
+    cur_rows = [r for r in rows if (r.deal_date.year, r.deal_date.month) == cur_month]
+    cur_amount = round(sum(r.amount or 0 for r in cur_rows), 2)
+    data = [
+        {
+            "id": r.id,
+            "name": r.name or "",
+            "school": r.school or "",
+            "grade": r.grade or "",
+            "source": r.source or "",
+            "campus": r.campus or "",
+            "amount": round(r.amount or 0, 2),
+            "deal_date": str(r.deal_date),
+            "owner": r.owner or "",
+            "note": r.note or "",
+            "is_current_month": (r.deal_date.year, r.deal_date.month) == cur_month,
+        }
+        for r in rows
+    ]
+    return {
+        "total": len(rows),
+        "total_amount": total_amount,
+        "cur_month_count": len(cur_rows),
+        "cur_month_amount": cur_amount,
+        "data": data,
+    }
+
+
+@router.post("/leads/deals")
+def create_deal(body: DealIn, db: SqlSession = Depends(get_db)):
+    deal = LeadDeal(
+        name=body.name, school=body.school, grade=body.grade,
+        source=body.source, campus=body.campus, amount=body.amount,
+        deal_date=date.fromisoformat(body.deal_date) if body.deal_date else date.today(),
+        owner=body.owner, note=body.note,
+    )
+    db.add(deal)
+    db.commit()
+    db.refresh(deal)
+    return {"ok": True, "id": deal.id}
+
+
+@router.delete("/leads/deals/{deal_id}")
+def delete_deal(deal_id: int, db: SqlSession = Depends(get_db)):
+    rec = db.query(LeadDeal).filter(LeadDeal.id == deal_id).first()
+    if not rec:
+        return {"ok": False, "error": "not found"}
+    db.delete(rec)
+    db.commit()
+    return {"ok": True}
 
 
 @router.post("/leads/upload")

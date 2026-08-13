@@ -700,6 +700,16 @@ body {
 .lt-num.i3 { color: #06B6D4; font-weight: 700; }
 .lt-num.i5 { color: #F97316; font-weight: 700; }
 .lt-rate { text-align: right; font-weight: 700; color: var(--accent); }
+
+/* 渠道两级：录入渠道父行 + 备注细分子行 */
+.lead-src-row { background: var(--bg-elevated); border-radius: 4px 4px 0 0; font-weight: 700; }
+.lead-src-row .lead-src-name { color: var(--text-primary); font-weight: 800; }
+.lead-sub-row { padding-left: 14px; color: var(--text-muted); }
+.lead-sub-row .lt-name { color: var(--text-secondary); }
+.sub-hide { display: block; }
+@media (max-width: 720px) {
+  .sub-hide { display: none; }
+}
 .lead-bar-val {
   min-width: 50px; font-family: var(--font-mono); font-size: 10px;
   color: var(--text-primary); text-align: right;
@@ -1253,4 +1263,40 @@ body {
   .page-body { padding: 14px 16px 24px; }
   .page-header { padding: 12px 16px; }
   .grain-overlay { opacity: .4; }
+}
+
+/* ===== 成单统计表格 ===== */
+.deal-table-head, .deal-table-row {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr 0.7fr 1fr 1.2fr 1fr 1.1fr 0.8fr 0.6fr;
+  gap: 6px; align-items: center; padding: 8px 10px; font-size: 11px;
+}
+.deal-table-head {
+  background: var(--bg-elevated); border-radius: 8px;
+  font-weight: 700; color: var(--text-muted); font-size: 10px;
+  letter-spacing: 0.03em;
+}
+.deal-table-row { border-bottom: 1px solid var(--border-soft); }
+.deal-table-row:hover { background: var(--bg-elevated); }
+.dt-name { font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dt-school, .dt-campus { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dt-grade { color: var(--text-muted); }
+.dt-amount { font-family: var(--font-mono); font-weight: 700; color: var(--accent); text-align: right; }
+.dt-date { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.dt-act { display: flex; justify-content: flex-end; }
+@media (max-width: 900px) {
+  .deal-table-head { display: none; }
+  .deal-table-row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "name amount" "school date" "campus act";
+    gap: 4px 10px; padding: 10px; border: 1px solid var(--border-soft);
+    border-radius: 10px; margin-bottom: 8px;
+  }
+  .deal-table-row .dt-name { grid-area: name; }
+  .deal-table-row .dt-amount { grid-area: amount; }
+  .deal-table-row .dt-school { grid-area: school; }
+  .deal-table-row .dt-date { grid-area: date; text-align: right; }
+  .deal-table-row .dt-campus { grid-area: campus; }
+  .deal-table-row .dt-act { grid-area: act; }
+  .deal-table-row .dt-grade { display: none; }
 }

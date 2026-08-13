@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#1D4ED8">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231D4ED8'/%3E%3Ctext x='32' y='43' font-size='30' font-weight='700' fill='%23fff' text-anchor='middle' font-family='-apple-system,sans-serif'%3E%E6%80%9D%3C/text%3E%3C/svg%3E">
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=0813c">
+<link rel="stylesheet" href="/static/css/style.css?v=0813d">
 </head>
 <body>
 
@@ -206,13 +206,25 @@
         <div class="stat-grid cols-4" id="leads-cards"></div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;margin-top:20px">
           <div>
-            <div class="card-header" style="padding:0 0 10px 0;border:none"><span class="card-title">渠道有效性汇总</span><span class="card-subtitle">按备注细分 · 含意向级别</span></div>
+            <div class="card-header" style="padding:0 0 10px 0;border:none"><span class="card-title">渠道有效性汇总</span><span class="card-subtitle">按录入渠道 → 备注细分</span></div>
             <div id="leads-validity-summary"></div>
           </div>
           <div>
             <div class="card-header" style="padding:0 0 10px 0;border:none"><span class="card-title">地区有效性汇总</span><span class="card-subtitle">按负责人地区 · 含意向级别</span></div>
             <div id="leads-region-summary"></div>
           </div>
+        </div>
+        <!-- 成单统计 -->
+        <div style="margin-top:24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+            <span class="card-title">线索成单统计</span>
+            <div style="display:flex;gap:6px;align-items:center">
+              <span class="card-subtitle" id="deals-period-label"></span>
+              <button class="btn btn-primary btn-sm" onclick="openDealForm()">＋ 录入成单</button>
+            </div>
+          </div>
+          <div class="stat-grid cols-4" id="deals-cards"></div>
+          <div id="deals-table" style="margin-top:14px"></div>
         </div>
       </div>
     </div>
@@ -374,7 +386,7 @@ document.querySelectorAll('.toggle-pill').forEach(function(pill){
   });
 });
 </script>
-<script src="/static/js/app.js?v=0813c"></script>
+<script src="/static/js/app.js?v=0813d"></script>
 <div class="grain-overlay" aria-hidden="true"></div>
 </body>
 </html>

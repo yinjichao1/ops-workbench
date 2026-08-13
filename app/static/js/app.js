@@ -2415,8 +2415,8 @@ async function loadLeads() {
     ${c.sub ? `<div class="stat-change up">${c.sub}</div>` : ''}
   </div>`).join("");
 
-  // 渠道有效性汇总（按备注细分 + 意向级别 1/3/5）
-  const sv = (data.by_source_validity || []).filter(s => s.total > 0);
+  // 渠道有效性汇总（两级：录入渠道 → 备注细分）
+  const sv = (data.by_source_note || []).filter(s => s.total > 0);
   const summaryTable = (rows, nameKey) => `
     <div class="lead-table-head">
       <span>${nameKey}</span><span class="v">有效</span><span class="p">待定</span><span class="i">无效</span><span>有效率</span><span>意向1</span><span>意向3</span><span>意向5</span><span>合计</span>
@@ -2433,17 +2433,41 @@ async function loadLeads() {
         <span class="lt-num i5">${s.intent5}</span>
         <span class="lt-num">${s.total}</span>
       </div>`).join("")}`;
+  // 两级渠道：渠道行 + 备注细分子行
+  const srcNoteHtml = (rows) => `
+    <div class="lead-table-head">
+      <span>渠道 / 备注细分</span><span class="v">有效</span><span class="p">待定</span><span class="i">无效</span><span>有效率</span><span class="sub-hide">意向1</span><span class="sub-hide">意向3</span><span class="sub-hide">意向5</span><span>合计</span>
+    </div>
+    ${rows.map(s => `
+      <div class="lead-table-row lead-src-row">
+        <span class="lt-name lead-src-name">▾ ${s.name}</span>
+        <span class="lt-num v">${s.valid}</span>
+        <span class="lt-num p">${s.pending}</span>
+        <span class="lt-num i">${s.invalid}</span>
+        <span class="lt-rate">${s.valid_rate}%</span>
+        <span class="sub-hide"></span><span class="sub-hide"></span><span class="sub-hide"></span>
+        <span class="lt-num">${s.total}</span>
+      </div>
+      ${(s.subs || []).map(sub => `
+        <div class="lead-table-row lead-sub-row">
+          <span class="lt-name" title="${sub.name}">　└ ${sub.name}</span>
+          <span class="lt-num v">${sub.valid}</span>
+          <span class="lt-num p">${sub.pending}</span>
+          <span class="lt-num i">${sub.invalid}</span>
+          <span class="lt-rate">${sub.valid_rate}%</span>
+          <span class="sub-hide"></span><span class="sub-hide"></span><span class="sub-hide"></span>
+          <span class="lt-num">${sub.total}</span>
+        </div>`).join("")}
+    `).join("")}`;
   document.getElementById("leads-validity-summary").innerHTML = sv.length
-    ? summaryTable(sv, "渠道") + `
+    ? srcNoteHtml(sv) + `
       <div class="lead-table-foot">
         <span class="lt-name">总计</span>
         <span class="lt-num v">${data.valid}</span>
         <span class="lt-num p">${data.pending}</span>
         <span class="lt-num i">${data.invalid}</span>
         <span class="lt-rate">${data.valid_rate}%</span>
-        <span class="lt-num i1">${sv.reduce((a,b)=>a+(b.intent1||0),0)}</span>
-        <span class="lt-num i3">${sv.reduce((a,b)=>a+(b.intent3||0),0)}</span>
-        <span class="lt-num i5">${sv.reduce((a,b)=>a+(b.intent5||0),0)}</span>
+        <span class="sub-hide"></span><span class="sub-hide"></span><span class="sub-hide"></span>
         <span class="lt-num">${data.total}</span>
       </div>`
     : '<div class="empty-state"><p>暂无数据</p></div>';
@@ -2464,6 +2488,105 @@ async function loadLeads() {
         <span class="lt-num">${data.total}</span>
       </div>`
     : '<div class="empty-state"><p>暂无数据</p></div>';
+
+  // 成单统计
+  loadDeals(mode, week, month, year);
+}
+
+async function loadDeals(mode, week, month, year) {
+  const params = new URLSearchParams({ mode, week_val: week || "", month_val: month || "", year_val: year || 0 });
+  let d;
+  try {
+    const r = await fetch(API + "/leads/deals?" + params);
+    if (!r.ok) throw new Error("fail");
+    d = await r.json();
+  } catch(e) {
+    document.getElementById("deals-cards").innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>成单数据加载失败</p></div>';
+    return;
+  }
+  const lbl = document.getElementById("deals-period-label");
+  if (lbl) lbl.textContent = `当前筛选：成单 ${d.total} 笔 · 金额 ¥${(d.total_amount||0).toLocaleString()}`;
+  document.getElementById("deals-cards").innerHTML = [
+    { label: "成单总数", val: d.total, cls: "" },
+    { label: "成单总金额", val: "¥" + (d.total_amount||0).toLocaleString(), cls: "up" },
+    { label: "当月成单", val: d.cur_month_count, cls: "", sub: "本月成交笔数" },
+    { label: "当月金额", val: "¥" + (d.cur_month_amount||0).toLocaleString(), cls: "up", sub: "本月成交金额" },
+  ].map(c => `<div class="stat-card">
+    <div class="stat-label">${c.label}</div>
+    <div class="stat-value ${c.cls}">${c.val}</div>
+    ${c.sub ? `<div class="stat-change up">${c.sub}</div>` : ''}
+  </div>`).join("");
+
+  const rows = d.data || [];
+  const platCls = { 抖音: "douyin", 视频号: "shipinhao", 公众号: "gzh", 小红书: "xhs" };
+  document.getElementById("deals-table").innerHTML = rows.length ? `
+    <div class="deal-table-head">
+      <span>姓名</span><span>学校</span><span>年级</span><span>渠道来源</span><span>成单校区</span><span>成单金额</span><span>成单日期</span><span>当月成单</span><span>操作</span>
+    </div>
+    ${rows.map(x => `
+      <div class="deal-table-row">
+        <span class="dt-name">${x.name || "—"}</span>
+        <span class="dt-school">${x.school || "—"}</span>
+        <span class="dt-grade">${x.grade || "—"}</span>
+        <span><span class="platform-badge ${platCls[x.source] || ''}">${x.source || "—"}</span></span>
+        <span class="dt-campus">${x.campus || "—"}</span>
+        <span class="dt-amount">¥${(x.amount||0).toLocaleString()}</span>
+        <span class="dt-date">${x.deal_date}</span>
+        <span>${x.is_current_month ? '<span class="cal-status done">当月</span>' : '<span class="cal-status muted">历史</span>'}</span>
+        <span class="dt-act"><button type="button" class="ct-btn del" title="删除" onclick="deleteDeal(${x.id})">🗑</button></span>
+      </div>`).join("")}`
+    : '<div class="empty-state"><p>当前周期暂无成单，点击右上角"＋ 录入成单"添加</p></div>';
+}
+
+function openDealForm() {
+  const mid = "deal-" + Date.now();
+  const today = new Date().toISOString().split("T")[0];
+  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal" style="max-width:460px">
+    <h2>录入成单</h2>
+    <div class="form-group"><label>姓名 <span class="required">*</span></label><input id="dl-name" placeholder="学员姓名"><span class="error-msg">请输入姓名</span></div>
+    <div class="form-group"><label>学校</label><input id="dl-school" placeholder="如：华中科技大学"></div>
+    <div class="form-group"><label>年级</label><select id="dl-grade"><option value="">未选择</option><option>大一</option><option>大二</option><option>大三</option><option>大四</option><option>研究生</option></select></div>
+    <div class="form-group"><label>渠道来源</label><select id="dl-source"><option>抖音</option><option>微信视频号</option><option>微信公众号</option><option>小红书</option></select></div>
+    <div class="form-group"><label>成单校区</label><input id="dl-campus" placeholder="如：武汉校区 / 郑州校区"></div>
+    <div class="form-group"><label>成单金额（元）</label><input type="number" id="dl-amount" placeholder="0" min="0"></div>
+    <div class="form-group"><label>成单日期</label><input type="date" id="dl-date" value="${today}"></div>
+    <div class="form-group"><label>负责人</label><input id="dl-owner" placeholder="可选"></div>
+    <div class="form-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('${mid}')">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveDeal('${mid}')">保存</button>
+    </div>
+  </div></div>`;
+  document.body.insertAdjacentHTML("beforeend", html);
+}
+
+async function saveDeal(modalId) {
+  if (!validateForm(modalId, ["dl-name"])) { toast("请填写姓名", "error"); return; }
+  const body = {
+    name: $qs("#dl-name").value,
+    school: $qs("#dl-school").value,
+    grade: $qs("#dl-grade").value,
+    source: $qs("#dl-source").value,
+    campus: $qs("#dl-campus").value,
+    amount: +($qs("#dl-amount").value) || 0,
+    deal_date: $qs("#dl-date").value,
+    owner: $qs("#dl-owner").value,
+  };
+  try {
+    const r = await fetch(API + "/leads/deals", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error("保存失败");
+    closeModal(modalId);
+    toast("成单已录入", "success");
+    loadLeads();
+  } catch(e) { toast("保存失败，请重试", "error"); }
+}
+
+async function deleteDeal(id) {
+  if (!confirm("确定删除这条成单记录吗？")) return;
+  const r = await fetch(API + `/leads/deals/${id}`, { method: "DELETE" });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || j.ok === false) { toast("删除失败", "error"); return; }
+  toast("成单已删除", "success");
+  loadLeads();
 }
 
 // ========== INIT ==========
