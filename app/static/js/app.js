@@ -2178,6 +2178,73 @@ async function saveBatchContent(modalId) {
   } catch(e) { toast("批量录入失败", "error"); }
 }
 
+// ===== 内容明细 CSV/Excel 智能导入（自动识别各平台导出列名） =====
+function openContentImport() {
+  const mid = "content-import-" + Date.now();
+  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal" style="max-width:540px">
+    <h2>&#128229; 导入内容明细</h2>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.7">
+      支持从 <b>抖音 / 视频号 / 公众号 / 小红书</b> 后台导出的 Excel（.xlsx/.xls）或 CSV 文件，<br>
+      系统会自动识别列名（标题、日期、平台、播放量、点赞、评论、分享、收藏、账号、备注等）并写入内容明细。
+    </p>
+    <div class="form-group">
+      <label>文件所属平台（单平台导出文件无"平台"列时必选）</label>
+      <select id="ci-platform" style="font-size:12px">
+        <option value="">自动识别（文件含平台列时推荐）</option>
+        <option>抖音</option><option>视频号</option><option>公众号</option><option>小红书</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>选择文件</label>
+      <input type="file" id="ci-file" accept=".xlsx,.xls,.csv" style="font-size:12px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface)">
+    </div>
+    <div class="import-hint" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg-elevated);border-radius:10px;font-size:11px;color:var(--text-muted)">
+      <span>&#128161;</span>
+      <span>若导出的文件列名无法自动识别，可先下载模板整理后再导入</span>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline btn-sm" onclick="window.open('/api/content/import-template')">&#11015; 下载模板</button>
+      <button class="btn btn-outline btn-sm" onclick="closeModal('${mid}')">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="uploadContentImport('${mid}')">开始导入</button>
+    </div>
+    <div id="ci-result" style="margin-top:14px"></div>
+  </div></div>`;
+  document.body.insertAdjacentHTML("beforeend", html);
+}
+
+async function uploadContentImport(modalId) {
+  const input = document.getElementById("ci-file");
+  const resultEl = document.getElementById("ci-result");
+  if (!input || !input.files || !input.files.length) { toast("请先选择文件", "error"); return; }
+  const file = input.files[0];
+  resultEl.innerHTML = '<div class="empty-state" style="padding:16px"><p>导入中，请稍候…</p></div>';
+  const fd = new FormData();
+  fd.append("file", file);
+  const platEl = document.getElementById("ci-platform");
+  const plat = platEl && platEl.value ? "&platform=" + encodeURIComponent(platEl.value) : "";
+  try {
+    const r = await fetch(API + "/content/import?" + plat.replace(/^&/, ""), { method: "POST", body: fd });
+    const j = await r.json();
+    if (!r.ok || j.ok === false) {
+      resultEl.innerHTML = `<div style="padding:12px;background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.2);border-radius:10px;font-size:12px;color:var(--text-secondary)">
+        <b style="color:var(--down)">导入失败：</b>${j.error || "未知错误"}</div>`;
+      return;
+    }
+    let errHtml = "";
+    if (j.errors && j.errors.length) {
+      errHtml = `<div style="margin-top:8px;font-size:11px;color:var(--text-muted);line-height:1.6">${j.errors.slice(0, 5).map(e => `· 第 ${e.row} 行：${e.error}`).join("<br>")}</div>`;
+    }
+    const ok = j.imported > 0;
+    resultEl.innerHTML = `<div style="padding:12px;background:${ok ? "rgba(16,185,129,.1)" : "rgba(245,158,11,.12)"};border:1px solid ${ok ? "rgba(16,185,129,.25)" : "rgba(245,158,11,.3)"};border-radius:10px;font-size:12px;color:var(--text-secondary)">
+      <b style="color:${ok ? "#059669" : "#B45309"}">导入完成</b>：成功 ${j.imported} 条${j.skipped ? `，跳过 ${j.skipped} 条` : ""}（共 ${j.total} 行）${errHtml}</div>`;
+    setTimeout(() => closeModal(modalId), 1600);
+    loadContent();
+    if (ok) toast(`成功导入 ${j.imported} 条内容`, "success");
+  } catch(e) {
+    resultEl.innerHTML = '<div style="padding:12px;background:rgba(220,38,38,.08);border-radius:10px;font-size:12px;color:var(--down)">网络错误，请重试</div>';
+  }
+}
+
 // ========== TASK FORM ==========
 function openTaskForm() {
   const mid = "tsk-" + Date.now();
