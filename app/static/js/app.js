@@ -1172,10 +1172,18 @@ async function loadContent() {
   try {
     ensureContentPeriodDefaults();
     const range = getFilterRange("content");
-    const params = new URLSearchParams({ page_size: "100", start_date: range.start, end_date: range.end });
-    const r = await fetch(API + "/content/detail?" + params.toString());
-    if (!r.ok) throw new Error("加载失败");
-    const { data } = await r.json();
+    // 按月/周周期下分页循环拉取全部内容，保证一屏内全部展示、不截断
+    let data = [], page = 1;
+    while (true) {
+      const params = new URLSearchParams({ page_size: "100", page: String(page), start_date: range.start, end_date: range.end });
+      const r = await fetch(API + "/content/detail?" + params.toString());
+      if (!r.ok) throw new Error("加载失败");
+      const j = await r.json();
+      const batch = j.data || [];
+      data = data.concat(batch);
+      if (!batch.length || data.length >= (j.total || 0)) break;
+      page++;
+    }
     if (!data.length) {
       if (countEl) countEl.textContent = "共 0 条";
       container.innerHTML = `<div class="empty-state">
@@ -1304,7 +1312,125 @@ async function saveContentEdit(id, modalId) {
 }
 
 // ========== CALENDAR ==========
-async function loadCalendar() { loadMonthCalendar(); }
+let calView = "list";
+function loadCalendar() {
+  ensureCalPeriodDefaults();
+  if (calView === "cal") loadMonthCalendarFromPicker();
+  else loadCalendarList();
+}
+function ensureCalPeriodDefaults() {
+  const mode = $qs("#cal-mode")?.value || "week";
+  const week = $qs("#cal-week"), month = $qs("#cal-month");
+  if (mode === "month") { if (month && !month.value) month.value = getPreviousMonthValue(); }
+  else { if (week && !week.value) week.value = dateToIsoWeek(getPreviousWeekDate()); }
+}
+function onCalModeChange() {
+  const mode = $qs("#cal-mode")?.value || "week";
+  const week = $qs("#cal-week"), month = $qs("#cal-month");
+  if (week) week.style.display = mode === "week" ? "" : "none";
+  if (month) month.style.display = mode === "month" ? "" : "none";
+  ensureCalPeriodDefaults();
+  loadCalendar();
+}
+function switchCalendarView(view) {
+  calView = view;
+  const lb = document.getElementById("cal-view-list"), cb = document.getElementById("cal-view-cal");
+  if (lb) lb.classList.toggle("active", view === "list");
+  if (cb) cb.classList.toggle("active", view === "cal");
+  const listEl = document.getElementById("calendar-list"), calEl = document.getElementById("calendar-card");
+  if (listEl) listEl.style.display = view === "list" ? "" : "none";
+  if (calEl) calEl.style.display = view === "cal" ? "" : "none";
+  loadCalendar();
+}
+function calRowHtml(c) {
+  const statusCls = { "待策划": "muted", "制作中": "blue", "待审核": "warn", "待发布": "purple", "已发布": "done" }[c.status] || "muted";
+  const type = c.content_type ? `<span class="content-item-type">${c.content_type}</span>` : "";
+  const title = (c.title || "未命名").replace(/</g, "&lt;");
+  return `
+  <div class="cal-tbl-row" data-id="${c.id}">
+    <span class="cal-c-date">${(c.scheduled_date || "").slice(5)}</span>
+    <span class="cal-c-title"><span class="ct-title-text" title="${title.replace(/"/g, "&quot;")}">${title}</span>${type}</span>
+    <span class="cal-c-status"><span class="cal-status ${statusCls}">${c.status}</span></span>
+    <span class="cal-c-assignee">${c.assignee || "—"}</span>
+    <span class="cal-c-act">
+      <button type="button" class="ct-btn edit" title="编辑" aria-label="编辑排期" onclick="event.stopPropagation();editCalendar(${c.id})">✎</button>
+      <button type="button" class="ct-btn del" title="删除" aria-label="删除排期" onclick="event.stopPropagation();deleteCalendar(${c.id})">🗑</button>
+    </span>
+  </div>`;
+}
+async function loadCalendarList() {
+  const container = document.getElementById("calendar-list");
+  if (!container) return;
+  container.innerHTML = '<div class="empty-state"><p>加载中…</p></div>';
+  const countEl = document.getElementById("cal-count");
+  if (countEl) countEl.textContent = "";
+  ensureCalPeriodDefaults();
+  const mode = $qs("#cal-mode")?.value || "week";
+  let start, end;
+  if (mode === "month") {
+    const rng = getMonthFilterRange($qs("#cal-month")?.value || getPreviousMonthValue());
+    start = rng.start; end = rng.end;
+  } else {
+    const rng = getWeekFilterRange($qs("#cal-week")?.value || dateToIsoWeek(getPreviousWeekDate()));
+    start = rng.start; end = rng.end;
+  }
+  try {
+    const r = await fetch(API + `/content/calendar?start_date=${start}&end_date=${end}`);
+    if (!r.ok) throw new Error("加载失败");
+    const { data } = await r.json();
+    if (countEl) countEl.textContent = `共 ${data.length} 条排期`;
+    if (!data.length) {
+      container.innerHTML = `<div class="empty-state">
+        <h3>该周期暂无排期</h3>
+        <p>点击右上角"新建排期"添加，或切换到日历视图查看</p></div>`;
+      return;
+    }
+    const platMap = { 抖音: "douyin", 视频号: "shipinhao", 公众号: "gzh", 小红书: "xhs" };
+    const byPlat = {};
+    data.forEach(d => { (byPlat[d.platform] = byPlat[d.platform] || []).push(d); });
+    let html = "";
+    PLATFORMS.forEach(p => {
+      const list = byPlat[p] || [];
+      if (!list.length) return;
+      const byAcct = {};
+      list.forEach(d => { const a = d.assignee || "未分配"; (byAcct[a] = byAcct[a] || []).push(d); });
+      const waitPublish = list.filter(x => x.status === "待发布").length;
+      const making = list.filter(x => x.status === "制作中").length;
+      const acctHtml = Object.keys(byAcct).map(acct => `
+        <div class="content-acct-section">
+          <div class="content-acct-section-head">
+            <span class="content-acct-dot">${acct.slice(0, 1)}</span>
+            <span class="content-acct-name">${acct}</span>
+            <span class="content-acct-count">${byAcct[acct].length} 条排期</span>
+          </div>
+          <div class="cal-tbl">
+            <div class="cal-tbl-head">
+              <span>日期</span><span>标题 / 类型</span><span>状态</span><span>负责人</span><span>操作</span>
+            </div>
+            ${byAcct[acct].map(calRowHtml).join("")}
+          </div>
+        </div>`).join("");
+      html += `<div class="content-plat-card ${platMap[p] || ''}">
+        <div class="content-plat-card-head">
+          <span class="content-plat-card-name">
+            <span class="platform-badge ${platMap[p] || ''}">${p}</span>
+            <span class="content-plat-card-count">${list.length} 条排期</span>
+          </span>
+          <span class="content-plat-card-sum">待发布 ${waitPublish} · 制作中 ${making}</span>
+        </div>
+        ${acctHtml}
+      </div>`;
+    });
+    container.innerHTML = html;
+  } catch(e) {
+    container.innerHTML = '<div class="empty-state"><p>排期加载失败</p></div>';
+  }
+}
+function loadMonthCalendarFromPicker() {
+  const month = $qs("#cal-month")?.value;
+  if (month) { const [y, m] = month.split("-"); loadMonthCalendar(+y, +m - 1); }
+  else loadMonthCalendar();
+}
 
 function loadMonthCalendar(year, month) {
   const now = new Date();
@@ -1394,11 +1520,14 @@ async function editCalendar(id) {
     if (!item) { toast("未找到该排期", "error"); return; }
     const mid = "cal-edit-" + Date.now();
     const html = `<div class="modal-overlay show" id="${mid}"><div class="modal"><h2>编辑排期</h2>
-      <div class="form-group"><label>标题</label><input id="ce-title" value="${item.title}"></div>
+      <div class="form-group"><label>标题</label><input id="ce-title" value="${(item.title || "").replace(/"/g, "&quot;")}"></div>
+      <div class="form-group"><label>平台</label><select id="ce-platform">${PLATFORMS.map(p=>`<option ${p===item.platform?"selected":""}>${p}</option>`).join("")}</select></div>
+      <div class="form-group"><label>内容类型</label><select id="ce-type">${["短视频","图文","长文章","笔记"].map(t=>`<option ${t===item.content_type?"selected":""}>${t}</option>`).join("")}</select></div>
+      <div class="form-group"><label>排期日期</label><input type="date" id="ce-date" value="${item.scheduled_date || ""}"></div>
       <div class="form-group"><label>状态</label><select id="ce-status">
         ${["待策划","制作中","待审核","待发布","已发布"].map(s => `<option ${item.status===s?'selected':''}>${s}</option>`).join("")}
       </select></div>
-      <div class="form-group"><label>负责人</label><input id="ce-assignee" value="${item.assignee||''}"></div>
+      <div class="form-group"><label>负责人</label><input id="ce-assignee" value="${(item.assignee||'').replace(/"/g, "&quot;")}"></div>
       <div class="form-actions">
         <button class="btn btn-danger btn-sm" onclick="deleteCalendar(${id},'${mid}')">删除排期</button>
         <button class="btn btn-outline btn-sm" onclick="closeModal('${mid}')">取消</button>
@@ -1411,7 +1540,11 @@ async function editCalendar(id) {
 
 async function updateCalendar(id, modalId) {
   const body = {
-    title: $qs("#ce-title").value, status: $qs("#ce-status").value,
+    title: $qs("#ce-title").value,
+    platform: $qs("#ce-platform").value,
+    content_type: $qs("#ce-type").value,
+    scheduled_date: $qs("#ce-date").value,
+    status: $qs("#ce-status").value,
     assignee: $qs("#ce-assignee").value,
   };
   try {

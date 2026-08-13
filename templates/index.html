@@ -8,7 +8,7 @@
 <meta http-equiv="Expires" content="0">
 <title>思格教育 · 运营工作台</title>
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=0812d">
+<link rel="stylesheet" href="/static/css/style.css?v=0812e">
 </head>
 <body>
 
@@ -251,14 +251,32 @@
       </div>
     </div>
     <div class="page-body">
-      <div class="card"><div class="card-body">
-        <div class="calendar-nav">
-          <button onclick="calendarPrev()">&#8592;</button>
-          <h2 id="cal-title">2026 年 8 月</h2>
-          <button onclick="calendarNext()">&#8594;</button>
+      <div class="cal-filter-bar">
+        <div class="cal-view-switch">
+          <button class="btn btn-sm active" id="cal-view-list" onclick="switchCalendarView('list')">&#128203; 列表</button>
+          <button class="btn btn-sm" id="cal-view-cal" onclick="switchCalendarView('cal')">&#128197; 日历</button>
         </div>
-        <div class="calendar-grid" id="cal-grid"></div>
-      </div></div>
+        <select id="cal-mode" onchange="onCalModeChange()">
+          <option value="week">按周</option><option value="month">按月</option>
+        </select>
+        <input type="week" id="cal-week" aria-label="排期周次">
+        <input type="month" id="cal-month" aria-label="排期月份" style="display:none">
+        <span class="card-subtitle" id="cal-count" style="margin-left:auto"></span>
+        <button class="btn btn-outline btn-sm" onclick="loadCalendar()">查询</button>
+      </div>
+      <!-- 列表视图：平台 → 账号分组 -->
+      <div id="calendar-list"></div>
+      <!-- 日历视图 -->
+      <div id="calendar-card" style="display:none">
+        <div class="card"><div class="card-body">
+          <div class="calendar-nav">
+            <button onclick="calendarPrev()">&#8592;</button>
+            <h2 id="cal-title">2026 年 8 月</h2>
+            <button onclick="calendarNext()">&#8594;</button>
+          </div>
+          <div class="calendar-grid" id="cal-grid"></div>
+        </div></div>
+      </div>
     </div>
   </div>
 
@@ -352,6 +370,6 @@ document.querySelectorAll('.toggle-pill').forEach(function(pill){
   });
 });
 </script>
-<script src="/static/js/app.js?v=0812d"></script>
+<script src="/static/js/app.js?v=0812e"></script>
 </body>
 </html>
