@@ -2090,18 +2090,23 @@ async function saveBatchTopics(modalId) {
 function openBatchCalendarForm() {
   const mid = "bc-" + Date.now();
   const PLAT = ["抖音","视频号","公众号","小红书"];
+  const TYPES = ["短视频","图文","长文章","笔记"];
   const today = new Date().toISOString().split('T')[0];
   const rows = Array(10).fill(0).map((_, i) => `
     <div class="batch-row">
       <input class="bc-title" placeholder="事件标题" style="flex:2">
       <select class="bc-plat" style="flex:1">${PLAT.map(p=>`<option>${p}</option>`).join("")}</select>
+      <select class="bc-type" style="flex:0.9">${TYPES.map(t=>`<option>${t}</option>`).join("")}</select>
       <input type="date" class="bc-date" value="${today}" style="flex:1.3">
       <input class="bc-person" placeholder="负责人" style="flex:1">
       <select class="bc-status" style="flex:1"><option>待策划</option><option>制作中</option><option>待审核</option><option>待发布</option></select>
       <input class="bc-desc" placeholder="描述(选填)" style="flex:2">
     </div>`).join("");
-  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal" style="max-width:800px">
+  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal" style="max-width:820px">
     <h2>批量录入内容排期</h2>
+    <div class="batch-head" style="display:flex;gap:6px;margin-bottom:6px;font-size:10px;font-weight:700;color:var(--text-muted)">
+      <span style="flex:2">标题</span><span style="flex:1">平台</span><span style="flex:0.9">类型</span><span style="flex:1.3">排期日期</span><span style="flex:1">负责人</span><span style="flex:1">状态</span><span style="flex:2">描述</span>
+    </div>
     <div class="batch-container">${rows}</div>
     <div class="form-actions">
       <button class="btn btn-outline btn-sm" onclick="closeModal('${mid}')">取消</button>
@@ -2119,7 +2124,7 @@ async function saveBatchCalendar(modalId) {
     items.push({
       title,
       platform: row.querySelector(".bc-plat").value,
-      content_type: "短视频",
+      content_type: row.querySelector(".bc-type").value,
       scheduled_date: row.querySelector(".bc-date").value,
       status: row.querySelector(".bc-status").value,
       assignee: row.querySelector(".bc-person").value,
