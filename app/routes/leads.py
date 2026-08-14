@@ -338,8 +338,13 @@ def lead_deals(
     rows = db.query(LeadDeal).filter(LeadDeal.deal_date >= start, LeadDeal.deal_date <= end).order_by(LeadDeal.deal_date.desc()).all()
     cur_month = (today.year, today.month)
     total_amount = round(sum(r.amount or 0 for r in rows), 2)
-    cur_rows = [r for r in rows if (r.deal_date.year, r.deal_date.month) == cur_month]
-    cur_amount = round(sum(r.amount or 0 for r in cur_rows), 2)
+    # 独立查当月所有成单（不受筛选周期限制，按 deal_date 当月）
+    cur_month_start = date(today.year, today.month, 1)
+    cur_month_end = (date(today.year + 1, 1, 1) - timedelta(days=1)) if today.month == 12 else (date(today.year, today.month + 1, 1) - timedelta(days=1))
+    cur_month_rows = db.query(LeadDeal).filter(LeadDeal.deal_date >= cur_month_start, LeadDeal.deal_date <= cur_month_end).all()
+    cur_month_amount = round(sum(r.amount or 0 for r in cur_month_rows), 2)
+    # 本月累积成单人数：按 name 去重（去除空名）
+    cur_month_unique_customers = len({r.name.strip() for r in cur_month_rows if r.name and r.name.strip()})
     data = [
         {
             "id": r.id,
@@ -359,8 +364,9 @@ def lead_deals(
     return {
         "total": len(rows),
         "total_amount": total_amount,
-        "cur_month_count": len(cur_rows),
-        "cur_month_amount": cur_amount,
+        "cur_month_count": len(cur_month_rows),
+        "cur_month_amount": cur_month_amount,
+        "cur_month_unique_customers": cur_month_unique_customers,
         "data": data,
     }
 

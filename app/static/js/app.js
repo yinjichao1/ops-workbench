@@ -2542,8 +2542,8 @@ async function loadDeads(mode, week, month, year) {
   document.getElementById("deals-cards").innerHTML = [
     { label: "成单总数", val: d.total, cls: "" },
     { label: "成单总金额", val: "¥" + (d.total_amount||0).toLocaleString(), cls: "up" },
-    { label: "当月成单", val: d.cur_month_count, cls: "", sub: "本月成交笔数" },
-    { label: "当月金额", val: "¥" + (d.cur_month_amount||0).toLocaleString(), cls: "up", sub: "本月成交金额" },
+    { label: "本月累积成单人数", val: d.cur_month_unique_customers ?? d.cur_month_count ?? 0, cls: "", sub: "按当月所有成单(姓名去重)" },
+    { label: "本月累计成单金额", val: "¥" + (d.cur_month_amount||0).toLocaleString(), cls: "up", sub: "按当月所有成单金额累计" },
   ].map(c => `<div class="stat-card">
     <div class="stat-label">${c.label}</div>
     <div class="stat-value ${c.cls}">${c.val}</div>
