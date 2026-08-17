@@ -23,7 +23,17 @@ def _migrate_columns():
                 conn.execute(text("ALTER TABLE content_calendar ADD COLUMN account VARCHAR(50) DEFAULT ''"))
 
 
+def _fix_gzh_plays():
+    """修复历史脏数据：单条录入 bug 曾把公众号/小红书阅读量同时写入 plays 字段，
+    导致看板播放/阅读 = plays + reads + note_reads 翻倍。plays 语义上仅属抖音/视频号。"""
+    if "platform_daily_metrics" not in inspect(engine).get_table_names():
+        return
+    with engine.begin() as conn:
+        conn.execute(text("UPDATE platform_daily_metrics SET plays = 0 WHERE platform IN ('公众号', '小红书') AND plays > 0"))
+
+
 _migrate_columns()
+_fix_gzh_plays()
 
 app = FastAPI(title="新媒体运营工作台", version="0.2.0")
 

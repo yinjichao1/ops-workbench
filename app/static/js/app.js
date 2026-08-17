@@ -1939,12 +1939,15 @@ async function saveMetric(modalId, mode) {
     toast(mode === "month" ? "请选择平台和月份" : "请选择平台和周次", "error"); return;
   }
   const week = mode === "month" ? `${document.getElementById("mf-month").value}-01` : document.getElementById("mf-week").value;
+  const mfPlat = platEl.value;
+  const playsVal = +$qs("#mf-plays").value || 0;
   const body = {
     week,
-    platform: platEl.value,
+    platform: mfPlat,
     account: acctEl.value,
     followers: +$qs("#mf-followers").value||0,
-    plays: +$qs("#mf-plays").value||0,
+    // 抖音/视频号用 plays；公众号/小红书不应写 plays（否则与 reads/note_reads 叠加翻倍）
+    plays: (mfPlat === "公众号" || mfPlat === "小红书") ? 0 : playsVal,
     likes: +$qs("#mf-likes").value||0,
     comments: +$qs("#mf-comments").value||0,
     shares: +$qs("#mf-shares").value||0,
@@ -1954,8 +1957,8 @@ async function saveMetric(modalId, mode) {
     hearts: +($qs("#mf-hearts")?.value)||0,
     new_followers: +$qs("#mf-newf").value||0,
     publish_count: +$qs("#mf-pub").value||0,
-    reads: $qs("#mf-plat").value === "公众号" ? (+$qs("#mf-plays").value||0) : 0,
-    note_reads: $qs("#mf-plat").value === "小红书" ? (+$qs("#mf-plays").value||0) : 0,
+    reads: mfPlat === "公众号" ? playsVal : 0,
+    note_reads: mfPlat === "小红书" ? playsVal : 0,
   };
   try {
     const r = await fetch(API + "/data/metrics", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
