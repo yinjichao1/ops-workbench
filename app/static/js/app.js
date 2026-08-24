@@ -2450,6 +2450,20 @@ async function loadLeads() {
     ${c.sub ? `<div class="stat-change up">${c.sub}</div>` : ''}
   </div>`).join("");
 
+  // 本月累计线索数据（本月1号至今，不受筛选影响）
+  const ma = data.month_accum || {};
+  const maLabel = document.getElementById("leads-month-accum-label");
+  if (maLabel) maLabel.textContent = `本月 1 日至今 · 累计 ${ma.total || 0} 条 · 有效率 ${ma.valid_rate || 0}%`;
+  document.getElementById("leads-month-accum").innerHTML = [
+    { label: "本月累计线索", val: ma.total || 0, cls: "" },
+    { label: "本月有效", val: ma.valid || 0, cls: "up" },
+    { label: "本月无效", val: ma.invalid || 0, cls: "down" },
+    { label: "本月待定", val: ma.pending || 0, cls: "" },
+  ].map(c => `<div class="stat-card">
+    <div class="stat-label">${c.label}</div>
+    <div class="stat-value ${c.cls}">${c.val}</div>
+  </div>`).join("");
+
   // 渠道有效性汇总（两级：录入渠道 → 备注细分）
   const sv = (data.by_source_note || []).filter(s => s.total > 0);
   const summaryTable = (rows, nameKey) => `

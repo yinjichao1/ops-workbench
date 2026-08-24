@@ -166,6 +166,21 @@ def leads_summary(
     invalid = sum(1 for r in rows if r.validity == "无效")
     pending = sum(1 for r in rows if r.validity == "待定")
 
+    # 本月累计（本月1号至今日，不受筛选维度影响）
+    month_start = date(today.year, today.month, 1)
+    month_rows = db.query(Lead).filter(Lead.date >= month_start, Lead.date <= today).all()
+    month_total = len(month_rows)
+    month_valid = sum(1 for r in month_rows if r.validity == "有效")
+    month_invalid = sum(1 for r in month_rows if r.validity == "无效")
+    month_pending = sum(1 for r in month_rows if r.validity == "待定")
+    month_accum = {
+        "total": month_total,
+        "valid": month_valid,
+        "invalid": month_invalid,
+        "pending": month_pending,
+        "valid_rate": round(month_valid / month_total * 100, 1) if month_total else 0,
+    }
+
     by_source = defaultdict(int)
     by_validity = defaultdict(int)
     by_region = defaultdict(int)
@@ -234,6 +249,7 @@ def leads_summary(
 
     return {
         "week": f"{start} ~ {end}",
+        "month_accum": month_accum,
         "total": total,
         "valid": valid, "invalid": invalid, "pending": pending,
         "valid_rate": round(valid / total * 100, 1) if total else 0,
