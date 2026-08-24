@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#1D4ED8">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231D4ED8'/%3E%3Ctext x='32' y='43' font-size='30' font-weight='700' fill='%23fff' text-anchor='middle' font-family='-apple-system,sans-serif'%3E%E6%80%9D%3C/text%3E%3C/svg%3E">
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=0814a">
+<link rel="stylesheet" href="/static/css/style.css?v=0814b">
 </head>
 <body>
 
@@ -262,6 +262,15 @@
         </div>
         <div class="stat-grid cols-4" id="pd-accounts"></div>
       </div>
+
+      <!-- 本周热门内容 Top5（与平台数据联动） -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <span class="card-title">热门内容 Top5</span>
+          <span class="card-subtitle" id="pd-hot-label"></span>
+        </div>
+        <div id="pd-hot"></div>
+      </div>
     </div>
   </div>
 
@@ -394,7 +403,7 @@ document.querySelectorAll('.toggle-pill').forEach(function(pill){
   });
 });
 </script>
-<script src="/static/js/app.js?v=0814a"></script>
+<script src="/static/js/app.js?v=0814b"></script>
 <div class="grain-overlay" aria-hidden="true"></div>
 </body>
 </html>

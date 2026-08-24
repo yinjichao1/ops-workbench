@@ -726,16 +726,60 @@ async function loadPlatformDetail(platform, mode) {
   // Skeleton
   document.getElementById("pd-aggregate").innerHTML = Array(4).fill(0).map(() => '<div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-stat"></div><div class="skeleton skeleton-text"></div></div>').join("");
   document.getElementById("pd-accounts").innerHTML = "";
+  document.getElementById("pd-hot").innerHTML = '<div class="empty-state" style="padding:20px"><p>加载热门内容…</p></div>';
 
   try {
-    const r = await fetch(API + `/dashboard/platform-detail?platform=${encodeURIComponent(platform)}&mode=${encodeURIComponent(mode)}`);
+    const [r, h] = await Promise.all([
+      fetch(API + `/dashboard/platform-detail?platform=${encodeURIComponent(platform)}&mode=${encodeURIComponent(mode)}`),
+      fetch(API + `/dashboard/hot-content?mode=${encodeURIComponent(mode)}`),
+    ]);
     if (!r.ok) throw new Error("平台明细加载失败");
     const data = await r.json();
+    let hot = [];
+    if (h.ok) {
+      const hj = await h.json();
+      hot = (hj.data || {})[platform] || [];
+    }
     renderPlatformDetail(data, platform, mode);
+    renderPdHot(hot, platform, mode);
   } catch(e) {
     console.error(e);
     toast("平台明细加载失败", "error");
   }
+}
+
+// 平台明细：当前平台热门内容 Top5（与平台数据同周期联动）
+function renderPdHot(hot, platform, mode) {
+  const label = document.getElementById("pd-hot-label");
+  if (label) label.textContent = `${mode === "month" ? "本月" : "本周"}热门 · Top${Math.min(hot.length, 5)} · 点击可跳内容明细`;
+  const div = document.getElementById("pd-hot");
+  if (!div) return;
+  if (!hot.length) {
+    div.innerHTML = '<div class="empty-state"><h3>暂无热门内容</h3><p>录入内容数据后，该平台热门排名会自动出现</p></div>';
+    return;
+  }
+  div.innerHTML = `
+    <div class="card" style="width:100%"><div class="card-body" style="padding:6px 16px">
+      <div class="hot-plat-block">
+        <div class="hot-plat-header">
+          <span class="platform-badge ${({抖音:'douyin',视频号:'shipinhao',公众号:'gzh',小红书:'xhs'})[platform] || ''}">${platform}</span>
+          <span class="hot-plat-count">TOP5 · 按点赞排名</span>
+        </div>
+        ${hot.map((c, i) => {
+          const rankCls = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : 'rn';
+          const viral = c.is_viral ? '<span class="content-item-viral" style="font-size:9px">爆款</span>' : '';
+          return `
+          <div class="top-item hot-clickable" title="点击查看内容明细" onclick="gotoContentDetail(${c.id})">
+            <div class="top-rank ${rankCls}">${i + 1}</div>
+            <div class="top-info">
+              <div class="tt">${(c.title || '未命名').replace(/</g,'&lt;')} ${viral}</div>
+              <div class="tm">${c.author || '—'} · ${c.publish_date} · 播放 ${fmt(c.impressions || 0)}</div>
+            </div>
+            <div class="top-stat-r">👍 ${fmt(c.likes || 0)}</div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div></div>`;
 }
 
 function renderPlatformDetail(data, platform, mode) {
