@@ -763,7 +763,7 @@ function renderPdHot(hot, platform, mode) {
       <div class="hot-plat-block">
         <div class="hot-plat-header">
           <span class="platform-badge ${({抖音:'douyin',视频号:'shipinhao',公众号:'gzh',小红书:'xhs'})[platform] || ''}">${platform}</span>
-          <span class="hot-plat-count">TOP5 · 按点赞排名</span>
+          <span class="hot-plat-count">TOP5 · 按播放量排名</span>
         </div>
         ${hot.map((c, i) => {
           const rankCls = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : 'rn';

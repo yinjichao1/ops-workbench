@@ -463,7 +463,8 @@ def hot_content(
 
     result = {}
     for plat in PLATFORMS:
-        items = sorted(by_plat.get(plat, []), key=lambda r: (r.likes or 0), reverse=True)[:5]
+        # 各平台爆款按播放量(impressions)排序取 Top5
+        items = sorted(by_plat.get(plat, []), key=lambda r: (r.impressions or 0), reverse=True)[:5]
         result[plat] = [
             {
                 "id": r.id,
