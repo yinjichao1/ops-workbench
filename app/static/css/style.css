@@ -1305,3 +1305,16 @@ body {
   .deal-table-row .dt-act { grid-area: act; }
   .deal-table-row .dt-grade { display: none; }
 }
+
+/* 周报可编辑区域 */
+.report-body[contenteditable="true"] {
+  outline: 1px dashed var(--border);
+  outline-offset: 6px;
+  border-radius: 8px;
+  transition: outline-color .15s;
+}
+.report-body[contenteditable="true"]:focus { outline-color: var(--accent); outline-style: solid; }
+.report-edit-hint {
+  margin-top: 14px; font-size: 11px; color: var(--text-muted);
+  padding: 8px 12px; background: var(--bg-elevated); border-radius: 8px;
+}

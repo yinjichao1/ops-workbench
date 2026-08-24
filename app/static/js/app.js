@@ -1815,7 +1815,13 @@ async function loadReports(type) {
     });
     html = html.replace(/(<tr>.*<\/tr>\n?)+/g, '<table><thead>$&</tbody></table>');
     html = html.replace(/<blockquote>/g, '<blockquote>').replace(/<\/blockquote>/g, '</blockquote>');
-    $qs("#report-area").innerHTML = `<div class="report-body">${html}</div>`;
+    // 周期标签（后端返回的是默认上周/上月）
+    const lbl = document.getElementById("report-period-label");
+    const m = markdown.match(/汇报周期：\*\*(\S+) 至 (\S+)\*\*/);
+    if (lbl) lbl.textContent = m ? `当前周期：${m[1]} ~ ${m[2]}` : "";
+    // 可编辑：contenteditable 让用户可直接修改内容
+    $qs("#report-area").innerHTML = `<div class="report-body" contenteditable="true" spellcheck="false">${html}</div>
+      <div class="report-edit-hint">✏️ 内容可直接编辑，编辑后点「复制内容」或「下载 Markdown」导出</div>`;
   } catch(e) {
     $qs("#report-area").innerHTML = `<div class="empty-state">
       <div class="empty-icon">&#128203;</div>
@@ -1828,6 +1834,36 @@ async function loadReports(type) {
 
 // ========== MODAL ==========
 function closeModal(id) { const el = document.getElementById(id); if (el) el.remove(); }
+
+// 周报复制 / 下载（读取编辑后的内容）
+function reportText() {
+  const el = document.querySelector("#report-area .report-body");
+  return el ? el.innerText.trim() : "";
+}
+async function copyReport() {
+  const txt = reportText();
+  if (!txt) { toast("请先生成报表", "error"); return; }
+  try {
+    await navigator.clipboard.writeText(txt);
+    toast("内容已复制，可直接粘贴到 Word/飞书", "success");
+  } catch(e) {
+    const ta = document.createElement("textarea");
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    document.execCommand("copy"); ta.remove();
+    toast("内容已复制，可直接粘贴到 Word/飞书", "success");
+  }
+}
+function downloadReport() {
+  const txt = reportText();
+  if (!txt) { toast("请先生成报表", "error"); return; }
+  const blob = new Blob([txt], { type: "text/markdown;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `运营周报_${new Date().toISOString().slice(0, 10)}.md`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(a.href);
+  toast("周报已下载", "success");
+}
 
 // ========== BATCH ENTRY ==========
 async function openBatchEntry(platform, mode) {

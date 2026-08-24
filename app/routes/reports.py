@@ -82,6 +82,11 @@ def _week_range(today: date):
     return monday, sunday
 
 
+def _last_week_range(today: date):
+    monday, sunday = _week_range(today)
+    return monday - timedelta(weeks=1), sunday - timedelta(weeks=1)
+
+
 def _month_range(today: date):
     start = today.replace(day=1)
     if today.month == 12:
@@ -93,19 +98,36 @@ def _month_range(today: date):
     return start, end
 
 
+def _last_month_range(today: date):
+    last_start = (today.replace(day=1) - timedelta(days=1)).replace(day=1)
+    last_end = today.replace(day=1) - timedelta(days=1)
+    return last_start, last_end
+
+
 @router.get("")
 def generate_report(
     report_type: str = Query("weekly", pattern="^(weekly|monthly)$"),
+    week: str = Query("", description="指定周期（周报传周一日期 YYYY-MM-DD；月报传 YYYY-MM-01），默认上周/上月"),
     db: Session = Depends(get_db),
 ):
-    """生成周报或月报 Markdown。"""
+    """生成周报或月报 Markdown。周报默认取上周数据。"""
     today = date.today()
 
     if report_type == "weekly":
-        start, end = _week_range(today)
+        if week:
+            start = date.fromisoformat(week)
+        else:
+            start, _ = _last_week_range(today)  # 默认上周
+        end = start + timedelta(days=6)
         period = "周"
     else:
-        start, end = _month_range(today)
+        if week:
+            start = date.fromisoformat(week)
+            end = (date(start.year + 1, 1, 1) - timedelta(days=1)) if start.month == 12 else (date(start.year, start.month + 1, 1) - timedelta(days=1))
+            if end > today:
+                end = today
+        else:
+            start, end = _last_month_range(today)  # 默认上月
         period = "月"
 
     # Collect data
