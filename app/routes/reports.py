@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from ..models import get_db
 from ..models.platform_metrics import PlatformDailyMetrics
-from ..models.content import ContentDetail
+from ..models.content import ContentDetail, ContentCalendar, Task
 
 router = APIRouter()
 
@@ -67,27 +67,9 @@ REPORT_TEMPLATE = """# {period}新媒体运营汇报
 
 ---
 
-## 七、下周工作计划
+## 七、下周工作计划（联动任务管理与内容排期）
 
-> 【自由编辑区：请填写下周每日重点工作安排，如内容发布、直播排期、活动执行、团队分工等】
-
-### 周一
-（待填写）
-
-### 周二
-（待填写）
-
-### 周三
-（待填写）
-
-### 周四
-（待填写）
-
-### 周五
-（待填写）
-
-### 周末
-（待填写）
+{next_week_plan}
 
 ---
 
@@ -126,6 +108,13 @@ def _last_month_range(today: date):
     last_start = (today.replace(day=1) - timedelta(days=1)).replace(day=1)
     last_end = today.replace(day=1) - timedelta(days=1)
     return last_start, last_end
+
+
+def _next_week_range(today: date):
+    """下周：下周一 ~ 下周日。"""
+    this_monday = today - timedelta(days=today.weekday())
+    next_monday = this_monday + timedelta(weeks=1)
+    return next_monday, next_monday + timedelta(days=6)
 
 
 @router.get("")
@@ -303,6 +292,49 @@ def generate_report(
     # Next plan
     next_plan = "> 【请根据本周期表现制定下周期各平台目标与 KPI】\n"
 
+    # 下周工作计划：联动内容排期 + 任务管理
+    next_start, next_end = _next_week_range(today)
+    cals = (
+        db.query(ContentCalendar)
+        .filter(ContentCalendar.scheduled_date >= next_start, ContentCalendar.scheduled_date <= next_end)
+        .order_by(ContentCalendar.scheduled_date.asc(), ContentCalendar.platform.asc())
+        .all()
+    )
+    tasks = (
+        db.query(Task)
+        .filter(Task.due_date >= next_start, Task.due_date <= next_end)
+        .order_by(Task.due_date.asc())
+        .all()
+    )
+    plan_lines = [f"> 自动联动内容排期（{len(cals)} 条）与任务管理（{len(tasks)} 项），生成后可继续编辑\n"]
+    # 内容排期
+    if cals:
+        plan_lines.append(f"### 📅 下周内容排期（{next_start} 至 {next_end}，共 {len(cals)} 条）\n")
+        plan_lines.append("| 日期 | 平台 | 账号 | 类型 | 标题 | 状态 |")
+        plan_lines.append("|------|------|------|------|------|------|")
+        for c in cals:
+            plan_lines.append(
+                f"| {c.scheduled_date} | {c.platform} | {c.account or '—'} | "
+                f"{c.content_type} | {c.title} | {c.status} |"
+            )
+        plan_lines.append("")
+    else:
+        plan_lines.append(f"### 📅 下周内容排期\n下周（{next_start} 至 {next_end}）暂无排期。\n")
+    # 任务管理
+    if tasks:
+        plan_lines.append(f"### ✅ 下周任务（{len(tasks)} 项）\n")
+        plan_lines.append("| 截止日期 | 优先级 | 任务 | 负责人 | 状态 |")
+        plan_lines.append("|---------|--------|------|--------|------|")
+        for t in tasks:
+            plan_lines.append(
+                f"| {t.due_date} | {t.priority} | {t.title} | {t.assignee or '—'} | {t.status} |"
+            )
+        plan_lines.append("")
+    else:
+        plan_lines.append("### ✅ 下周任务\n下周暂无到期任务。\n")
+    plan_lines.append("### 📝 补充安排（自由编辑）\n（待填写）\n")
+    next_week_plan = "\n".join(plan_lines)
+
     report = REPORT_TEMPLATE.format(
         period=period,
         start=str(start),
@@ -311,6 +343,7 @@ def generate_report(
         platform_details=platform_details,
         data_overview=data_overview,
         kpi_analysis=kpi_analysis,
+        next_week_plan=next_week_plan,
         next_plan=next_plan,
     )
 
