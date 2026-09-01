@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import date, timedelta
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, extract
 from ..models import get_db, MonthlyTarget
 from ..models.platform_metrics import PlatformDailyMetrics
 from ..models.content import ContentDetail
@@ -113,6 +113,13 @@ def dashboard_overview(
 
     result = []
 
+    # 周/月数据隔离：按月只取每月1号记录，按周排除每月1号（月记录）避免相互污染
+    day_filter = (
+        (extract("day", PlatformDailyMetrics.date) == 1)
+        if mode == "month"
+        else (extract("day", PlatformDailyMetrics.date) != 1)
+    )
+
     for plat in PLATFORMS:
         this_week = (
             db.query(PlatformDailyMetrics)
@@ -120,6 +127,7 @@ def dashboard_overview(
                 PlatformDailyMetrics.platform == plat,
                 PlatformDailyMetrics.date >= this_mon,
                 PlatformDailyMetrics.date <= this_tue,
+                day_filter,
             )
             .all()
         )
@@ -130,6 +138,7 @@ def dashboard_overview(
                 PlatformDailyMetrics.platform == plat,
                 PlatformDailyMetrics.date >= last_mon,
                 PlatformDailyMetrics.date <= last_tue,
+                day_filter,
             )
             .all()
         )
@@ -355,6 +364,8 @@ def dashboard_kpi(db: Session = Depends(get_db)):
     }
 
     result = []
+    # KPI 是月维度，只取每月1号记录（排除周记录）
+    kpi_day_filter = extract("day", PlatformDailyMetrics.date) == 1
     for plat in PLATFORMS:
         this_month = (
             db.query(PlatformDailyMetrics)
@@ -362,6 +373,7 @@ def dashboard_kpi(db: Session = Depends(get_db)):
                 PlatformDailyMetrics.platform == plat,
                 PlatformDailyMetrics.date >= this_start,
                 PlatformDailyMetrics.date <= today,
+                kpi_day_filter,
             )
             .all()
         )
@@ -371,6 +383,7 @@ def dashboard_kpi(db: Session = Depends(get_db)):
                 PlatformDailyMetrics.platform == plat,
                 PlatformDailyMetrics.date >= last_start,
                 PlatformDailyMetrics.date <= last_end,
+                kpi_day_filter,
             )
             .all()
         )
@@ -514,6 +527,13 @@ def platform_detail(
         this_mon, this_sun = last_mon, last_sun
         last_mon, last_sun = this_mon - timedelta(weeks=1), this_sun - timedelta(weeks=1)
 
+    # 周/月数据隔离：按月只取1号记录，按周排除1号记录
+    pd_day_filter = (
+        (extract("day", PlatformDailyMetrics.date) == 1)
+        if mode == "month"
+        else (extract("day", PlatformDailyMetrics.date) != 1)
+    )
+
     # 本周数据
     base_q = (
         db.query(PlatformDailyMetrics)
@@ -521,6 +541,7 @@ def platform_detail(
             PlatformDailyMetrics.platform == platform,
             PlatformDailyMetrics.date >= this_mon,
             PlatformDailyMetrics.date <= this_sun,
+            pd_day_filter,
         )
     )
     if account:
@@ -535,6 +556,7 @@ def platform_detail(
             PlatformDailyMetrics.platform == platform,
             PlatformDailyMetrics.date >= last_mon,
             PlatformDailyMetrics.date <= last_sun,
+            pd_day_filter,
         )
     )
     if account:

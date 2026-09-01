@@ -143,12 +143,19 @@ def generate_report(
             start, end = _last_month_range(today)  # 默认上月
         period = "月"
 
-    # Collect data
+    # Collect data（周报排除每月1号月记录，月报只取1号月记录，避免相互污染）
+    from sqlalchemy import extract
+    day_filter = (
+        (extract("day", PlatformDailyMetrics.date) != 1)
+        if report_type == "weekly"
+        else (extract("day", PlatformDailyMetrics.date) == 1)
+    )
     rows = (
         db.query(PlatformDailyMetrics)
         .filter(
             PlatformDailyMetrics.date >= start,
             PlatformDailyMetrics.date <= end,
+            day_filter,
         )
         .all()
     )
@@ -205,6 +212,7 @@ def generate_report(
                 PlatformDailyMetrics.platform == plat,
                 PlatformDailyMetrics.date >= last_start,
                 PlatformDailyMetrics.date <= last_end,
+                day_filter,
             )
             .all()
         )
