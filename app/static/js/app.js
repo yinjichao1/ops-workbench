@@ -2601,10 +2601,10 @@ async function loadLeads() {
       </div>`
     : '<div class="empty-state"><p>暂无数据</p></div>';
 
-  // 地区有效性汇总（含意向级别）
-  const rv = (data.by_region_validity || []).filter(s => s.total > 0);
-  document.getElementById("leads-region-summary").innerHTML = rv.length
-    ? summaryTable(rv, "地区") + `
+  // 校区有效性汇总（按所属校区 · 含意向级别）
+  const rv = (data.by_campus_validity || []).filter(s => s.total > 0);
+  document.getElementById("leads-campus-summary").innerHTML = rv.length
+    ? summaryTable(rv, "校区") + `
       <div class="lead-table-foot">
         <span class="lt-name">总计</span>
         <span class="lt-num v">${data.valid}</span>

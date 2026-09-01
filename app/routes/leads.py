@@ -85,6 +85,7 @@ class LeadIn(BaseModel):
     grade: str = ""
     contact_count: int = 0
     owner: str = ""
+    campus: str = ""
     note: str = ""
 
 
@@ -96,7 +97,8 @@ def create_lead(body: LeadIn, db: SqlSession = Depends(get_db)):
         date=date.fromisoformat(body.date) if body.date else date.today(),
         status=body.status, source=body.source, validity=body.validity,
         intent=body.intent, school=body.school, grade=body.grade,
-        contact_count=body.contact_count, owner=body.owner, note=body.note,
+        contact_count=body.contact_count, owner=body.owner,
+        campus=body.campus, note=body.note,
     )
     db.add(lead)
     db.commit()
@@ -127,6 +129,7 @@ def leads_recent(
                 "status": r.status or "",
                 "validity": r.validity or "",
                 "school": r.school or "",
+                "campus": r.campus or "",
             }
             for r in rows
         ]
@@ -191,7 +194,8 @@ def leads_summary(
     sub_shipin = defaultdict(int)
     # 渠道×有效性、地区×有效性 交叉分析 + 意向级别 1/3/5 统计
     src_valid = defaultdict(lambda: {"有效": 0, "无效": 0, "待定": 0, "total": 0, "intent1": 0, "intent3": 0, "intent5": 0})
-    reg_valid = defaultdict(lambda: {"有效": 0, "无效": 0, "待定": 0, "total": 0, "intent1": 0, "intent3": 0, "intent5": 0})
+    # 按所属校区（campus）分组（用户要求：地区有效性汇总改为按所属校区）
+    cam_valid = defaultdict(lambda: {"有效": 0, "无效": 0, "待定": 0, "total": 0, "intent1": 0, "intent3": 0, "intent5": 0})
     # 渠道 → 备注细分 两级结构
     src_note = defaultdict(lambda: {"有效": 0, "无效": 0, "待定": 0, "total": 0, "subs": defaultdict(lambda: {"有效": 0, "无效": 0, "待定": 0, "total": 0})})
 
@@ -227,14 +231,16 @@ def leads_summary(
         src_note[src]["subs"][sub_val][v] += 1
         src_note[src]["subs"][sub_val]["total"] += 1
 
-        reg_valid[r.owner or "未知"][v] += 1
-        reg_valid[r.owner or "未知"]["total"] += 1
+        # 校区汇总：按 campus 分组（campus 为空回退 owner，保证兼容性）
+        campus = r.campus or r.owner or "未分配"
+        cam_valid[campus][v] += 1
+        cam_valid[campus]["total"] += 1
         if it == 1:
-            reg_valid[r.owner or "未知"]["intent1"] += 1
+            cam_valid[campus]["intent1"] += 1
         elif it == 3:
-            reg_valid[r.owner or "未知"]["intent3"] += 1
+            cam_valid[campus]["intent3"] += 1
         elif it == 5:
-            reg_valid[r.owner or "未知"]["intent5"] += 1
+            cam_valid[campus]["intent5"] += 1
 
         for cat, val in subs:
             if cat == "抖音":
@@ -274,7 +280,7 @@ def leads_summary(
             }
             for k, v in sorted(src_valid.items(), key=lambda x: -x[1]["total"])
         ],
-        "by_region_validity": [
+        "by_campus_validity": [
             {
                 "name": k,
                 "valid": v["有效"], "invalid": v["无效"], "pending": v["待定"],
@@ -282,7 +288,7 @@ def leads_summary(
                 "valid_rate": round(v["有效"] / v["total"] * 100, 1) if v["total"] else 0,
                 "intent1": v["intent1"], "intent3": v["intent3"], "intent5": v["intent5"],
             }
-            for k, v in sorted(reg_valid.items(), key=lambda x: -x[1]["total"])
+            for k, v in sorted(cam_valid.items(), key=lambda x: -x[1]["total"])
         ],
         "by_source_note": [
             {
@@ -519,6 +525,7 @@ async def upload_leads(
                 grade=str(r.get("年级") or ""),
                 contact_count=int(r.get("沟通次数") or 0),
                 owner=str(r.get("主责任人") or ""),
+                campus=str(r.get("所属校区") or ""),
                 note=str(r.get("备注") or ""),
             )
             db.add(lead)

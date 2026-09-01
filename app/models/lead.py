@@ -22,6 +22,7 @@ class Lead(Base):
     grade = Column(String(20), default="")
     contact_count = Column(Integer, default=0, comment="沟通次数")
     owner = Column(String(20), default="", comment="主责任人/地区")
+    campus = Column(String(50), default="", comment="所属校区，如武汉校区/郑州校区")
     note = Column(String(500), default="")
 
     created_at = Column(DateTime, server_default=func.now())

@@ -21,6 +21,11 @@ def _migrate_columns():
         if "account" not in cols:
             with engine.begin() as conn:
                 conn.execute(text("ALTER TABLE content_calendar ADD COLUMN account VARCHAR(50) DEFAULT ''"))
+    if "leads" in insp.get_table_names():
+        cols = {c["name"] for c in insp.get_columns("leads")}
+        if "campus" not in cols:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE leads ADD COLUMN campus VARCHAR(50) DEFAULT ''"))
 
 
 def _fix_gzh_plays():
