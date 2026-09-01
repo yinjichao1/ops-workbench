@@ -29,7 +29,7 @@ if not exist "venv\" (
 
 :: Install deps
 echo    [2/3] 安装依赖...
-venv\Scripts\pip install -q fastapi uvicorn sqlalchemy python-multipart aiofiles >nul 2>&1
+venv\Scripts\pip install -q fastapi uvicorn sqlalchemy python-multipart aiofiles openpyxl >nul 2>&1
 
 :: Shared mode
 if "%mode%"=="2" (

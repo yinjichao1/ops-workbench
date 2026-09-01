@@ -28,17 +28,41 @@ def _migrate_columns():
                 conn.execute(text("ALTER TABLE leads ADD COLUMN campus VARCHAR(50) DEFAULT ''"))
 
 
-def _fix_gzh_plays():
-    """修复历史脏数据：单条录入 bug 曾把公众号/小红书阅读量同时写入 plays 字段，
-    导致看板播放/阅读 = plays + reads + note_reads 翻倍。plays 语义上仅属抖音/视频号。"""
+def _fix_double_counting():
+    """修复历史脏数据：旧版录入 bug 曾把公众号/小红书的阅读量同时写入 plays 字段，
+    导致看板播放/阅读 = plays + reads + note_reads 翻倍。
+    规范化规则：抖音/视频号→plays；公众号→reads；小红书→note_reads。
+    修复时优先"搬家"（把值移到正确字段）而不是直接清零，避免丢数据。幂等，可重复执行。"""
     if "platform_daily_metrics" not in inspect(engine).get_table_names():
         return
     with engine.begin() as conn:
-        conn.execute(text("UPDATE platform_daily_metrics SET plays = 0 WHERE platform IN ('公众号', '小红书') AND plays > 0"))
+        # 小红书：canonical=note_reads。已有 note_reads 时清掉 plays；没有时把 plays 搬过去（NULL 视为空）
+        conn.execute(text(
+            "UPDATE platform_daily_metrics SET note_reads = plays, plays = 0 "
+            "WHERE platform = '小红书' AND plays > 0 AND (note_reads IS NULL OR note_reads = 0)"
+        ))
+        conn.execute(text(
+            "UPDATE platform_daily_metrics SET plays = 0 "
+            "WHERE platform = '小红书' AND plays > 0"
+        ))
+        # 公众号：canonical=reads
+        conn.execute(text(
+            "UPDATE platform_daily_metrics SET reads = plays, plays = 0 "
+            "WHERE platform = '公众号' AND plays > 0 AND (reads IS NULL OR reads = 0)"
+        ))
+        conn.execute(text(
+            "UPDATE platform_daily_metrics SET plays = 0 "
+            "WHERE platform = '公众号' AND plays > 0"
+        ))
+        # 抖音/视频号：canonical=plays，清掉误写的 reads/note_reads（仅当 plays 有值时，避免丢数据）
+        conn.execute(text(
+            "UPDATE platform_daily_metrics SET reads = 0, note_reads = 0 "
+            "WHERE platform IN ('抖音', '视频号') AND plays > 0 AND (reads > 0 OR note_reads > 0)"
+        ))
 
 
 _migrate_columns()
-_fix_gzh_plays()
+_fix_double_counting()
 
 app = FastAPI(title="新媒体运营工作台", version="0.2.0")
 

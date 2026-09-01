@@ -1976,6 +1976,11 @@ function openMetricForm(mode) {
     <div class="form-group"><label>账号</label><select id="mf-acct"></select></div>
     ${isMonth ? `
     <div class="form-group"><label>月份 <span class="required">*</span></label><input type="month" id="mf-month" value="${thisMonth}"><span class="error-msg">请选择月份</span></div>
+    <div class="form-group" id="mf-import-group" style="display:none">
+      <label>从平台数据表导入（自动汇总整月）</label>
+      <input type="file" id="mf-import-file" accept=".csv,.xlsx" onchange="importMonthFile('${mid}')">
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">支持 抖音 / 视频号 / 小红书 官方导出的日数据表（.xlsx / .csv），自动按月求和后保存，无需手动填写。</div>
+    </div>
     <div style="font-size:11px;color:var(--text-warning);margin:-4px 0 10px 0">整月汇总数据会保存为该月 1 号的记录，请与按周录入分开使用，避免重复统计。</div>`
     : `
     <div class="form-group"><label>周次 <span class="required">*</span></label><input type="week" id="mf-week" value="${thisWeek}"><span class="error-msg">请选择周次</span></div>`}
@@ -2004,11 +2009,42 @@ function openMetricForm(mode) {
 
 function togglePlatformFields() {
   const plat = document.getElementById("mf-plat").value;
+  const isMonth = !!document.getElementById("mf-month");
   const show = (id, v) => { const el = document.getElementById(id); if (el) el.style.display = v ? "" : "none"; };
   show("mf-bookmark-group", plat === "小红书" || plat === "抖音" || plat === "公众号");
   show("mf-home-group", plat === "抖音");
   show("mf-comp-group", plat === "抖音" || plat === "视频号");
   show("mf-heart-group", plat === "视频号");
+  show("mf-import-group", isMonth && (plat === "抖音" || plat === "视频号" || plat === "小红书"));
+}
+
+// ========== 月度表格导入（抖音/视频号/小红书） ==========
+async function importMonthFile(modalId) {
+  const input = document.getElementById("mf-import-file");
+  const file = input?.files?.[0];
+  if (!file) return;
+  const plat = document.getElementById("mf-plat")?.value || "";
+  const acct = document.getElementById("mf-acct")?.value || "";
+  if (!["抖音", "视频号", "小红书"].includes(plat)) {
+    toast("该平台暂不支持表格导入", "error"); return;
+  }
+  toast("正在解析表格，请稍候…");
+  try {
+    const fd = new FormData();
+    fd.append("file", file);
+    const r = await fetch(API + `/data/metrics/import-month?platform=${encodeURIComponent(plat)}&account=${encodeURIComponent(acct)}`, { method: "POST", body: fd });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.ok) throw new Error(data.error || data.detail || `HTTP ${r.status}`);
+    const mainVal = data.fields.note_reads || data.fields.reads || data.fields.plays || 0;
+    const metricName = plat === "小红书" ? "笔记阅读" : (plat === "公众号" ? "阅读" : "播放");
+    closeModal(modalId);
+    toast(`${plat} ${data.month} 已导入（${data.days} 天汇总）· ${metricName} ${Number(mainVal).toLocaleString()}${data.updated ? " · 已覆盖原记录" : ""}`, "success");
+    if (window._pdPlatform) loadPlatformDetail(window._pdPlatform, "month");
+    else loadDashboard();
+  } catch(e) {
+    toast("导入失败：" + e.message, "error");
+    if (input) input.value = "";
+  }
 }
 
 async function saveMetric(modalId, mode) {
