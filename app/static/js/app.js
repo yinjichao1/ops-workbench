@@ -2633,11 +2633,19 @@ function onLeadsModeChange() {
   if (wk) wk.style.display = mode === "week" ? "" : "none";
   if (mn) mn.style.display = mode === "month" ? "" : "none";
   if (yr) yr.style.display = mode === "year" ? "" : "none";
+  toggleMonthAccumBlock(mode);
   loadLeads();
+}
+
+// 按月筛选时隐藏"本月累计线索数据"（月视图已含当月汇总，避免重复）
+function toggleMonthAccumBlock(mode) {
+  const blk = document.getElementById("leads-month-accum-block");
+  if (blk) blk.style.display = mode === "month" ? "none" : "";
 }
 
 async function loadLeads() {
   const mode = $qs("#leads-mode")?.value || "week";
+  toggleMonthAccumBlock(mode);
   let week = "", month = "", year = 0;
   if (mode === "week") week = $qs("#leads-week")?.value || getCurrentWeekDate();
   else if (mode === "month") month = $qs("#leads-month")?.value || getCurrentMonthValue();
