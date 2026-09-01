@@ -48,7 +48,13 @@ function switchDashtab(el, tab) {
   });
   // 切换 tab 时按需加载数据
   if (tab === "trend") loadDashboardDetail(null, "抖音");
-  if (tab === "hot") loadHotContent();
+  if (tab === "hot") {
+    const hwk = $qs("#hot-week-picker");
+    const hmo = $qs("#hot-month-picker");
+    if (hwk && !hwk.value) hwk.value = dateToIsoWeek(getPreviousWeekDate());
+    if (hmo && !hmo.value) hmo.value = getPreviousMonthValue();
+    loadHotContent();
+  }
   if (tab === "leads") {
     const wi = $qs("#leads-week");
     if (wi && !wi.value) wi.value = getLastWeek();
@@ -130,6 +136,40 @@ function onOvFilterChange() {
     return;
   }
   loadDashboard(start, end);
+}
+
+// ========== 热门内容 Top5 周/月维度（可独立切换，默认跟随看板"平台数据"维度） ==========
+let hotCurrentMode = null; // null=跟随 ovCurrentMode；week/month=手动选择
+
+function applyHotModeUI(mode) {
+  const w = document.getElementById("hot-mode-week");
+  const m = document.getElementById("hot-mode-month");
+  const wkP = document.getElementById("hot-week-picker");
+  const moP = document.getElementById("hot-month-picker");
+  if (mode === "week") {
+    if (w) { w.style.background = "var(--accent)"; w.style.color = "#fff"; w.style.border = "none"; }
+    if (m) { m.style.background = "var(--bg-elevated)"; m.style.color = "var(--text-muted)"; m.style.border = "1px solid var(--border)"; }
+    if (wkP) wkP.style.display = "";
+    if (moP) moP.style.display = "none";
+  } else {
+    if (m) { m.style.background = "var(--accent)"; m.style.color = "#fff"; m.style.border = "none"; }
+    if (w) { w.style.background = "var(--bg-elevated)"; w.style.color = "var(--text-muted)"; w.style.border = "1px solid var(--border)"; }
+    if (wkP) wkP.style.display = "none";
+    if (moP) moP.style.display = "";
+  }
+}
+
+function switchHotMode(mode) {
+  hotCurrentMode = mode;
+  const wkP = document.getElementById("hot-week-picker");
+  const moP = document.getElementById("hot-month-picker");
+  if (mode === "month" && moP && !moP.value) moP.value = getPreviousMonthValue();
+  if (mode === "week" && wkP && !wkP.value) wkP.value = dateToIsoWeek(getPreviousWeekDate());
+  loadHotContent();
+}
+
+function onHotFilterChange() {
+  loadHotContent();
 }
 
 function toggleSubmenu(el) {
@@ -708,6 +748,43 @@ function openPlatformDetail(platform) {
   loadPlatformDetail(platform, window._pdMode || "week");
 }
 
+// ========== 平台明细页 周/月维度（跟随看板维度进入，可独立切换） ==========
+let pdCurrentMode = "week";
+
+function pdApplyModeUI(mode) {
+  const w = document.getElementById("pd-mode-week");
+  const m = document.getElementById("pd-mode-month");
+  const wkP = document.getElementById("pd-week-picker");
+  const moP = document.getElementById("pd-month-picker");
+  if (mode === "week") {
+    if (w) { w.style.background = "var(--accent)"; w.style.color = "#fff"; w.style.border = "none"; }
+    if (m) { m.style.background = "var(--bg-elevated)"; m.style.color = "var(--text-muted)"; m.style.border = "1px solid var(--border)"; }
+    if (wkP) wkP.style.display = "";
+    if (moP) moP.style.display = "none";
+  } else {
+    if (m) { m.style.background = "var(--accent)"; m.style.color = "#fff"; m.style.border = "none"; }
+    if (w) { w.style.background = "var(--bg-elevated)"; w.style.color = "var(--text-muted)"; w.style.border = "1px solid var(--border)"; }
+    if (wkP) wkP.style.display = "none";
+    if (moP) moP.style.display = "";
+  }
+}
+
+function pdSwitchMode(mode) {
+  pdCurrentMode = mode;
+  window._pdMode = mode;
+  const wkP = document.getElementById("pd-week-picker");
+  const moP = document.getElementById("pd-month-picker");
+  if (mode === "month" && moP && !moP.value) moP.value = getPreviousMonthValue();
+  if (mode === "week" && wkP && !wkP.value) wkP.value = dateToIsoWeek(getPreviousWeekDate());
+  const quickBtn = document.getElementById("pd-quick-entry-btn");
+  if (quickBtn) quickBtn.textContent = mode === "month" ? "快速录入本月" : "快速录入本周";
+  if (window._pdPlatform) loadPlatformDetail(window._pdPlatform, mode);
+}
+
+function onPdFilterChange() {
+  if (window._pdPlatform) loadPlatformDetail(window._pdPlatform, pdCurrentMode || "week");
+}
+
 function goToDashboard() {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.querySelectorAll(".sidebar-item[data-page]").forEach(i => i.classList.remove("active"));
@@ -723,6 +800,17 @@ async function loadPlatformDetail(platform, mode) {
   document.getElementById("pd-platform-name").textContent = platform;
   document.getElementById("pd-title").textContent = `${platform} · 数据明细`;
 
+  // 同步维度控件 UI（首次进入跟随看板维度）
+  pdCurrentMode = mode;
+  if (document.getElementById("pd-mode-week")) pdApplyModeUI(mode);
+  const wkP = document.getElementById("pd-week-picker");
+  const moP = document.getElementById("pd-month-picker");
+  if (wkP && !wkP.value) wkP.value = dateToIsoWeek(getPreviousWeekDate());
+  if (moP && !moP.value) moP.value = getPreviousMonthValue();
+  const weekVal = wkP && wkP.value ? wkP.value : dateToIsoWeek(getPreviousWeekDate());
+  const monthVal = moP && moP.value ? moP.value : getPreviousMonthValue();
+  const periodQ = mode === "month" ? `&month=${monthVal}` : `&week=${weekVal}`;
+
   // Skeleton
   document.getElementById("pd-aggregate").innerHTML = Array(4).fill(0).map(() => '<div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-stat"></div><div class="skeleton skeleton-text"></div></div>').join("");
   document.getElementById("pd-accounts").innerHTML = "";
@@ -730,8 +818,8 @@ async function loadPlatformDetail(platform, mode) {
 
   try {
     const [r, h] = await Promise.all([
-      fetch(API + `/dashboard/platform-detail?platform=${encodeURIComponent(platform)}&mode=${encodeURIComponent(mode)}`),
-      fetch(API + `/dashboard/hot-content?mode=${encodeURIComponent(mode)}`),
+      fetch(API + `/dashboard/platform-detail?platform=${encodeURIComponent(platform)}&mode=${encodeURIComponent(mode)}${periodQ}`),
+      fetch(API + `/dashboard/hot-content?mode=${encodeURIComponent(mode)}${periodQ}`),
     ]);
     if (!r.ok) throw new Error("平台明细加载失败");
     const data = await r.json();
@@ -751,7 +839,14 @@ async function loadPlatformDetail(platform, mode) {
 // 平台明细：当前平台热门内容 Top5（与平台数据同周期联动）
 function renderPdHot(hot, platform, mode) {
   const label = document.getElementById("pd-hot-label");
-  if (label) label.textContent = `${mode === "month" ? "本月" : "本周"}热门 · Top${Math.min(hot.length, 5)} · 点击可跳内容明细`;
+  if (label) {
+    const wkEl = document.getElementById("pd-week-picker");
+    const moEl = document.getElementById("pd-month-picker");
+    const per = mode === "month"
+      ? `${(moEl && moEl.value) || getPreviousMonthValue()}`
+      : `第${((wkEl && wkEl.value) || "").split("-W")[1] || ""}周`;
+    label.textContent = `${mode === "month" ? "按月" : "按周"}统计 · ${per} · Top${Math.min(hot.length, 5)} · 点击可跳内容明细`;
+  }
   const div = document.getElementById("pd-hot");
   if (!div) return;
   if (!hot.length) {
@@ -952,16 +1047,20 @@ async function loadDashboardDetail(allData, platform, account) {
   } catch(e) { /* no data - silent */ }
 }
 
-// Top 5 — 「本周/月热门」与内容明细共享同一周期，点击条目跳转内容明细
+// Top 5 — 「本周/本月热门」支持周/月维度独立切换，点击条目跳转内容明细
 async function loadHotContent() {
   const top5Div = $qs("#top5-container");
   if (!top5Div) return;
   top5Div.innerHTML = '<div class="empty-state"><p>加载中…</p></div>';
   try {
-    ensureContentPeriodDefaults();
-    const mode = $qs("#content-mode")?.value || "week";
-    const week = $qs("#content-week")?.value || dateToIsoWeek(getPreviousWeekDate());
-    const month = $qs("#content-month")?.value || getPreviousMonthValue();
+    // 维度：热门区块可独立切换；未手动选过时跟随看板"平台数据"维度
+    const hasCtrl = !!document.getElementById("hot-mode-week");
+    const mode = hasCtrl ? (hotCurrentMode || ovCurrentMode || "week") : (ovCurrentMode || "week");
+    if (hasCtrl) applyHotModeUI(mode);
+    const wkP = hasCtrl ? $qs("#hot-week-picker") : null;
+    const moP = hasCtrl ? $qs("#hot-month-picker") : null;
+    const week = (wkP && wkP.value) ? wkP.value : (mode === "week" ? dateToIsoWeek(getPreviousWeekDate()) : "");
+    const month = (moP && moP.value) ? moP.value : (mode === "month" ? getPreviousMonthValue() : "");
     const url = mode === "month"
       ? API + `/dashboard/hot-content?mode=month&month=${month}`
       : API + `/dashboard/hot-content?mode=week&week=${week}`;
@@ -975,10 +1074,10 @@ async function loadHotContent() {
     if (lbl) {
       if (mode === "month") {
         const [y, m] = month.split("-");
-        lbl.textContent = `${y}年${Number(m)}月 · 与内容明细同周期`;
+        lbl.textContent = `${y}年${Number(m)}月`;
       } else {
         const [y, wk] = week.split("-W");
-        lbl.textContent = `${y}年 第${Number(wk)}周 · 与内容明细同周期`;
+        lbl.textContent = `${y}年 第${Number(wk)}周`;
       }
     }
     const platCls = { 抖音: "douyin", 视频号: "shipinhao", 公众号: "gzh", 小红书: "xhs" };

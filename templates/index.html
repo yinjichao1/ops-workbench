@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#1D4ED8">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231D4ED8'/%3E%3Ctext x='32' y='43' font-size='30' font-weight='700' fill='%23fff' text-anchor='middle' font-family='-apple-system,sans-serif'%3E%E6%80%9D%3C/text%3E%3C/svg%3E">
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=0813a">
+<link rel="stylesheet" href="/static/css/style.css?v=0901a">
 </head>
 <body>
 
@@ -174,12 +174,21 @@
         <table class="data-table" style="width:100%" id="trend-table" cellpadding="0" cellspacing="0"><thead><tr><th>周次</th><th>播放/阅读</th><th>新增粉丝</th><th>互动量</th><th>发布</th><th>完播率</th></tr></thead><tbody id="trend-table-body"></tbody></table>
       </div>
 
-      <!-- 区块4: 本周热门 -->
+      <!-- 区块4: 热门内容 Top5（支持周/月维度） -->
       <div class="dashtab" id="dashtab-hot" style="display:none">
         <div class="hot-head">
-          <span class="card-title" id="hot-title">本周热门</span>
-          <span class="card-subtitle" id="hot-period-label"></span>
-          <button class="btn btn-outline btn-sm" onclick="gotoContentPage()">去内容明细 →</button>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="card-title" id="hot-title">本周热门</span>
+            <span class="card-subtitle" id="hot-period-label"></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-sm" id="hot-mode-week" style="background:var(--accent);color:#fff;border:none;border-radius:4px 0 0 4px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer" onclick="switchHotMode('week')">按周</button>
+            <button class="btn btn-sm" id="hot-mode-month" style="background:var(--bg-elevated);color:var(--text-muted);border:1px solid var(--border);border-radius:0 4px 4px 0;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer" onclick="switchHotMode('month')">按月</button>
+            <input type="week" id="hot-week-picker" aria-label="选择周次" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary)">
+            <input type="month" id="hot-month-picker" aria-label="选择月份" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary);display:none">
+            <button class="btn btn-outline btn-sm" onclick="onHotFilterChange()">查询</button>
+            <button class="btn btn-outline btn-sm" onclick="gotoContentPage()">去内容明细 →</button>
+          </div>
         </div>
         <div id="top5-container"></div>
       </div>
@@ -245,8 +254,13 @@
         <div class="breadcrumb" style="margin-bottom:4px"><span onclick="goToDashboard()" style="cursor:pointer">数据看板</span> / <span id="pd-platform-name">平台明细</span></div>
         <h1 id="pd-title">平台明细</h1>
       </div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-outline btn-sm" onclick="goToDashboard()">← 返回看板</button>
+        <button class="btn btn-sm" id="pd-mode-week" style="background:var(--accent);color:#fff;border:none;border-radius:4px 0 0 4px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer" onclick="pdSwitchMode('week')">按周</button>
+        <button class="btn btn-sm" id="pd-mode-month" style="background:var(--bg-elevated);color:var(--text-muted);border:1px solid var(--border);border-radius:0 4px 4px 0;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer" onclick="pdSwitchMode('month')">按月</button>
+        <input type="week" id="pd-week-picker" aria-label="选择周次" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary)">
+        <input type="month" id="pd-month-picker" aria-label="选择月份" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary);display:none">
+        <button class="btn btn-outline btn-sm" onclick="onPdFilterChange()">查询</button>
         <button class="btn btn-primary btn-sm" id="pd-quick-entry-btn" onclick="openBatchEntry(window._pdPlatform||'抖音')">快速录入本周</button>
       </div>
     </div>
@@ -407,7 +421,7 @@ document.querySelectorAll('.toggle-pill').forEach(function(pill){
   });
 });
 </script>
-<script src="/static/js/app.js?v=0813a"></script>
+<script src="/static/js/app.js?v=0901a"></script>
 <div class="grain-overlay" aria-hidden="true"></div>
 </body>
 </html>
