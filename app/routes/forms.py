@@ -18,7 +18,7 @@ import re
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
 from pydantic import BaseModel
-from sqlalchemy import func
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session as SqlSession
 
 from ..models import get_db, FormSubmission
@@ -82,16 +82,15 @@ def forms_overview(db: SqlSession = Depends(get_db)):
         or 0
     )
     # 按 page 分组计数（今日/累计），空 page 归为 "__none__"，前端映射为「未标注」
+    today_flag = case(
+        (func.date(FormSubmission.created_at) == func.current_date(), 1),
+        else_=0,
+    )
     rows = (
         db.query(
             FormSubmission.page,
             func.count(FormSubmission.id),
-            func.sum(
-                func.cast(
-                    func.date(FormSubmission.created_at) == func.current_date(),
-                    func.Integer,
-                )
-            ),
+            func.sum(today_flag),
         )
         .group_by(FormSubmission.page)
         .order_by(func.count(FormSubmission.id).desc())
