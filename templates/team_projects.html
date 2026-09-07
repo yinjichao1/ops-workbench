@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>团队项目 · 思格运营工作台</title>
+<style>
+  :root{
+    --ink:#1c2b3a; --ink-soft:#46586b; --ink-faint:#5f6f7e; --line:#e5e8ee;
+    --primary:#0a69cd; --danger:#d93025; --bg:#f5f7fa; --card:#fff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);padding:20px 14px 60px}
+  .wrap{max-width:1180px;margin:0 auto}
+  .top{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+  .top .t{flex:1;min-width:280px}
+  .back{display:inline-block;font-size:12px;color:var(--ink-soft);text-decoration:none;margin-bottom:6px}
+  .back:hover{color:var(--primary)}
+  h1{font-size:20px;font-weight:700}
+  .sub{font-size:12px;color:var(--ink-soft);margin-top:5px;max-width:720px;line-height:1.7}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .chip{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--ink-soft)}
+  .chip b{color:var(--primary)}
+  /* 项目卡片 */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .15s, box-shadow .15s;position:relative}
+  .card:hover{border-color:#b9d4f2}
+  .card.active{border-color:var(--primary);box-shadow:0 0 0 2px rgba(10,105,205,.12)}
+  .card .row1{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .card h3{font-size:15px;font-weight:700}
+  .card .st{font-size:11px;color:#1d8a4e;background:#e7f7ee;border-radius:20px;padding:2px 9px;font-weight:600}
+  .card .st.off{color:var(--ink-faint);background:#f1f2f5}
+  .card .code{font-size:11px;color:var(--ink-faint);background:#f4f6f9;border:1px dashed #d7dce4;border-radius:6px;padding:1px 7px}
+  .card p{font-size:12px;color:var(--ink-soft);line-height:1.7;margin-top:8px;min-height:40px}
+  .card .foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+  .card .foot span{font-size:11px;color:var(--ink-faint)}
+  .card .open{font-size:12px;color:var(--primary);font-weight:600}
+  /* 面板 */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .panel-head{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:#fafbfd;flex-wrap:wrap}
+  .panel-head h2{font-size:14px;font-weight:700}
+  .panel-head .tips{font-size:11px;color:var(--ink-faint);margin-left:auto}
+  .panel-head button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer}
+  .panel-head button:hover{opacity:.85}
+  iframe{width:100%;height:calc(100vh - 250px);min-height:420px;border:0;display:block;background:#f2f7fd}
+  .note{font-size:12px;color:var(--ink-faint);line-height:1.8;margin-top:10px;background:#fffbea;border:1px solid #f3e7c3;border-radius:10px;padding:10px 14px}
+  .note b{color:#8a6d1a}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="t">
+      <a class="back" href="/">← 返回运营工作台</a>
+      <h1>团队项目</h1>
+      <div class="sub">集中承接面向学员 / 员工的线上项目入口与数据管理。当前已接入：<b>919 模考排位赛</b>报名数据。点击卡片即可查看对应项目的数据管理页。</div>
+      <div class="meta">
+        <span class="chip">认证范围：<b>工作台账号（Basic Auth）</b></span>
+        <span class="chip">接入项目：<b id="cnt">0</b></span>
+        <span class="chip">口令存放：<b>服务器端 .env</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="panel" id="panel" style="display:none">
+    <div class="panel-head">
+      <h2 id="pTitle">项目</h2>
+      <span class="tips">数据每 30 秒自动刷新；口令由服务端代理注入，本页与地址栏均不出现密钥。</span>
+      <button onclick="reloadFrame()">↻ 立即刷新</button>
+      <button onclick="window.open(cur.href,'_blank')">新标签打开 ↗</button>
+    </div>
+    <iframe id="frame" title="项目数据管理"></iframe>
+  </div>
+
+  <div class="note"><b>使用提示：</b>本模块仅「运营工作台」认证账号可访问。给员工开通数据查看前请走资料库《对外发布 · 员工说明与填写模板》，不要外传本页地址或截图原始口令 URL。新增团队项目时，在下方 PROJECTS 注册表追加一条记录即可（入口 / 描述 / 状态），页面自动生成卡片。</div>
+</div>
+
+<script>
+/* ===== 团队项目注册表：新增项目在此追加一条即可 ===== */
+var PROJECTS = [
+  {
+    id: 'sig919',
+    name: '919 模考排位赛',
+    code: 'sig919-signups',
+    desc: '919 电网购课节模考报名学员数据管理：实时查看报名人数、最高 / 平均分与明细，支持一键导出 CSV（Excel 直接打开不乱码）。',
+    href: '/api/wb/proxy/signups',
+    status: '运行中',
+    statusOff: false,
+    meta: '数据实时 · 同机代理'
+  }
+];
+/* ================================================== */
+
+var cur = PROJECTS[0];
+var cardsEl = document.getElementById('cards');
+var frame = document.getElementById('frame');
+var panel = document.getElementById('panel');
+
+function renderCards(){
+  document.getElementById('cnt').textContent = PROJECTS.length;
+  cardsEl.innerHTML = '';
+  PROJECTS.forEach(function(p){
+    var d = document.createElement('div');
+    d.className = 'card' + (p.id === cur.id ? ' active' : '');
+    d.innerHTML =
+      '<div class="row1"><h3>' + esc(p.name) + '</h3>' +
+      (p.statusOff ? '<span class="st off">已下线</span>' : '<span class="st">● ' + esc(p.status) + '</span>') +
+      '</div>' +
+      '<div class="row1" style="margin-top:6px"><span class="code">' + esc(p.code) + '</span><span style="font-size:11px;color:var(--ink-faint)">' + esc(p.meta || '') + '</span></div>' +
+      '<p>' + esc(p.desc) + '</p>' +
+      '<div class="foot"><span>' + esc(p.meta || '') + '</span><span class="open">' + (p.id === cur.id ? '正在查看 ▾' : '打开 ▸') + '</span></div>';
+    d.onclick = function(){ openProject(p); };
+    cardsEl.appendChild(d);
+  });
+}
+
+function openProject(p){
+  cur = p;
+  renderCards();
+  document.getElementById('pTitle').textContent = p.name + ' · 数据管理';
+  panel.style.display = 'block';
+  frame.src = p.href;
+}
+
+function reloadFrame(){
+  var s = frame.src;
+  frame.src = '';
+  setTimeout(function(){ frame.src = s; }, 60);
+}
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+renderCards();
+openProject(PROJECTS[0]);
+</script>
+</body>
+</html>

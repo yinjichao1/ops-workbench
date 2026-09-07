@@ -85,7 +85,7 @@ STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # Import and register routers
-from .routes import dashboard, data, content, tasks, topics, reports, targets, export_data, leads, batch, forms  # noqa: E402
+from .routes import dashboard, data, content, tasks, topics, reports, targets, export_data, leads, batch, forms, projects  # noqa: E402
 
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["看板"])
 app.include_router(data.router, prefix="/api/data", tags=["数据录入"])
@@ -98,6 +98,7 @@ app.include_router(export_data.router, prefix="/api", tags=["导出"])
 app.include_router(leads.router, prefix="/api", tags=["线索"])
 app.include_router(batch.router, prefix="/api", tags=["批量导入"])
 app.include_router(forms.router, prefix="/api", tags=["表单收集"])
+app.include_router(projects.router, prefix="/api", tags=["团队项目"])
 
 
 @app.get("/")
@@ -120,6 +121,20 @@ async def forms_admin():
     templates_dir = os.path.join(os.path.dirname(__file__), "..", "templates")
     return FileResponse(
         os.path.join(templates_dir, "forms.html"),
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
+
+
+@app.get("/team-projects")
+async def team_projects():
+    """团队项目模块页：集中挂接面向学员/员工的线上项目入口与数据管理（Basic Auth 之后）。"""
+    templates_dir = os.path.join(os.path.dirname(__file__), "..", "templates")
+    return FileResponse(
+        os.path.join(templates_dir, "team_projects.html"),
         headers={
             "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
             "Pragma": "no-cache",
