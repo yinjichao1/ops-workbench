@@ -3,28 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>表单收集 · 落地页名单</title>
+<title>线索收集 · 按项目分类查看</title>
 <style>
   :root{
-    --ink:#1c2b3a; --ink-soft:#46586b; --line:#e5e8ee;
+    --ink:#1c2b3a; --ink-soft:#46586b; --ink-faint:#5f6f7e; --line:#e5e8ee;
     --primary:#0a69cd; --danger:#d93025; --bg:#f5f7fa; --card:#fff;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);padding:24px 16px 60px}
-  .wrap{max-width:1080px;margin:0 auto}
-  .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);padding:22px 14px 70px}
+  .wrap{max-width:1100px;margin:0 auto}
+  .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
   h1{font-size:20px;font-weight:700}
-  .sub{font-size:12px;color:var(--ink-soft);margin-top:4px}
+  .sub{font-size:12px;color:var(--ink-soft);margin-top:4px;max-width:640px;line-height:1.6}
   .stats{display:flex;gap:10px;margin-left:auto}
-  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 14px;text-align:center;min-width:86px}
-  .stat b{display:block;font-size:20px;color:var(--primary)}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 16px;text-align:center;min-width:92px}
+  .stat b{display:block;font-size:22px;color:var(--primary)}
   .stat span{font-size:12px;color:var(--ink-soft)}
-  .actions{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  /* 项目 Tab */
+  .tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;margin-bottom:2px;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:7px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap;color:var(--ink-soft)}
+  .tab .code{color:var(--ink-faint);font-size:11px}
+  .tab.active{background:var(--primary);border-color:var(--primary);color:#fff}
+  .tab.active .code{color:#dceafc}
+  .tab .badge{background:#eef4fd;color:var(--primary);border-radius:20px;padding:1px 8px;font-size:11px;font-weight:600}
+  .tab.active .badge{background:rgba(255,255,255,.22);color:#fff}
+  .tab .badge.t{color:var(--ink-soft);background:#f1f2f5}
+  .tab.active .badge.t{background:rgba(255,255,255,.15);color:#fff}
+  .actions{display:flex;gap:8px;margin:2px 0 12px;flex-wrap:wrap}
+  input[type=search]{flex:1;min-width:200px;border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;outline:0;background:#fff}
+  input[type=search]:focus{border-color:var(--primary)}
   button,.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer}
   button.primary,.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
   button:hover{opacity:.85}
-  input[type=search]{flex:1;min-width:200px;border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;outline:0}
-  input[type=search]:focus{border-color:var(--primary)}
+  .hint{font-size:12px;color:var(--ink-faint);line-height:1.8;margin:8px 0 10px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:auto}
   table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
   th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}
@@ -34,41 +46,60 @@
   .empty{padding:40px;text-align:center;color:var(--ink-soft);font-size:13px}
   .del{color:var(--danger);border-color:#f3d4d2}
   .tag{display:inline-block;background:#eef4fd;color:var(--primary);border-radius:6px;padding:1px 7px;font-size:12px}
+  .tag.none{background:#f1f2f5;color:var(--ink-faint)}
   .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:rgba(28,43,58,.92);color:#fff;padding:9px 18px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9}
   .toast.show{opacity:1}
+  .cur{font-size:13px;font-weight:600;margin-bottom:8px;color:var(--ink-soft)}
+  .cur b{color:var(--ink)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <div>
-      <h1>落地页表单收集</h1>
-      <div class="sub">28届备考时间线等公开页提交的 姓名 / 手机 / 学校 / 专业 名单 · 独立存放，不受每周线索替换影响</div>
+      <h1>线索收集 · 按项目分类</h1>
+      <div class="sub">各落地页/活动共用同一提交通道，按项目分开查看与导出，互不混淆。页面在「运营工作台」内维护，公开页填写提交后即进入对应项目。</div>
     </div>
     <div class="stats">
-      <div class="stat"><b id="stToday">-</b><span>今日新增</span></div>
-      <div class="stat"><b id="stTotal">-</b><span>累计收集</span></div>
+      <div class="stat"><b id="stToday">-</b><span>今日全部</span></div>
+      <div class="stat"><b id="stTotal">-</b><span>累计全部</span></div>
     </div>
   </div>
+
+  <div class="tabs" id="tabs"></div>
+
   <div class="actions">
     <input type="search" id="kw" placeholder="搜索 姓名 / 手机 / 学校 / 专业…">
-    <button class="primary" onclick="load()">刷新</button>
-    <a class="btn primary" href="/api/forms/export">导出 CSV</a>
+    <button class="primary" onclick="loadOverview()">刷新</button>
+    <a class="btn primary" id="btnExport" href="/api/forms/export">导出当前项目 CSV</a>
   </div>
+
+  <div class="cur" id="cur"></div>
   <div class="card">
     <table>
       <thead>
-        <tr><th>ID</th><th>提交时间</th><th>姓名</th><th>手机</th><th>学校</th><th>专业</th><th>来源页</th><th>操作</th></tr>
+        <tr><th>ID</th><th>提交时间</th><th>姓名</th><th>手机</th><th>学校</th><th>专业</th><th>来源项目</th><th>操作</th></tr>
       </thead>
       <tbody id="tb"></tbody>
     </table>
-    <div class="empty" id="empty" style="display:none">暂无数据</div>
+    <div class="empty" id="empty" style="display:none">该项目暂无数据</div>
   </div>
+  <div class="hint">使用提示：切到某个项目 Tab 后，上方的「导出当前项目 CSV」只会导出该项目线索；删除操作仅对当前项目内的记录生效。新项目上线时，页面代号由发布通道统一登记并出现在上方 Tab 中。</div>
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
+var PAGE_LABELS = {
+  'timeline28': '28届备考时间线'
+};
+var PAGE_ORDER = [];       // 项目代号顺序（来自 overview）
+var curPage = 'all';       // all 或具体代号
 var all = [];
+
+function label(code){
+  if(!code) return '未标注';
+  return PAGE_LABELS[code] || code;
+}
 function toast(m){
   var t = document.getElementById('toast');
   t.textContent = m; t.classList.add('show');
@@ -79,18 +110,70 @@ function esc(s){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
   });
 }
-function load(){
-  fetch('/api/forms/list?limit=2000')
+function fmtCount(n){ return (n == null ? 0 : n); }
+
+function loadOverview(){
+  fetch('/api/forms/overview')
+    .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(j){
+      if(!j.ok) throw new Error(j.error || '加载失败');
+      document.getElementById('stToday').textContent = fmtCount(j.today);
+      document.getElementById('stTotal').textContent = fmtCount(j.total);
+      var pages = j.pages || [];
+      PAGE_ORDER = pages.map(function(p){ return p.page; });
+      renderTabs(j.total, j.today, pages);
+      loadList();   // 保持当前 tab 的明细刷新
+    })
+    .catch(function(e){ toast('加载失败：' + e.message); });
+}
+
+function renderTabs(total, today, pages){
+  var el = document.getElementById('tabs');
+  var html = '';
+  // 「全部」Tab
+  html += '<div class="tab' + (curPage === 'all' ? ' active' : '') + '" data-page="all" onclick="switchPage(\'all\')">' +
+          '全部 <span class="badge t">今 ' + fmtCount(today) + '</span><span class="badge">' + fmtCount(total) + '</span></div>';
+  pages.forEach(function(p){
+    var code = p.page;
+    var cls = curPage === code ? ' active' : '';
+    html += '<div class="tab' + cls + '" data-page="' + esc(code) + '" onclick="switchPage(\'' + esc(code) + '\')">' +
+            esc(label(code)) + '<span class="code">' + esc(code || 'none') + '</span>' +
+            '<span class="badge t">今 ' + fmtCount(p.today) + '</span><span class="badge">' + fmtCount(p.total) + '</span></div>';
+  });
+  el.innerHTML = html;
+  updateCurTitle();
+}
+
+function switchPage(code){
+  curPage = code;
+  all = [];
+  render();
+  loadOverview();      // 重新拉徽标并触发 loadList（保持新 tab）
+}
+
+function updateCurTitle(){
+  var el = document.getElementById('cur');
+  var name = curPage === 'all' ? '全部项目' : label(curPage) + '（' + (curPage || '未标注') + '）';
+  el.innerHTML = '当前查看：<b>' + esc(name) + '</b>';
+  var exp = document.getElementById('btnExport');
+  exp.setAttribute('href', '/api/forms/export' + (curPage === 'all' ? '' : '?page=' + encodeURIComponent(curPage)));
+}
+
+function loadList(){
+  var url = '/api/forms/list?limit=2000';
+  if(curPage !== 'all') url += '&page=' + encodeURIComponent(curPage);
+  fetch(url)
     .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(j){
       if(!j.ok) throw new Error(j.error || '加载失败');
       all = j.data || [];
-      document.getElementById('stToday').textContent = j.today || 0;
-      document.getElementById('stTotal').textContent = j.total || 0;
+      var name = curPage === 'all' ? '全部项目' : label(curPage) + '（' + (curPage || '未标注') + '）';
+      document.getElementById('cur').innerHTML = '当前查看：<b>' + esc(name) + '</b> · 共 <b>' + fmtCount(j.total) + '</b> 条（今日 ' + fmtCount(j.today) + '）';
       render();
     })
     .catch(function(e){ toast('加载失败：' + e.message); });
 }
+
 function render(){
   var kw = (document.getElementById('kw').value || '').trim().toLowerCase();
   var rows = all.filter(function(r){
@@ -99,9 +182,9 @@ function render(){
       return String(v || '').toLowerCase().indexOf(kw) >= 0;
     });
   });
-  var tb = document.getElementById('tb');
   document.getElementById('empty').style.display = rows.length ? 'none' : 'block';
-  tb.innerHTML = rows.map(function(r){
+  document.getElementById('tb').innerHTML = rows.map(function(r){
+    var none = r.page ? '' : ' none';
     return '<tr>' +
       '<td>' + r.id + '</td>' +
       '<td>' + esc(r.created_at) + '</td>' +
@@ -109,11 +192,12 @@ function render(){
       '<td class="phone">' + esc(r.phone) + '</td>' +
       '<td>' + esc(r.school) + '</td>' +
       '<td>' + esc(r.major) + '</td>' +
-      '<td><span class="tag">' + esc(r.page || '通用') + '</span></td>' +
+      '<td><span class="tag' + none + '">' + esc(label(r.page)) + '</span></td>' +
       '<td><button class="del" onclick="del(' + r.id + ')">删除</button></td>' +
     '</tr>';
   }).join('');
 }
+
 function del(id){
   if(!confirm('确认删除 ID=' + id + ' 这条记录？此操作不可恢复。')) return;
   fetch('/api/forms/delete', {
@@ -123,12 +207,12 @@ function del(id){
   })
   .then(function(r){ return r.json(); })
   .then(function(j){
-    if(j.ok){ toast('已删除'); load(); } else { toast(j.error || '删除失败'); }
+    if(j.ok){ toast('已删除'); loadOverview(); } else { toast(j.error || '删除失败'); }
   })
   .catch(function(){ toast('删除失败，请重试'); });
 }
 document.getElementById('kw').addEventListener('input', render);
-load();
+loadOverview();
 </script>
 </body>
 </html>
