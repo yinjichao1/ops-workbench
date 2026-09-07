@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>表单收集 · 落地页名单</title>
+<style>
+  :root{
+    --ink:#1c2b3a; --ink-soft:#46586b; --line:#e5e8ee;
+    --primary:#0a69cd; --danger:#d93025; --bg:#f5f7fa; --card:#fff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);padding:24px 16px 60px}
+  .wrap{max-width:1080px;margin:0 auto}
+  .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+  h1{font-size:20px;font-weight:700}
+  .sub{font-size:12px;color:var(--ink-soft);margin-top:4px}
+  .stats{display:flex;gap:10px;margin-left:auto}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 14px;text-align:center;min-width:86px}
+  .stat b{display:block;font-size:20px;color:var(--primary)}
+  .stat span{font-size:12px;color:var(--ink-soft)}
+  .actions{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  button,.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer}
+  button.primary,.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  button:hover{opacity:.85}
+  input[type=search]{flex:1;min-width:200px;border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;outline:0}
+  input[type=search]:focus{border-color:var(--primary)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
+  th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}
+  th{background:#fafbfd;color:var(--ink-soft);font-weight:600;position:sticky;top:0}
+  td.phone{font-variant-numeric:tabular-nums}
+  tr:last-child td{border-bottom:0}
+  .empty{padding:40px;text-align:center;color:var(--ink-soft);font-size:13px}
+  .del{color:var(--danger);border-color:#f3d4d2}
+  .tag{display:inline-block;background:#eef4fd;color:var(--primary);border-radius:6px;padding:1px 7px;font-size:12px}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:rgba(28,43,58,.92);color:#fff;padding:9px 18px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>落地页表单收集</h1>
+      <div class="sub">28届备考时间线等公开页提交的 姓名 / 手机 / 学校 / 专业 名单 · 独立存放，不受每周线索替换影响</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="stToday">-</b><span>今日新增</span></div>
+      <div class="stat"><b id="stTotal">-</b><span>累计收集</span></div>
+    </div>
+  </div>
+  <div class="actions">
+    <input type="search" id="kw" placeholder="搜索 姓名 / 手机 / 学校 / 专业…">
+    <button class="primary" onclick="load()">刷新</button>
+    <a class="btn primary" href="/api/forms/export">导出 CSV</a>
+  </div>
+  <div class="card">
+    <table>
+      <thead>
+        <tr><th>ID</th><th>提交时间</th><th>姓名</th><th>手机</th><th>学校</th><th>专业</th><th>来源页</th><th>操作</th></tr>
+      </thead>
+      <tbody id="tb"></tbody>
+    </table>
+    <div class="empty" id="empty" style="display:none">暂无数据</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var all = [];
+function toast(m){
+  var t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 1800);
+}
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function load(){
+  fetch('/api/forms/list?limit=2000')
+    .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(j){
+      if(!j.ok) throw new Error(j.error || '加载失败');
+      all = j.data || [];
+      document.getElementById('stToday').textContent = j.today || 0;
+      document.getElementById('stTotal').textContent = j.total || 0;
+      render();
+    })
+    .catch(function(e){ toast('加载失败：' + e.message); });
+}
+function render(){
+  var kw = (document.getElementById('kw').value || '').trim().toLowerCase();
+  var rows = all.filter(function(r){
+    if(!kw) return true;
+    return [r.name, r.phone, r.school, r.major].some(function(v){
+      return String(v || '').toLowerCase().indexOf(kw) >= 0;
+    });
+  });
+  var tb = document.getElementById('tb');
+  document.getElementById('empty').style.display = rows.length ? 'none' : 'block';
+  tb.innerHTML = rows.map(function(r){
+    return '<tr>' +
+      '<td>' + r.id + '</td>' +
+      '<td>' + esc(r.created_at) + '</td>' +
+      '<td>' + esc(r.name) + '</td>' +
+      '<td class="phone">' + esc(r.phone) + '</td>' +
+      '<td>' + esc(r.school) + '</td>' +
+      '<td>' + esc(r.major) + '</td>' +
+      '<td><span class="tag">' + esc(r.page || '通用') + '</span></td>' +
+      '<td><button class="del" onclick="del(' + r.id + ')">删除</button></td>' +
+    '</tr>';
+  }).join('');
+}
+function del(id){
+  if(!confirm('确认删除 ID=' + id + ' 这条记录？此操作不可恢复。')) return;
+  fetch('/api/forms/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: id })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(j){
+    if(j.ok){ toast('已删除'); load(); } else { toast(j.error || '删除失败'); }
+  })
+  .catch(function(){ toast('删除失败，请重试'); });
+}
+document.getElementById('kw').addEventListener('input', render);
+load();
+</script>
+</body>
+</html>

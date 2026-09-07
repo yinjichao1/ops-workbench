@@ -85,7 +85,7 @@ STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # Import and register routers
-from .routes import dashboard, data, content, tasks, topics, reports, targets, export_data, leads, batch  # noqa: E402
+from .routes import dashboard, data, content, tasks, topics, reports, targets, export_data, leads, batch, forms  # noqa: E402
 
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["看板"])
 app.include_router(data.router, prefix="/api/data", tags=["数据录入"])
@@ -97,6 +97,7 @@ app.include_router(targets.router, prefix="/api", tags=["目标"])
 app.include_router(export_data.router, prefix="/api", tags=["导出"])
 app.include_router(leads.router, prefix="/api", tags=["线索"])
 app.include_router(batch.router, prefix="/api", tags=["批量导入"])
+app.include_router(forms.router, prefix="/api", tags=["表单收集"])
 
 
 @app.get("/")
@@ -105,6 +106,20 @@ async def index():
     templates_dir = os.path.join(os.path.dirname(__file__), "..", "templates")
     return FileResponse(
         os.path.join(templates_dir, "index.html"),
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
+
+
+@app.get("/forms")
+async def forms_admin():
+    """公开表单收集管理页（位于工作台 Basic Auth 之后）。"""
+    templates_dir = os.path.join(os.path.dirname(__file__), "..", "templates")
+    return FileResponse(
+        os.path.join(templates_dir, "forms.html"),
         headers={
             "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
             "Pragma": "no-cache",

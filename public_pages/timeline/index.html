@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+<meta charset="UTF-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>28届电力备考时间线 · 国网/南网/蒙西/电力央国企</title>
+<meta content="一张图看懂 2028 届电力备考全周期：专业课 10 阶段备考节奏 + 电力央国企报考时间线，所有发电集团笔试以行测为核心（50%-80%）。" name="description">
+
+
+
+<style>
+/* ============ DesignTokens (DesignSystemManifest v1) ============ */
+:root{
+  --paper:#f6f5f0;
+  --card:#ffffff;
+  --ink:#1c2b3a;
+  --ink-soft:#46586b;
+  --ink-faint:#5f6f7e;
+  --primary:#1e4a6f;
+  --primary-deep:#16354f;
+  --accent:#e8a33d;
+  --accent-deep:#965f12;
+  --signal-red:#c2452d;
+  --line:#e0dcd1;
+  --grid:#ece8de;
+  --shadow-1:0 1px 0 rgba(28,43,58,.06);
+  --shadow-hover:0 4px 0 rgba(28,43,58,.12);
+  --font-display:"Noto Sans SC",-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  --font-body:"Noto Sans SC",-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);
+  color:var(--ink);
+  background-color:var(--paper);
+  background-image:
+    repeating-linear-gradient(0deg,transparent 0 47px,var(--grid) 47px 48px),
+    repeating-linear-gradient(90deg,transparent 0 47px,var(--grid) 47px 48px);
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+::selection{background:var(--accent);color:var(--primary-deep)}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer}
+:focus-visible{
+  outline:2px solid var(--accent-deep);
+  outline-offset:2px;
+}
+.skip-link{
+  position:absolute;left:-9999px;top:0;z-index:100;
+  background:var(--primary-deep);color:#fff;
+  padding:10px 18px;font-size:14px;
+}
+.skip-link:focus{left:0;outline:none}
+
+/* ============ 顶部窄条 ============ */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  background:var(--primary-deep);color:#eef2f5;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 40px;
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;
+}
+.topbar .brand{display:flex;align-items:center;gap:10px}
+.topbar .brand .dot{width:8px;height:8px;background:var(--accent)}
+.topbar nav{display:flex;gap:28px}
+.topbar nav a{opacity:.8;transition:opacity .2s var(--ease)}
+.topbar nav a:hover{opacity:1;color:var(--accent)}
+@media(max-width:720px){.topbar nav{display:none}.topbar{padding:10px 20px}}
+
+/* ============ Hero ============ */
+.hero{
+  max-width:1180px;margin:0 auto;padding:64px 40px 72px;
+}
+.databar{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  border:1px solid var(--line);background:var(--card);
+  box-shadow:var(--shadow-1);margin-bottom:56px;
+}
+.databar .cell{padding:20px 24px;border-left:1px solid var(--line)}
+.databar .cell:first-child{border-left:none}
+.databar .num{
+  font-family:var(--font-mono);font-weight:600;font-size:34px;
+  color:var(--primary);line-height:1.1;font-variant-numeric:tabular-nums;
+}
+.databar .num em{font-style:normal;font-size:18px;color:var(--accent-deep)}
+.databar .lbl{margin-top:6px;font-size:13px;color:var(--ink-soft);letter-spacing:.06em}
+@media(max-width:720px){
+  .hero{padding:40px 20px 56px}
+  .databar{grid-template-columns:1fr}
+  .databar .cell{border-left:none;border-top:1px solid var(--line)}
+  .databar .cell:first-child{border-top:none}
+}
+.hero .kicker{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.18em;
+  color:var(--accent-deep);margin-bottom:18px;
+}
+.hero .kicker::before{content:"";width:28px;height:2px;background:var(--accent)}
+.hero h1{
+  font-family:var(--font-display);font-weight:900;
+  font-size:clamp(34px,5.2vw,64px);line-height:1.15;letter-spacing:.01em;
+  color:var(--primary-deep);max-width:18ch;
+}
+.hero h1 .accent{color:var(--accent-deep)}
+.hero .sub{
+  margin-top:20px;font-size:clamp(15px,1.6vw,18px);color:var(--ink-soft);
+  max-width:56ch;
+}
+.hero .sub b{color:var(--ink);font-weight:700}
+.hero .meta{
+  margin-top:32px;display:flex;flex-wrap:wrap;gap:12px;
+}
+.meta .chip{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.1em;
+  border:1px solid var(--line);padding:6px 14px;color:var(--ink-soft);
+  background:rgba(255,255,255,.6);
+}
+.meta .chip.hot{border-color:var(--accent);color:var(--accent-deep);background:rgba(232,163,61,.08)}
+
+/* ============ Section 通用 ============ */
+.section{max-width:1180px;margin:0 auto;padding:0 40px 88px}
+.sec-head{display:flex;align-items:baseline;gap:20px;margin-bottom:36px;border-bottom:2px solid var(--ink)}
+.sec-head .idx{
+  font-family:var(--font-mono);font-weight:600;font-size:15px;color:var(--accent-deep);
+  padding-bottom:12px;
+}
+.sec-head h2{font-size:clamp(22px,3vw,30px);font-weight:900;color:var(--primary-deep);padding-bottom:12px}
+.sec-head .note{margin-left:auto;font-family:var(--font-mono);font-size:12px;color:var(--ink-faint);letter-spacing:.08em;padding-bottom:12px;white-space:nowrap}
+@media(max-width:720px){.section{padding:0 20px 64px}.sec-head{flex-wrap:wrap}.sec-head .note{display:none}}
+
+/* ============ 备考阶段时刻表 ============ */
+.timetable{
+  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow-1);
+}
+.tt-head,.tt-row{
+  display:grid;grid-template-columns:56px 132px 150px 1fr 116px;
+  align-items:center;column-gap:20px;
+}
+.tt-head{
+  background:var(--primary-deep);color:#cdd9e3;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;
+  padding:12px 24px;
+}
+.tt-row{
+  padding:18px 24px;border-top:1px solid var(--line);
+  transition:background .2s var(--ease),transform .2s var(--ease),box-shadow .2s var(--ease);
+  position:relative;
+}
+.tt-row:nth-child(even){background:#faf9f5}
+.tt-row:hover{
+  background:#fff;box-shadow:var(--shadow-hover);
+  transform:translateY(-1px);z-index:2;
+}
+.tt-row:active{transform:translateY(1px);box-shadow:var(--shadow-1)}
+.tt-row::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--accent);opacity:0;transition:opacity .2s var(--ease);
+}
+.tt-row:hover::before{opacity:1}
+.tt-row .no{font-family:var(--font-mono);font-weight:600;font-size:15px;color:var(--ink-faint)}
+.tt-row .time{font-family:var(--font-mono);font-size:13px;color:var(--primary);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tt-row .name{font-weight:700;font-size:16px;color:var(--ink)}
+.tt-row .desc{font-size:13.5px;color:var(--ink-soft);line-height:1.6}
+.tt-row .mode{justify-self:end}
+.tag{
+  display:inline-block;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;
+  border:1.5px solid var(--primary);color:var(--primary);
+  padding:3px 10px;border-radius:2px;white-space:nowrap;
+}
+.tag.mian{background:var(--primary);color:#fff}
+.tag.ketang{border-color:var(--accent);color:var(--accent-deep)}
+.tag.ziwo{border-color:var(--ink-faint);color:var(--ink-soft)}
+.tag.shiti{border-color:var(--signal-red);color:var(--signal-red)}
+/* 移动端时刻表行布局见下方 Patch #4 区块（flex 堆叠 + 左侧站号轨道区），此处不再使用 grid */
+
+/* ============ 报考时间线 ============ */
+.recruit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.recruit-card{
+  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow-1);
+  padding:22px 22px 20px;transition:box-shadow .2s var(--ease),transform .2s var(--ease);
+  display:flex;flex-direction:column;gap:12px;
+}
+.recruit-card:hover{box-shadow:var(--shadow-hover);transform:translateY(-2px)}
+.recruit-card:active{transform:translateY(0);box-shadow:var(--shadow-1)}
+.recruit-card .m{
+  font-family:var(--font-mono);font-weight:600;font-size:15px;color:var(--primary);
+  display:flex;align-items:center;gap:10px;font-variant-numeric:tabular-nums;
+}
+.recruit-card .m::before{content:"";width:8px;height:8px;background:var(--accent);flex:none}
+.recruit-card .m.hot::before{background:var(--signal-red)}
+.recruit-card ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.recruit-card li{font-size:13.5px;color:var(--ink-soft);line-height:1.6;padding-left:14px;position:relative}
+.recruit-card li::before{content:"";position:absolute;left:0;top:9px;width:5px;height:5px;background:var(--line)}
+.recruit-card li b{color:var(--ink);font-weight:500}
+.recruit-card .stamps{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:8px}
+.stamp{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;
+  border:1px solid;padding:2px 8px;border-radius:1px;white-space:nowrap;
+}
+.stamp.b{color:var(--primary);border-color:var(--primary);background:rgba(30,74,111,.04)}
+.stamp.a{color:var(--accent-deep);border-color:var(--accent);background:rgba(232,163,61,.07)}
+.stamp.r{color:var(--signal-red);border-color:var(--signal-red);background:rgba(194,69,45,.05)}
+@media(max-width:960px){.recruit-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.recruit-grid{grid-template-columns:1fr}}
+
+/* ============ 要点条 ============ */
+.keynote{
+  max-width:1180px;margin:0 auto 88px;padding:0 40px;
+}
+.keynote .inner{
+  background:var(--primary-deep);color:#e8eef3;
+  padding:32px 40px;display:flex;align-items:center;gap:24px;
+  position:relative;overflow:hidden;
+}
+.keynote .inner::after{
+  content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;
+  border:2px solid rgba(232,163,61,.35);transform:rotate(45deg);
+}
+.keynote .sig{
+  flex:none;font-family:var(--font-mono);font-weight:600;font-size:13px;
+  color:var(--accent);border:1.5px solid var(--accent);padding:8px 16px;
+  letter-spacing:.12em;
+}
+.keynote p{font-size:clamp(15px,1.8vw,19px);font-weight:500;line-height:1.7}
+.keynote p b{color:var(--accent);font-family:var(--font-mono);font-weight:600}
+@media(max-width:720px){
+  .keynote{padding:0 20px;margin-bottom:64px}
+  .keynote .inner{flex-direction:column;align-items:flex-start;padding:28px 24px;gap:16px}
+}
+
+/* ============ Footer ============ */
+footer{
+  border-top:1px solid var(--line);padding:36px 40px 48px;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+  max-width:1180px;margin:0 auto;
+}
+footer .f-brand{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;color:var(--ink-soft)}
+footer .f-note{font-size:12px;color:var(--ink-faint)}
+@media(max-width:720px){footer{padding:28px 20px}}
+
+/* ============ 滚动浮现 ============ */
+.reveal{opacity:0;transform:translateY(12px);transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto}
+  html{scroll-behavior:auto}
+  .reveal{opacity:1;transform:none}
+}
+
+/* ============ 动效增强 v1.1：列车出发（Patch #1） ============ */
+
+/* topbar 信号灯呼吸 */
+.topbar .brand .dot{animation:dotPulse 2.4s ease-in-out infinite}
+@keyframes dotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+
+/* Hero 发车轨道 */
+.depart-rail{
+  position:relative;margin:40px 0 0;height:64px;overflow:hidden;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  background:
+    repeating-linear-gradient(90deg,transparent 0 34px,rgba(224,220,209,.55) 34px 36px),
+    var(--card);
+}
+.depart-rail::before,.depart-rail::after{
+  content:"";position:absolute;left:0;right:0;height:2px;background:var(--primary);
+  opacity:.28;
+}
+.depart-rail::before{top:26px}
+.depart-rail::after{top:38px}
+.depart-rail .rail-label{
+  position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;
+  padding:0 14px;font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;
+  color:var(--ink-faint);background:var(--card);z-index:2;border-right:1px solid var(--line);
+}
+.depart-rail .rail-label b{color:var(--accent-deep);font-weight:600;margin-left:6px}
+.depart-rail .rail-end{
+  position:absolute;right:0;top:0;bottom:0;display:flex;align-items:center;
+  padding:0 14px;font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;
+  color:var(--accent-deep);background:var(--card);z-index:2;border-left:1px solid var(--line);
+}
+.train-wrap{
+  position:absolute;top:14px;left:-150px;z-index:1;width:150px;height:44px;
+  animation:departRun 9s var(--ease) infinite;
+  animation-play-state:paused;
+}
+.depart-rail.in .train-wrap{animation-play-state:running}
+.train{width:150px;height:44px;display:block}
+.train .wheel{animation:wheelRun 9s linear infinite;transform-box:fill-box;transform-origin:center}
+@keyframes wheelRun{
+  0%  {transform:rotate(0)}
+  22% {transform:rotate(540deg)}
+  52% {transform:rotate(540deg)}
+  78% {transform:rotate(1080deg)}
+  100%{transform:rotate(1080deg)}
+}
+@keyframes departRun{
+  0%    {left:-160px;opacity:0}
+  6%    {opacity:1}
+  22%   {left:calc(100% - 170px)}
+  52%   {left:calc(100% - 170px)}
+  56%   {opacity:1}
+  78%   {left:calc(100% - 60px);opacity:0}
+  100%  {left:calc(100% - 60px);opacity:0}
+}
+/* 停靠冒烟：驶入阶段(22%)后列车停靠，烟圈循环 */
+.train .puff{
+  position:absolute;border-radius:50%;background:rgba(150,95,18,.28);
+  opacity:0;pointer-events:none;
+}
+.train .puff.p1{width:14px;height:14px;left:26px;top:2px;animation:smoke 1.8s ease-out 2.2s infinite}
+.train .puff.p2{width:9px;height:9px;left:34px;top:0;animation:smoke 1.8s ease-out 2.9s infinite}
+@keyframes smoke{
+  0%{opacity:0;transform:translateY(6px) scale(.6)}
+  30%{opacity:.7}
+  100%{opacity:0;transform:translateY(-16px) scale(1.5)}
+}
+@media(max-width:720px){
+  .depart-rail{height:52px;margin-top:32px}
+  .train-wrap{transform:scale(.72);transform-origin:left center;top:16px}
+  .rail-label{font-size:10px;padding:0 10px}
+  .rail-end{display:none}
+  /* 移动端 linkbar：换行优先，留出可读空隙 */
+  .link-bar,
+  .lb-ico,
+  .lb-station,
+  .lb-arrow,
+  .lb-window,
+  .lb-empty{display:none!important}
+}
+
+/* 时刻表行：进站滑入（覆盖 .reveal 默认的上浮，改为侧向滑入） */
+.tt-row.reveal{
+  opacity:0;transform:translateX(22px);
+  transition:opacity .3s var(--ease),transform .3s var(--ease),
+    background .2s var(--ease),box-shadow .2s var(--ease);
+}
+.tt-row.reveal.in{opacity:1;transform:none}
+.tt-row.reveal.in:hover{transform:translateY(-1px)}
+.tt-row.reveal.in:active{transform:translateY(1px)}
+.tt-row.in .no{animation:noFlash .9s var(--ease)}
+@keyframes noFlash{
+  0%{background:var(--accent);color:#fff;box-shadow:0 0 0 5px rgba(232,163,61,.22)}
+  100%{background:transparent;color:var(--ink-faint);box-shadow:none}
+}
+/* 报考卡片：车厢交错滑入 */
+.recruit-card.reveal{transition:opacity .45s var(--ease),transform .45s var(--ease),box-shadow .2s var(--ease)}
+.recruit-card.reveal.in:hover{transform:translateY(-2px)}
+.recruit-card.reveal.in:active{transform:translateY(0)}
+@media(max-width:960px){
+  /* 移动端：站号绝对定位在左侧站号列，文字 padding-left 56px 避开轨道线（轨道不进文字） */
+  /* 站号中心 24px = 轨道中心 24.5px = 列车中心 24.5px 三者对齐 */
+  /* !important 覆盖后文全局轨道规则（left:29px / rail left:6px），避免 CSS 顺序覆盖 */
+  .tt-track{display:block;left:17px !important;top:34px;bottom:12px;width:14px}
+  .tt-track .rail{left:7px !important}
+  .tt-train{left:-12px !important}
+  .tt-row{
+    position:relative;
+    display:flex;flex-wrap:wrap;align-items:flex-start;
+    column-gap:14px;row-gap:8px;
+    padding:14px 16px 16px 56px;
+    border-left:3px solid transparent;
+  }
+  .tt-row.current{border-left-color:var(--accent)}
+  .tt-row .no{
+    position:absolute !important;left:8px !important;top:14px !important;
+    width:32px;height:32px;font-size:13px;
+  }
+  .tt-row .time{
+    flex:1;min-width:0;font-size:12.5px;line-height:32px;margin-top:0;
+  }
+  .tt-row .name{
+    flex:1 0 100%;font-size:15px;line-height:1.3;
+  }
+  .tt-row .desc{
+    flex:1 0 100%;font-size:13px;line-height:1.55;
+  }
+  .tt-row .mode{
+    flex:1 0 100%;justify-self:start;margin-top:0;
+  }
+  .tt-row .mode .tag{font-size:11px;padding:3px 10px}
+  /* 移动端减弱网格背景 */
+  body{
+    background-image:
+      repeating-linear-gradient(0deg,transparent 0 47px,rgba(236,232,222,.5) 47px 48px),
+      repeating-linear-gradient(90deg,transparent 0 47px,rgba(236,232,222,.5) 47px 48px);
+  }
+}
+
+/* ============ Patch #6：删除 linkbar 联动（保留 .tt-row .linkedback 兼容） ============ */
+.link-bar,
+.lb-ico,
+.lb-station,
+.lb-arrow,
+.lb-window,
+.lb-empty{display:none!important}
+.recruit-card.linked{all:revert}
+
+/* ============ Patch #13：双轨合并时间线（中时间轴 / 左报考 / 右备考） ============ */
+.dualtrack{
+  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow-1);
+  position:relative;
+}
+.dt-row{
+  display:grid;grid-template-columns:1fr 132px 1fr;
+  align-items:stretch;min-height:74px;
+}
+.dt-cell{
+  padding:16px 20px;position:relative;
+}
+.dt-cell + .dt-cell{border-left:1px solid var(--line)}
+/* 左列：央国企报考 */
+.dt-cell.left{text-align:left;border-left:none}
+.dt-cell.left .dt-type{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;
+  color:var(--accent-deep);margin-bottom:6px;display:block;
+}
+.dt-cell.left .dt-title{font-weight:700;font-size:14.5px;color:var(--ink);line-height:1.4}
+.dt-cell.left .dt-sub{font-size:12px;color:var(--ink-soft);line-height:1.6;margin-top:4px}
+.dt-cell.left .dt-list{margin-top:5px;list-style:none;display:flex;flex-direction:column;gap:3px}
+.dt-cell.left .dt-list li{font-size:12px;color:var(--ink-soft);line-height:1.55;padding-left:13px;position:relative}
+.dt-cell.left .dt-list li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;background:var(--line)}
+.dt-cell.left .dt-list li b{color:var(--ink);font-weight:500}
+.dt-cell.left .dt-stamps{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+/* 右列：专业课备考 */
+.dt-cell.right{text-align:right;border-left:none}
+.dt-cell.right .dt-type{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;
+  color:var(--primary);margin-bottom:6px;display:block;
+}
+.dt-cell.right .dt-head{display:flex;align-items:center;justify-content:flex-end;gap:10px}
+.dt-cell.right .dt-title{font-weight:700;font-size:14.5px;color:var(--ink);line-height:1.4}
+.dt-cell.right .dt-sub{font-size:12px;color:var(--ink-soft);line-height:1.6;margin-top:4px;text-align:right}
+.dt-cell.right .dt-mode{margin-top:8px;display:flex;justify-content:flex-end}
+/* 中间时间轴 */
+.dt-axis{
+  position:relative;border-left:1px solid var(--line);border-right:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  background:#faf9f5;text-align:center;padding:8px 4px;
+}
+.dt-axis .dt-time{
+  font-family:var(--font-mono);font-size:12px;font-weight:600;
+  color:var(--primary);font-variant-numeric:tabular-nums;line-height:1.5;
+  z-index:2;background:#faf9f5;padding:2px 8px;border-radius:2px;
+}
+.dt-axis .dt-time em{font-style:normal;display:block;font-size:9.5px;color:var(--ink-faint);font-weight:400}
+.dt-row:nth-child(even) .dt-axis{background:#f6f5f0}
+.dt-row:nth-child(even) .dt-axis .dt-time{background:#f6f5f0}
+/* 轨道节点：两列时间线的交汇点 */
+.dt-row .dt-dot{
+  position:absolute;left:-4px;top:50%;width:8px;height:8px;border-radius:50%;
+  background:var(--card);border:2px solid var(--line);transform:translateY(-50%);
+}
+.dt-row:nth-child(even) .dt-dot{background:#f6f5f0}
+/* 报考事件：左列琥珀印章；备考事件：右列藏青站牌 */
+.dt-stamp{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.05em;
+  border:1px solid;padding:2px 8px;border-radius:1px;white-space:nowrap;
+}
+.dt-stamp.b{color:var(--primary);border-color:var(--primary)}
+.dt-stamp.a{color:var(--accent-deep);border-color:var(--accent)}
+.dt-stamp.r{color:var(--signal-red);border-color:var(--signal-red)}
+/* 右列备考站号圆钮（复用 .no 样式） */
+.dt-cell.right .no{
+  font-family:var(--font-mono);font-weight:600;font-size:13px;color:var(--ink-faint);
+  display:inline-flex;align-items:center;justify-content:center;
+  width:30px;height:30px;border:1px solid transparent;border-radius:50%;
+  cursor:pointer;background:transparent;flex:none;
+  transition:color .2s var(--ease),background .2s var(--ease),border-color .2s var(--ease),transform .2s var(--ease);
+}
+.dt-cell.right .no:hover{color:#fff;background:var(--primary);border-color:var(--primary);transform:scale(1.1)}
+.dt-cell.right .no:active{transform:scale(.94)}
+.dt-cell.right .no:focus-visible{outline:2px solid var(--accent);outline-offset:2px;color:#fff;background:var(--primary)}
+.dt-row.current .dt-cell.right .no{color:#fff;background:var(--accent);border-color:var(--accent)}
+.dt-row.current{background:#fff}
+.dt-row.current .dt-axis{background:#fffdf6}
+.dt-row.current .dt-axis .dt-time{background:#fffdf6}
+/* 滚动驱动列车：沿双轨中轴行驶 */
+.dt-track{
+  position:absolute;left:50%;top:0;bottom:0;width:2px;z-index:2;
+  transform:translateX(-50%);pointer-events:none;
+  background:var(--line);
+}
+.dt-track .dt-fill{
+  position:absolute;left:0;top:0;width:2px;height:100%;background:var(--accent);
+  transform:scaleY(0);transform-origin:top;transition:transform .3s var(--ease);
+}
+.dt-track .dt-fill.fill{transform:scaleY(1)}
+.dt-train{
+  position:absolute;left:50%;top:0;width:24px;height:24px;margin-left:-12px;margin-top:-12px;
+  transition:top .35s var(--ease);will-change:top;z-index:3;
+}
+@media(max-width:960px){
+  .dualtrack{border-left:none;border-right:none}
+  .dt-row{grid-template-columns:1fr 88px 1fr;min-height:0}
+  .dt-cell{padding:12px 10px}
+  .dt-cell.left .dt-type,.dt-cell.right .dt-type{font-size:9px;margin-bottom:3px}
+  .dt-cell.left .dt-title,.dt-cell.right .dt-title{font-size:13px}
+  .dt-cell.left .dt-sub,.dt-cell.right .dt-sub{font-size:11.5px;line-height:1.55;margin-top:3px}
+  .dt-axis{padding:6px 2px}
+  .dt-axis .dt-time{font-size:10.5px;padding:2px 4px}
+  .dt-axis .dt-time em{font-size:8.5px}
+  .dt-cell.right .no{width:26px;height:26px;font-size:12px}
+  /* 报考左列完整列表 */
+  .dt-cell.left .dt-list{margin-top:5px}
+  .dt-cell.left .dt-list li{font-size:11.5px;line-height:1.55;padding-left:11px;position:relative}
+  .dt-cell.left .dt-list li::before{content:"";position:absolute;left:0;top:7px;width:4px;height:4px;background:var(--line)}
+}
+
+/* ============ Patch #9：表单门控（lead gate） ============ */
+body.gated{overflow:hidden}
+.gate{
+  position:fixed;inset:0;z-index:100;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  background:rgba(22,53,79,.92);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.gate.hidden{display:none}
+.gate-box{
+  position:relative;max-width:520px;width:100%;
+  background:var(--card);border:1px solid var(--line);
+  padding:44px 40px 40px;
+  box-shadow:0 24px 60px rgba(10,25,38,.45);
+  animation:gateIn .45s var(--ease);
+}
+@keyframes gateIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.gate-box::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent);
+}
+.gate-kicker{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;
+  color:var(--accent-deep);margin-bottom:14px;
+}
+.gate-title{
+  font-family:var(--font-display);font-weight:900;
+  font-size:clamp(24px,4vw,30px);line-height:1.3;color:var(--primary-deep);
+  margin-bottom:12px;
+}
+.gate-desc{
+  font-size:14px;color:var(--ink-soft);line-height:1.7;margin-bottom:26px;
+}
+.gate-btn{
+  display:block;width:100%;text-align:center;
+  background:var(--primary);color:#fff;
+  font-family:var(--font-display);font-weight:700;font-size:16px;
+  padding:14px 20px;border-radius:2px;
+  transition:background .2s var(--ease),transform .2s var(--ease),box-shadow .2s var(--ease);
+  border:1px solid var(--primary);
+}
+.gate-btn:hover{background:var(--primary-deep);transform:translateY(-2px);box-shadow:var(--shadow-hover)}
+.gate-btn:active{transform:translateY(0);box-shadow:none}
+.gate-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.gate-note{
+  margin-top:14px;font-size:12px;color:var(--ink-faint);text-align:center;
+}
+.gate-sig{
+  margin-top:22px;padding-top:16px;border-top:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;color:var(--ink-faint);
+}
+.gate-sig::before{content:"";width:8px;height:8px;background:var(--accent);flex:none}
+@media(max-width:720px){
+  .gate-box{padding:32px 24px 28px}
+}
+@media (prefers-reduced-motion: reduce){
+  .gate-box{animation:none}
+}
+
+/* ============ Patch #2：滚动驱动列车 + 站号跳转 ============ */
+.timetable{position:relative}
+.tt-track{
+  position:absolute;left:29px;top:60px;bottom:24px;width:14px;z-index:3;
+  pointer-events:none;
+}
+.tt-track .rail{
+  position:absolute;left:6px;top:0;bottom:0;width:1px;
+  background:var(--line);
+}
+.tt-track .rail::after{
+  content:"";position:absolute;left:0;top:0;width:1px;height:100%;
+  background:var(--accent);
+  transform:scaleY(0);transform-origin:top;
+  transition:transform .3s var(--ease);
+}
+.tt-track .rail.fill::after{transform:scaleY(1)}
+.tt-train{
+  position:absolute;left:-12px;top:0;width:26px;height:26px;
+  margin-top:-13px;
+  transition:top .35s var(--ease);
+  will-change:top;
+}
+.tt-track.paused .tt-train{transition:none}
+.tt-station{
+  position:absolute;left:-7px;width:28px;height:28px;margin-top:-14px;
+  border-radius:50%;background:var(--card);border:2px solid var(--line);
+  transition:background .2s var(--ease),border-color .2s var(--ease),transform .2s var(--ease);
+}
+.tt-station.on{background:var(--accent);border-color:var(--accent);transform:scale(1.15)}
+
+/* 站号：可点击跳转 */
+.tt-row .no{
+  font-family:var(--font-mono);font-weight:600;font-size:15px;color:var(--ink-faint);
+  display:inline-flex;align-items:center;justify-content:center;
+  width:34px;height:34px;border:1px solid transparent;border-radius:50%;
+  cursor:pointer;user-select:none;position:relative;z-index:4;
+  transition:color .2s var(--ease),background .2s var(--ease),border-color .2s var(--ease),transform .2s var(--ease);
+  background:transparent;
+}
+.tt-row .no:hover{
+  color:#fff;background:var(--primary);border-color:var(--primary);
+  transform:scale(1.12);
+}
+.tt-row .no:active{transform:scale(.94)}
+.tt-row .no:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;color:#fff;background:var(--primary);
+}
+/* 当前经过的站：站号点亮 + 外部脉冲光晕 */
+.tt-row.current .no{
+  color:#fff;background:var(--accent);border-color:var(--accent);
+  animation:stationPulse 1.8s ease-out infinite;
+}
+@keyframes stationPulse{
+  0%{box-shadow:0 0 0 0 rgba(232,163,61,.5)}
+  70%{box-shadow:0 0 0 12px rgba(232,163,61,0)}
+  100%{box-shadow:0 0 0 0 rgba(232,163,61,0)}
+}
+.tt-row.current{background:#fff}
+/* 移动端轨道定位见下方 Patch #4 区块（统一管理，避免旧定位覆盖） */
+
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main"><!--pnid:uNDtBe4RBaPrzmRlnVXTL4-->跳到主要内容</a>
+
+<!--pnid:6Giim4nbjO65JmBCF5sXeD--><!-- 顶部窄条 -->
+<header class="topbar">
+  <div class="brand"><span class="dot"></span><span><!--pnid:KyBGyJAtS904xp3HHh6gZX-->28届电力备考 · 时间线</span></div>
+  <nav>
+    <a href="#phase"><!--pnid:u6pxaqXhpvSvzvPH4MZesG-->备考阶段</a>
+    <a href="#recruit"><!--pnid:X6JZDoMXf38Cq527r7pV4T-->报考时间线</a>
+    <a href="#keynote"><!--pnid:SWCYSELa2DoaIStLEvL9sg-->行测要点</a>
+  </nav>
+</header>
+
+<main>
+  <!--pnid:RUiRuEtpClu3OTnoIblOCw--><!-- Hero -->
+  <section class="hero">
+    <div class="databar reveal">
+      <div class="cell"><div class="num"><!--pnid:85NvdGd8wJSeqjbB4kgOr8-->10<em><!--pnid:PuLZjoU0HTtNhSUGwMnN2L--> 阶段</em></div><div class="lbl"><!--pnid:WRUauSAynnsdKbY1xdKlS1-->专业课备考节奏 · 全程规划</div></div>
+      <div class="cell"><div class="num"><!--pnid:hfO5Pf9JIWpkpZtXuC8FSa-->50–80<em><!--pnid:neHpAZVsyqGJwuNrk9j2WZ-->%</em></div><div class="lbl"><!--pnid:47l55wNTG3jaemrrBuTP7s-->发电集团笔试行测占比核心区间</div></div>
+      <div class="cell"><div class="num"><!--pnid:lxFuowOulqs0PeEuXijpDQ-->2026.09<em><!--pnid:CulaOTbPfjY7dFSMlPh2eI--> 起程</em></div><div class="lbl"><!--pnid:RFX99mRf9a2eJrhnV6CC8n-->至 2028.06 · 覆盖完整报考周期</div></div>
+    </div>
+
+    <div class="kicker reveal"><!--pnid:yIJpz19FUYdCZ9xous2Trp-->ELECTRIC POWER EXAM TIMELINE · 2028</div>
+    <h1 class="reveal"><!--pnid:zm6DvkonzqalQb1Lo7NAsL-->28届电力备考<span class="accent"><!--pnid:D8udCISMkand4SOC3UcwFM-->时间线</span></h1>
+    <p class="sub reveal"><!--pnid:LUB4noIgyZLi7YBQVwFyrc-->覆盖 <b><!--pnid:4i4xLagCrBvnp0nkxqOugN-->国网 · 南网 · 蒙西 · 国能 · 华电 · 国电投 · 大唐 · 华能</b><!--pnid:5m790RCXOvQrnUW9IzGaqD--> 等电力央国企。
+    专业课 10 阶段备考节奏 + 报考关键节点，一张图看懂未来两年「什么时间该做什么」。</p>
+    <div class="meta reveal">
+      <span class="chip hot"><!--pnid:B6q6lpeIzneptZDmhHO1ta-->提前批 / 一批次 / 二批次 / 三批次</span>
+      <span class="chip"><!--pnid:w39QB7ubQh01aC60C2TkEW-->春招 / 秋招 / 社招</span>
+      <span class="chip"><!--pnid:4xdoRDwH6BJB1cRsML3ZgA-->专业课 + 行测</span>
+    </div>
+
+    <!--pnid:VZNRDkbqklbBcKvhs6QVs1--><!-- 发车轨道：列车循环驶过 -->
+    <div aria-hidden="true" class="depart-rail reveal">
+      <div class="rail-label"><!--pnid:QB5Bl4n21OqZDHo9w5E0pb-->发车轨道<b><!--pnid:RiwOQX0vqw6pzKB8XL9eF2-->2026.09</b></div>
+      <div class="rail-end"><!--pnid:8z9eyrxYyzMWkjwtfHkdcn-->→ 2028.06</div>
+      <div class="train-wrap">
+        <svg aria-label="电力机车" class="train" role="img" viewBox="0 0 150 44">
+          <path d="M60 30 L72 16 L104 16 L114 30" fill="none" stroke="#46586b" stroke-width="2.5"/>
+          <rect fill="#1e4a6f" height="18" rx="3" width="126" x="8" y="14"/>
+          <rect fill="#16354f" height="5" rx="2" width="126" x="8" y="14"/>
+          <rect fill="#e8a33d" height="8" rx="1.5" width="16" x="18" y="19"/>
+          <rect fill="#e8a33d" height="8" rx="1.5" width="16" x="40" y="19"/>
+          <rect fill="#e8a33d" height="8" rx="1.5" width="16" x="62" y="19"/>
+          <rect fill="#e8a33d" height="9" rx="1.5" width="9" x="120" y="18"/>
+          <circle cx="138" cy="23" fill="#e8a33d" r="4"/>
+          <circle class="wheel" cx="30" cy="36" fill="#1c2b3a" r="4.5"/>
+          <circle cx="30" cy="36" fill="#7d8a99" r="1.5"/>
+          <circle class="wheel" cx="66" cy="36" fill="#1c2b3a" r="4.5"/>
+          <circle cx="66" cy="36" fill="#7d8a99" r="1.5"/>
+          <circle class="wheel" cx="102" cy="36" fill="#1c2b3a" r="4.5"/>
+          <circle cx="102" cy="36" fill="#7d8a99" r="1.5"/>
+          <circle class="puff p1" cx="0" cy="0" r="0"/>
+          <circle class="puff p2" cx="0" cy="0" r="0"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!--pnid:s56kBq4E6Ag4UNrlefkTOQ--><!-- 双轨合并时间线：中时间轴 / 左报考 / 右备考 -->
+  <section class="section" id="timeline">
+    <div class="sec-head reveal">
+      <span class="idx"><!--pnid:TfySHSlCsdgOaTjt73vcGe-->01</span>
+      <h2><!--pnid:MMfccXDxSOc4LuJRLTFaLL-->备考 · 报考 双轨时间线</h2>
+      <span class="note"><!--pnid:QhA27gLUbhO7RLYrpiB6VL-->2026.09 — 2028.06 / 双轨并行</span>
+    </div>
+
+    <div class="dualtrack" id="dtboard">
+      <!--pnid:zaVJ7tJZ7yIZ4ZfGImyz1V--><!-- 滚动驱动列车：沿中轴行驶 -->
+      <div aria-hidden="true" class="dt-track">
+        <div class="dt-fill"></div>
+        <span class="dt-train">
+          <svg height="24" viewBox="0 0 24 24" width="24">
+            <rect fill="#1e4a6f" height="9" rx="2" width="18" x="2" y="7"/>
+            <rect fill="#16354f" height="3" rx="1.5" width="18" x="2" y="7"/>
+            <rect fill="#e8a33d" height="3" rx="1" width="4" x="5" y="10"/>
+            <rect fill="#e8a33d" height="3" rx="1" width="4" x="11" y="10"/>
+            <rect fill="#e8a33d" height="3" rx="1" width="3" x="17" y="10"/>
+            <circle cx="22" cy="12" fill="#e8a33d" r="1.5"/>
+            <circle cx="7" cy="19" fill="#1c2b3a" r="2.2"/>
+            <circle cx="15" cy="19" fill="#1c2b3a" r="2.2"/>
+          </svg>
+        </span>
+      </div>
+
+      <!--pnid:BOU1hNfG2MbCUaSuAcsElT--><!-- ① 提前预习 -->
+      <div class="dt-row">
+        <div class="dt-cell left">
+          <span class="dt-type"><!--pnid:bdvN28wIEPpGdk9MDTLxyB-->央国企报考</span>
+          <div class="dt-title" style="color:var(--ink-faint)"><!--pnid:8WtDVHnXgQ9LXCiFJw7GFH-->—</div>
+          <div class="dt-sub" style="color:var(--ink-faint)"><!--pnid:PxoroOCH9a7MKouqdClo2O-->报考窗口未开启 · 安心打基础</div>
+        </div>
+        <div class="dt-axis"><span class="dt-time"><!--pnid:xX3Pob1v1vLnq7RXuSOTMc-->2026.09<em><!--pnid:rLnTliB36spAWvkH7Mx4C5-->提前预习</em></span></div>
+        <div class="dt-cell right">
+          <span class="dt-type"><!--pnid:t5pFsctg8vHcthiFL7vRXH-->专业课备考</span>
+          <div class="dt-head">
+            <button aria-label="跳转到第 1 站：提前预习" class="no" data-station="0"><!--pnid:Oh3Un7aW94Y1vh1ZYqnwro-->01</button>
+            <span class="dt-title"><!--pnid:Pf2m8l6YeR8nFtV3HOsWbN-->提前预习</span>
+          </div>
+          <div class="dt-sub"><!--pnid:1fU6SYKfu5untA5sJYFJsU-->在校期间：基础网课提前入门，补足基础，赢在起跑线</div>
+          <div class="dt-mode"><span class="tag ketang"><!--pnid:8UcPkqljSRekNsDxaDtGUH-->基础网课</span></div>
+        </div>
+      </div>
+
+      <!--pnid:hgknQY9bLlAHCbHUalZZDM--><!-- ② 基础学习 -->
+      <div class="dt-row">
+        <div class="dt-cell left">
+          <span class="dt-type"><!--pnid:330m0U7cJvHT3ADxH7Zvuw-->央国企报考</span>
+          <div class="dt-title" style="color:var(--ink-faint)"><!--pnid:oK7X35aH4yxrkqJQnYnSe3-->—</div>
+          <div class="dt-sub" style="color:var(--ink-faint)"><!--pnid:HbedUr3FK02mAS6YESYkqr-->报考窗口未开启 · 专注系统学习</div>
+        </div>
+        <div class="dt-axis"><span class="dt-time"><!--pnid:RSdBPawRHJGwKuauMkpYSj-->2027.01<em><!--pnid:M71seutWM5brJHhDQBdnJt-->基础学习</em></span></div>
+        <div class="dt-cell right">
+          <span class="dt-type"><!--pnid:Es1kTB15PJtTRNoiahBLYy-->专业课备考</span>
+          <div class="dt-head">
+            <button aria-label="跳转到第 2 站：基础学习" class="no" data-station="1"><!--pnid:mXVpmdeH78hqFGfX60vC2m-->02</button>
+            <span class="dt-title"><!--pnid:99LvRaSoAytJac9ar1wZ8q-->基础学习</span>
+          </div>
+          <div class="dt-sub"><!--pnid:s5kvydprkHEzog2mTJQz45-->线下面授：回归高校教材体系，系统理解全科专业课知识点</div>
+          <div class="dt-mode"><span class="tag mian"><!--pnid:lBR740u81OiSPAnPN9IwKF-->线下面授</span></div>
+        </div>
+      </div>
+
+      <!--pnid:NzKtg7Y4gkGZUY3o8tLYlM--><!-- ③ 巩固学习 -->
+      <div class="dt-row">
+        <div class="dt-cell left">
+          <span class="dt-type"><!--pnid:Fl41By6HgeUmlXKmclfBTt-->央国企报考</span>
+          <div class="dt-title" style="color:var(--ink-faint)"><!--pnid:4msyp1FO7FKvz4GQQrROdU-->—</div>
+          <div class="dt-sub" style="color:var(--ink-faint)"><!--pnid:DYXDnEMeDaC964FFcymggy-->报考窗口未开启 · 持续巩固</div>
+        </div>
+        <div class="dt-axis"><span class="dt-time"><!--pnid:jgV1l11Lzh49TuTT4Wz3Dj-->2027.03<em><!--pnid:DQp0IRmrvx8jkO08imNV0c-->巩固学习</em></span></div>
+        <div class="dt-cell right">
+          <span class="dt-type"><!--pnid:8FCEuYyTIUUuYGQSxXgMdM-->专业课备考</span>
+          <div class="dt-head">
+            <button aria-label="跳转到第 3 站：巩固学习" class="no" data-station="2"><!--pnid:AYK7vD0PyguXUrqWqOxxJc-->03</button>
+            <span class="dt-title"><!--pnid:sgdeVxt1ejgvJgxybgfmdz-->巩固学习</span>
+          </div>
+          <div class="dt-sub"><!--pnid:cDsp8s6yZzXAJW9GY1KQ8y-->在校期间：利用在校碎片时间，全面复习，巩固所学</div>
+          <div class="dt-mode"><span class="tag ziwo"><!--pnid:Z6A7u4NSGBI0oDwb6LC6bI-->在校复习</span></div>
+        </div>
+      </div>
+
+      <!--pnid:jTZkfnEIl480gckIFd2SAi--><!-- ④ 应试学习 -->
+      <div class="dt-row">
+        <div class="dt-cell left">
+          <span class="dt-type"><!--pnid:7NvloUYrVUa67vZ9uNNhfe-->央国企报考</span>
+          <div class="dt-title" style="color:var(--ink-faint)"><!--pnid:unDd7G4v6iB5PuNqBMPvoQ-->—</div>
+          <div class="dt-sub" style="color:var(--ink-faint)"><!--pnid:AiBLHCaFFkhEQitl6akdQe-->报考窗口未开启 · 应试训练</div>
+        </div>
+        <div class="dt-axis"><span class="dt-time"><!--pnid:rYkqIU3kXG9YiLW7l1AX1W-->2027.07<em><!--pnid:04pNxzH4QJEKu5dNMXEy1h-->应试学习</em></span></div>
+        <div class="dt-cell right">
+          <span class="dt-type"><!--pnid:oeyJaOxwLuptUL4POK2hZt-->专业课备考</span>
+          <div class="dt-head">
+            <button aria-label="跳转到第 4 站：应试学习" class="no" data-station="3"><!--pnid:CmpOXosEGQPb5dDxaKgVzF-->04</button>
+            <span class="dt-title"><!--pnid:Js2YFm0sHsJFGhMuXncUvf-->应试学习</span>
+          </div>
+          <div class="dt-sub"><!--pnid:nD4aioZ0xcGiEO9fHMVPqU-->线下面授：回归考纲，讲练结合，知识点分层巩固</div>
+          <div class="dt-mode"><span class="tag mian"><!--pnid:e3hHdPzhT1ZTFgZwGiXVAW-->线下面授</span></div>
+        </div>
+      </div>
+
+      <!--pnid:ooCXRkm2UGCepGwzVkG3a4--><!-- ⑤ 刷题巩固 + 提前批季 -->
+      <div class="dt-row">
+        <div class="dt-cell left">
+          <span class="dt-type"><!--pnid:aWS3PnIjrhLPrdabRq216Q-->央国企报考</span>
+          <div class="dt-title"><!--pnid:sIIbV6EP52YEuAvq8q8PBV-->提前批季开启</div>
+          <ul class="dt-list">
+            <li><b><!--pnid:MGGeuAZTKlaIuxSUgitfUA-->提前批</b><!--pnid:zEjt0YdDtQkweFy4ijSONm-->：国网 / 南网 / 蒙西 / 国电投 提前批</li>
+            <li><b><!--pnid:97DaTJz5w8HndpDj4a6unY-->国能</b><!--pnid:EyoQNKLEIYsPaSyQwP51WX-->：秋招</li>
+            <li><b><!--pnid:aLVtuyV1E34s3BD4NbUjIj-->华电</b><!--pnid:6OmKMHL4eHQbV1KySPEAhZ-->：一批次</li>
+            <li><b><!--pnid:p04VrQOmKLuNn2s9ucPBgk-->国电投</b><!--pnid:zUirBBLRAgEAyvWWxF9n3N-->：校园招聘；<b><!--pnid:wba4G221h5b8acUdiSormI-->大唐</b><!--pnid:3Xk1GTi4R5tVIom6PaYeTj-->：系统企业招聘；<b><!--pnid:8Ty9eWDNx0tTB2bjIUhSxS-->华能</b><!--pnid:bOje8AfW2kzN68A1xHAOQv-->：在京及京外单位招聘</li>
+          </ul>
+          <div class="dt-stamps">
+            <span class="dt-stamp r"><!--pnid:qkB3XUskWlwhgzb3JutmHm-->提前批</span><span class="dt-stamp a"><!--pnid:PUzZ9BoNdyCqv131Pgi9h4-->秋招</span><span class="dt-stamp b"><!--pnid:5KbZgXsoHmGajjlPGRzlII-->一批次</span>
+          </div>
+        </div>
+        <div class="dt-axis"><span class="dt-time"><!--pnid:vRxMKuaOT5uh3jgiLoDXB5-->2027.09<em><!--pnid:GCXpE0rNgS4no4vY9oYkWP-->刷题巩固</em></span></div>
+        <div class="dt-cell right">
+          <span class="dt-type"><!--pnid:RwFiunZB4XSa0ZYJdrAShB-->专业课备考</span>
+          <div class="dt-head">
+            <button aria-label="跳转到第 5 站：刷题巩固" class="no" data-station="4"><!--pnid:sD9Lhb5wZWhwFzHF2jVo0m-->05</button>
+            <span class="dt-title"><!--pnid:LvopXfyzfyt7qka20sfQMS-->刷题巩固</span>
+          </div>
+          <div class="dt-sub"><!--pnid:b97y1pNSZfSFQinjiqSc3M-->在校 / 在家：思格刷题小程序巩固复盘，衔接后续强化冲刺</div>
+          <div class="dt-mode"><span class="tag shiti"><!--pnid:tSLYb3gajR5D4ZRk4bnrm8-->刷题小程序</span></div>
+        </div>
+      </div>
+
+      <!--pnid:L8cPcrTHdM5YRxO9fEXmfV--><!-- ⑥ 强化学习 + 提前批进行中 -->
+      <div class="dt-row">
+        <div class="dt-cell left">
+          <span class="dt-type"><!--pnid:Uh4yrMVGmivBqPmUNbhVmF-->央国企报考</span>
+          <div class="dt-title"><!--pnid:IOuv4wRqF1l1uy0qtSscH1-->提前批进行中</div>
+          <ul class="dt-list">
+            <li><b><!--pnid:8ekV3Oljo3ozXPWwEDpput-->蒙西 / 国电投</b><!--pnid:m9Pzr9SRj1eHuXt8TiVDGh-->：提前批进行中</li>
+            <li><b><!--pnid:O3WUxoRhK6i1umZPECl48O-->国能</b><!--pnid:kE82UI7FklC0uhmBoCDbqz-->：秋招考试</li>
+            <li><b><!--pnid:WBhj6dGtj2ognefgXEtvhc-->华电</b><!--pnid:2HMdUquItdpUfsJKtegkme-->：一批次招考</li>
+            <li><b><!--pnid:T8Pr0VsMzgSpIdgqW6DCH3-->国电投</b><!--pnid:2DaGJnk3cez9enUtpqflEr-->：校园招聘；<b><!--pnid:YiRjzUgKIb2RJ69tFFQtUH-->大唐</b><!--pnid:giInzPnXJAIr95OuD6ZNhc-->：系统企业招聘；<b><!--pnid:331lm8vaaHPyvsoaMRx17B-->华能</b><!--pnid:3KBqLMDh8QR3MER7afI07u-->：在京及京外单位招聘</li>
+          </ul>
+          <div class="dt-stamps"><span class="dt-stamp a"><!--pnid:2eXkqhINRxU12l1BvTkive-->公告</span><span class="dt-stamp b"><!--pnid:UGSoa17oskVi15EVmi0MI0-->秋招考</span></div>
+        </div>
+        <div class="dt-axis"><span class="dt-time"><!--pnid:bN86ax2lJKERwc5pvS5Woa-->2027.10<em><!--pnid:kwPbXEOl2EFVMffNC5sf10-->强化学习</em></span></div>
+        <div class="dt-cell right">
+          <span class="dt-type"><!--pnid:2XKa3q2hS1Sbavx0hhtpqW-->专业课备考</span>
+          <div class="dt-head">
+            <button aria-label="跳转到第 6 站：强化学习" class="no" data-station="5"><!--pnid:XXu3kMEp9JiehbCMSj7DnM-->06</button>
+            <span class="dt-title"><!--pnid:cL7cmAYJ2DyBJVT77Vms7r-->强化学习</span>
+          </div>
+          <div class="dt-sub"><!--pnid:Lj7ZUg1LpWNqfH8FJioovY-->线下面授：分章刷题，真题、核心题、典型题讲练结合</div>
+          <div class="dt-mode"><span class="tag mian"><!--pnid:o8Y5AR6D6Y7nIWVx9iiBh4-->线下面授</span></div>
+        </div>
+      </div>
+
+      <!--pnid:YoMmbLY1u2Ri0lIRy8bied--><!-- ⑦ 冲刺学习 + 公告密集期 -->
+      <div class="dt-row">
+        <div class="dt-cell left">
+          <span class="dt-type"><!--pnid:y9rtJQXdrl5QTlWj75m2Ih-->央国企报考</span>
+          <div class="dt-title"><!--pnid:Ee1cO9tXE10LaDC4q8ol7e-->公告密集期</div>
+          <ul class="dt-list">
+            <li><b><!--pnid:abnFAOvK5a0RIteAAWPEe4-->国网 / 南网</b><!--pnid:PcdyahYgNcsecpN3kIciV1-->：发布招聘公告</li>
+            <li><b><!--pnid:uUYQd390IUUkD94FzQi3Tq-->蒙西 / 国电投</b><!--pnid:Y2jC8ApkWsgbKtbzv0bmGZ-->：提前批进行中</li>
+            <li><b><!--pnid:R3VTVo7QWclrDqUBW2ABdP-->国能</b><!--pnid:qURQWNJFRmZ93UdydqgE3b-->：秋招考试</li>
+            <li><b><!--pnid:JHvIJf6ZbDuITcmu8o4Dsd-->华电</b><!--pnid:rGbsZh4VonDQczo7h9wC5X-->：一批次招考</li>
+          </ul>
+          <div class="dt-stamps"><span class="dt-stamp a"><!--pnid:QgwlTCrVWqspd5MsqRfPPe-->公告</span><span class="dt-stamp b"><!--pnid:LK3VRbxR67TGaacAn1c8Zh-->一批次招考</span></div>
+        </div>
+        <div class="dt-axis"><span class="dt-time"><!--pnid:KQiFy93RPKnHjH30nVl4lp-->2027.11<em><!--pnid:RKfjCNIFISGP8RxcYDW84s-->冲刺学习</em></span></div>
+        <div class="dt-cell right">
+          <span class="dt-type"><!--pnid:uOq86jBJ49wvlezH7HE7BB-->专业课备考</span>
+          <div class="dt-head">
+            <button aria-label="跳转到第 7 站：冲刺学习" class="no" data-station="6"><!--pnid:6Ifar4tL8PJ3IVDpBwgk78-->07</button>
+            <span class="dt-title"><!--pnid:GJwgr10lRWWlx65r30DOai-->冲刺学习</span>
+          </div>
+          <div class="dt-sub"><!--pnid:mG6P38n8lXdObxUdbVq0td-->线下面授：全真模拟套卷 + 原考场主机模拟，刷题提分</div>
+          <div class="dt-mode"><span class="tag mian"><!--pnid:t6hwrJhlSMIBK1swzEcVFH-->线下面授</span></div>
+        </div>
+      </div>
+
+      <!--pnid:evn5ckZnJylhif89HC9qJq--><!-- ⑧ 春招复习 + 一批次考试 -->
+      <div class="dt-row">
+        <div class="dt-cell left">
+          <span class="dt-type"><!--pnid:MMQL5AsxLg123K1v3Y5XjX-->央国企报考</span>
+          <div class="dt-title"><!--pnid:EEoYrzpx9pb5TMUIkex6mX-->一批次考试</div>
+          <ul class="dt-list">
+            <li><b><!--pnid:fPGaivxMzXDWqs8wfQbEkA-->国网</b><!--pnid:kdFAygIIJYK5zAj8lOLuK5-->：一批次考试</li>
+            <li><b><!--pnid:mBJvLbzZYa0rdTJiUOZAmi-->南网</b><!--pnid:1EOFdUkiHpW2aOcCq0COzb-->：秋招考试</li>
+            <li><b><!--pnid:NiUshn2MycmKy7MARMoEQa-->国电投</b><!--pnid:2tEywG5Nvjo173sRUQrM7x-->：校园招聘；<b><!--pnid:rN2xfl6itipqNV4UlMdsSe-->大唐</b><!--pnid:E7cX3umiBHEbTURXqeO6u4-->：系统企业招聘；<b><!--pnid:tY9mVJIJWaztrmFctnideX-->华能</b><!--pnid:SOQ2UUQ8rdz3tODciLEckp-->：在京及京外单位招聘</li>
+          </ul>
+          <div class="dt-stamps"><span class="dt-stamp r"><!--pnid:iMyqpV0XaOZGIxxR86cBGw-->一批次考</span><span class="dt-stamp r"><!--pnid:iVJjdqRlWNhNB9WbZaZaiz-->秋招考</span></div>
+        </div>
+        <div class="dt-axis"><span class="dt-time"><!--pnid:xjdOJ6WJxuNEqolQAZXjmW-->2027.12<em><!--pnid:iek2WmKhlSoIQYArgGibUV-->春招复习</em></span></div>
+        <div class="dt-cell right">
+          <span class="dt-type"><!--pnid:9xw7Bxywh3aFNnNciYUEhs-->专业课备考</span>
+          <div class="dt-head">
+            <button aria-label="跳转到第 8 站：春招复习" class="no" data-station="7"><!--pnid:0eUa6x5EXtS28IIx0EI2mn-->08</button>
+            <span class="dt-title"><!--pnid:nq53x48wJHkC7iym11asIk-->春招复习</span>
+          </div>
+          <div class="dt-sub"><!--pnid:ow7vQIG3250UQ5VCBmOPgO-->备考蒙西 / 国网二三批 / 南网春招 巩固复习基础知识</div>
+          <div class="dt-mode"><span class="tag ziwo"><!--pnid:m5GvqhJRxdezWO73encF5A-->自主复习</span></div>
+        </div>
+      </div>
+
+      <!--pnid:AfJTJmTkfDlLUdIRqXG26j--><!-- ⑨ 春招强化基础 + 蒙西社招 -->
+      <div class="dt-row">
+        <div class="dt-cell left">
+          <span class="dt-type"><!--pnid:aXONalI9qWa3xAWvYatNCa-->央国企报考</span>
+          <div class="dt-title"><!--pnid:YYknLMwtZdUUeNbjbfldg0-->蒙西电力社招</div>
+          <ul class="dt-list">
+            <li><b><!--pnid:ul3Nro57UQt7amFmR03eGL-->蒙西</b><!--pnid:eqZOUULcsfmQovcDCyvleA-->：电力社招（应届生 / 成熟人才招聘）</li>
+            <li><b><!--pnid:vba4HF5xZzqxiLd8ygIPv5-->国电投</b><!--pnid:hSJ9U7szzDqqFLUlsjSNe0-->：校园招聘；<b><!--pnid:nmBLW54drcJh9384LoXuZq-->大唐</b><!--pnid:g7ItlKmUVkOMcirotWp25V-->：系统企业招聘；<b><!--pnid:GKkCfFZpLunNvyCVDi9uwZ-->华能</b><!--pnid:GXU0Sw1NkpOmSyL9ra5XIO-->：在京及京外单位招聘</li>
+          </ul>
+          <div class="dt-stamps"><span class="dt-stamp a"><!--pnid:usuusENtAxdqgn0twlols4-->社招</span></div>
+        </div>
+        <div class="dt-axis"><span class="dt-time"><!--pnid:ux77Vje51Y3WpWHe5f3735-->2028.01<em><!--pnid:dWvSNQXtgmZ1Hth6djFh6P-->春招强化基础</em></span></div>
+        <div class="dt-cell right">
+          <span class="dt-type"><!--pnid:YuRoRE76WKulZorKCtVvUw-->专业课备考</span>
+          <div class="dt-head">
+            <button aria-label="跳转到第 9 站：春招强化基础" class="no" data-station="8"><!--pnid:QkdXpD1C6Hgej1OA87M77e-->09</button>
+            <span class="dt-title"><!--pnid:8pDALDTPOWEhLW4jJqGEUI-->春招强化基础</span>
+          </div>
+          <div class="dt-sub"><!--pnid:hld2wYEjRlixEdBPm8feHy-->线下面授：强化专业课全科基础学习（适用于国网二三批 / 南网春招）</div>
+          <div class="dt-mode"><span class="tag mian"><!--pnid:NDoUoUVsnxOQY2iVBbFZUh-->线下面授</span></div>
+        </div>
+      </div>
+
+      <!--pnid:rKdlPBMHix3aW5rSb5O2ju--><!-- ⑩ 二批次公告 -->
+      <div class="dt-row">
+        <div class="dt-cell left">
+          <span class="dt-type"><!--pnid:JaViix0iKivpBIxJEU7flI-->央国企报考</span>
+          <div class="dt-title"><!--pnid:K4qPf4jAPVRZU1pMYbA6lQ-->二批次公告</div>
+          <ul class="dt-list">
+            <li><b><!--pnid:BiGEbHitq7GUH4ww7q71ke-->国网</b><!--pnid:oWOGMhxPODFuxgIiXZmIaX-->：二批次发布招聘公告</li>
+            <li><b><!--pnid:2ob43ogNSyBM4r19Z4VKMl-->华电</b><!--pnid:xAUtM4lltSQEOfWE1EHEOG-->：二批次招考</li>
+            <li><b><!--pnid:l6pihqw9M504OtUEyJj4uW-->国电投</b><!--pnid:LULL8Qf1TEq6a8Z7ktvvlr-->：校园招聘；<b><!--pnid:B68DyJ7IfljwHh143CO8qg-->大唐</b><!--pnid:n2D7iH6OblIAvujjctFiY4-->：系统企业招聘；<b><!--pnid:Udnje4wD7diEHlI0MlTJ31-->华能</b><!--pnid:2F0MnUvQiyGYc2HHzhGceX-->：在京及京外单位招聘</li>
+          </ul>
+          <div class="dt-stamps"><span class="dt-stamp a"><!--pnid:wl9kUB99hZ4EV98F8ctxLz-->二批次公告</span><span class="dt-stamp b"><!--pnid:1TaHR4lE3fJo9HVBx4E3Sz-->二批次招考</span></div>
+        </div>
+        <div class="dt-axis"><span class="dt-time"><!--pnid:Qj9o552D3s3GIHyXwDBkMU-->2028.02<em><!--pnid:Bp7ZeeP3yyAiQ13HdC3ue7-->报考窗口</em></span></div>
+        <div class="dt-cell right">
+          <span class="dt-type"><!--pnid:cbdx5Re5TlBrlX6a1iBQia-->专业课备考</span>
+          <div class="dt-title" style="color:var(--ink-faint)"><!--pnid:hlG1tZVfHH9Cp8dQ7FdaPV-->—</div>
+          <div class="dt-sub" style="color:var(--ink-faint)"><!--pnid:IZJZSQXu0crCoDsxAvWDCt-->本阶段无专业课面授安排</div>
+        </div>
+      </div>
+
+      <!--pnid:cqGZ5a2MHJuDgRkz8KX6MZ--><!-- ⑪ 春招强化冲刺 + 二批次考试 -->
+      <div class="dt-row">
+        <div class="dt-cell left">
+          <span class="dt-type"><!--pnid:8KlvsT79uYGAMKZuUl6LRr-->央国企报考</span>
+          <div class="dt-title"><!--pnid:jJjdrGdCWmsNnbFZ19sA4C-->二批次考试</div>
+          <ul class="dt-list">
+            <li><b><!--pnid:Je9kgyo4m5oFVr0SX77nW7-->国网</b><!--pnid:g930fsau0wBRMfDiFQPIS0-->：二批次考试</li>
+            <li><b><!--pnid:a3lemfWqkzHEa0lSOBuKWx-->南网</b><!--pnid:5Y8l9en9TJVFCyRpFZWFOa-->：春招发布招聘公告</li>
+            <li><b><!--pnid:PsYEjc8tIDKl9YQwRC5YCz-->华电</b><!--pnid:9pvmAikXdBo0ObVGhKsFP8-->：二批次招考</li>
+          </ul>
+          <div class="dt-stamps"><span class="dt-stamp r"><!--pnid:SPpqUBSdL6WBaIafbhgQc3-->二批次考</span><span class="dt-stamp a"><!--pnid:Bso8mEcmwEdmFnmPp7PSHa-->南网春招</span></div>
+        </div>
+        <div class="dt-axis"><span class="dt-time"><!--pnid:ToCViBE1jRu0dDEJFi9RGv-->2028.03<em><!--pnid:hp7HdK120NroOooyTR6w2F-->春招强化冲刺</em></span></div>
+        <div class="dt-cell right">
+          <span class="dt-type"><!--pnid:dNmD6XibTBtYmcHAe68aAg-->专业课备考</span>
+          <div class="dt-head">
+            <button aria-label="跳转到第 10 站：春招强化冲刺" class="no" data-station="9"><!--pnid:CwcnKLmPP0iI5EDBalU9gL-->10</button>
+            <span class="dt-title"><!--pnid:TbKb8XOv7pSu3Ha1yamTZH-->春招强化冲刺</span>
+          </div>
+          <div class="dt-sub"><!--pnid:ONk23E40tcEVHXKnBbftxq-->线下面授：冲刺习题提分训练（适用于国网二三批 / 南网春招）</div>
+          <div class="dt-mode"><span class="tag mian"><!--pnid:mF09pf9iaTuyBKagEjMUOh-->线下面授</span></div>
+        </div>
+      </div>
+
+      <!--pnid:SGbJO7bbYfqSkbFvtZ2ry4--><!-- ⑫ 三批次公告 -->
+      <div class="dt-row">
+        <div class="dt-cell left">
+          <span class="dt-type"><!--pnid:O2r2GGGYIwq8oXVpkeUIJ4-->央国企报考</span>
+          <div class="dt-title"><!--pnid:sqgyRgNyqykL7BzjhalchD-->三批次公告</div>
+          <ul class="dt-list">
+            <li><b><!--pnid:MCbvTh9363hEBuW3lZaW09-->国网</b><!--pnid:9qfN963689LBGoMgu6kxfo-->：三批次发布招聘公告</li>
+            <li><b><!--pnid:FJnuyJ8N1yqq5bTDYbBH53-->南网</b><!--pnid:5e2kuT3LqVdLkIT4wdcHTl-->：春招考试</li>
+            <li><b><!--pnid:vXSepe307wpsOh1s5b226f-->国电投</b><!--pnid:hbs1sjMNZ8EcIbUHXPzQvx-->：校园招聘；<b><!--pnid:KL0wHAsehpP2vskRjHpMF4-->大唐</b><!--pnid:jCJw4rVaVQ3Gm46LpTxZhE-->：系统企业招聘；<b><!--pnid:KssvXx0c30ZmDFut3FIGgq-->华能</b><!--pnid:oGpvbrDu5dLFspgCm3ik3O-->：在京及京外单位招聘</li>
+          </ul>
+          <div class="dt-stamps"><span class="dt-stamp a"><!--pnid:Wfw1pPVH5C0ENByLlDYu6t-->三批次公告</span><span class="dt-stamp r"><!--pnid:9cNC9aohlxbPzFkGpTgG8H-->南网春招考</span></div>
+        </div>
+        <div class="dt-axis"><span class="dt-time"><!--pnid:X62w7ge2Tmj4cw4cNoD67C-->2028.04<em><!--pnid:1ZCpySmrT75AuzyRLTc5q6-->报考窗口</em></span></div>
+        <div class="dt-cell right">
+          <span class="dt-type"><!--pnid:Kg67SnfkajmYjk6jN7tIqN-->专业课备考</span>
+          <div class="dt-title" style="color:var(--ink-faint)"><!--pnid:O0ZJCUR2sLP8juqVtIUKox-->—</div>
+          <div class="dt-sub" style="color:var(--ink-faint)"><!--pnid:IuYXlRV6jf2CDeNOCFbhs8-->本阶段无专业课面授安排</div>
+        </div>
+      </div>
+
+      <!--pnid:hnCvaxtTQ7CjHdWN0EVJ9j--><!-- ⑬ 三批次考试 -->
+      <div class="dt-row">
+        <div class="dt-cell left">
+          <span class="dt-type"><!--pnid:kULEnNpndOLUMN29SFI4Mr-->央国企报考</span>
+          <div class="dt-title"><!--pnid:rAfhz4Fb5nhl27d2pqOHHt-->三批次考试</div>
+          <ul class="dt-list">
+            <li><b><!--pnid:RNSj6IWikA428HPhNiBbqM-->国网</b><!--pnid:gHbKqZECWShKbbwPjQ3D2N-->：三批次考试</li>
+            <li><b><!--pnid:luruCYFwIweiCcPM5ZGaOL-->国能</b><!--pnid:EAp2hIM6gyFQKtQOZh4zO1-->：春招</li>
+            <li><b><!--pnid:vhnUaCmXtO6ETiFSybMhsc-->华电</b><!--pnid:o5X0DfJqNN7C1FTIr1eSut-->：三批次招考</li>
+          </ul>
+          <div class="dt-stamps"><span class="dt-stamp r"><!--pnid:WbHImAhNxDSJelickOdyyX-->三批次考</span><span class="dt-stamp a"><!--pnid:fH52eB3ZxD17vwFv537u4U-->国能春招</span></div>
+        </div>
+        <div class="dt-axis"><span class="dt-time"><!--pnid:UbObHs6fjy9VAepiTtOmzI-->2028.05<em><!--pnid:Y9TO6BJNgy1BDGUbzN6ift-->报考窗口</em></span></div>
+        <div class="dt-cell right">
+          <span class="dt-type"><!--pnid:shLSXHXdmtuQvmsJXFBigQ-->专业课备考</span>
+          <div class="dt-title" style="color:var(--ink-faint)"><!--pnid:EZlEffBiTQJB9kjHio39J5-->—</div>
+          <div class="dt-sub" style="color:var(--ink-faint)"><!--pnid:XPq1GfBHIv6euBE0UXMXnD-->本阶段无专业课面授安排</div>
+        </div>
+      </div>
+
+      <!--pnid:3n9mAe1slVd3InMSdd3hYY--><!-- ⑭ 持续通道 -->
+      <div class="dt-row">
+        <div class="dt-cell left">
+          <span class="dt-type"><!--pnid:KHl2vu5imV5YIHv3cslYpC-->央国企报考</span>
+          <div class="dt-title"><!--pnid:V8Qme6TeZg02kCuxKaaGsw-->持续通道</div>
+          <ul class="dt-list">
+            <li><b><!--pnid:66TPYBNja8dTlBRP5Hb3Fd-->国电投</b><!--pnid:iRJQlfbsqqLAecyiVkeshL-->：校园招聘；<b><!--pnid:4DcEuzpVBYVyf3agDDemCH-->大唐</b><!--pnid:vSpx6dAY5BSiglP5QWcOOi-->：系统企业招聘；<b><!--pnid:cZaKCMXZv75scT6qSz8CUw-->华能</b><!--pnid:ZCk977Tu5w6hOHAyxZqFy1-->：在京及京外单位招聘</li>
+          </ul>
+          <div class="dt-stamps"><span class="dt-stamp b"><!--pnid:BOg3wr2ksIaeMrDYVw8iO6-->持续通道</span></div>
+        </div>
+        <div class="dt-axis"><span class="dt-time"><!--pnid:VviMvxUBOr4auROXY8dY89-->2028.06<em><!--pnid:TDaOKhjHvadJk2j8dPDbA5-->收官</em></span></div>
+        <div class="dt-cell right">
+          <span class="dt-type"><!--pnid:kDaIYB1bCV2Iz4gTtmRcNC-->专业课备考</span>
+          <div class="dt-title" style="color:var(--ink-faint)"><!--pnid:e7Fid3RsZbrgZEKFYkcqU0-->—</div>
+          <div class="dt-sub" style="color:var(--ink-faint)"><!--pnid:TKlCeolSDoErxD1PU0Ay1d-->备考周期收官 · 关注录取动态</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!--pnid:f7VIFoe4xkEEA07zee7X9w--><!-- 要点条 -->
+  <section class="keynote" id="keynote">
+    <div class="inner reveal">
+      <div class="sig"><!--pnid:gV1gY5WNpZtdguoKl7cms5-->KEY POINT</div>
+      <p><!--pnid:CkmM0BNCphNi2v6ysEEGGN-->所有发电集团的笔试都以 <b><!--pnid:WtdFJZ8iakTzM9AMbYQ4Uq-->行测</b><!--pnid:AuF2NpZrYXTIUuR52TfCLb--> 为核心，占比通常在 <b><!--pnid:52QSrd736IciZiX0hpb49r-->50% – 80%</b><!--pnid:59KCkuOXHd3UTrXozd70Ma--> —— 备考请务必优先分配行测复习权重。</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="f-brand"><!--pnid:uCoToqxex5ojNANNBsKxo8-->28届电力备考时间线 · TIMETABLE v1</div>
+  <div class="f-note"><!--pnid:ZSRoqQ9mW9gyTZk90e8uZU-->内容整理自思格电网教研院 · 2026.09 起程至 2028.06 收官</div>
+</footer>
+
+<!--pnid:jo4mv2F6FHdv8XjzsiHrIn--><style>
+/* lead-gate 内嵌表单（自托管版 2026-09-07） */
+.gate-form{margin-top:14px;display:flex;flex-direction:column;gap:9px;text-align:left}
+.gf-row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:0 12px;box-shadow:var(--shadow-1)}
+.gf-row:focus-within{border-color:var(--primary)}
+.gf-lab{flex:0 0 40px;font-size:13px;font-weight:700;color:var(--ink-soft)}
+.gf-inp{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:14px;color:var(--ink);padding:11px 0}
+.gf-inp::placeholder{color:var(--ink-faint);opacity:.7}
+.gf-err{min-height:15px;margin:0;font-size:12px;line-height:15px;color:var(--signal-red);display:none}
+.gate-btn.gf-submit{display:block;width:100%;margin-top:2px;text-align:center;border:0;cursor:pointer;font-family:inherit}
+.gate-btn.gf-submit[disabled]{opacity:.65;cursor:default}
+</style>
+
+<!-- 表单门控遮罩：自动跳转表单，填完返回自动解锁 -->
+<div aria-labelledby="gate-title" aria-modal="true" class="gate" id="gate" role="dialog">
+
+  <div class="gate-box">
+    <div class="gate-kicker">ELECTRIC POWER EXAM TIMELINE · 2028</div>
+    <h2 class="gate-title" id="gate-title">填写表单，解锁完整备考时间线</h2>
+    <p class="gate-desc">国网 · 南网 · 蒙西 · 电力央国企，10 阶段备考节奏 + 报考关键节点。提交后本页立即解锁，无需跳转。</p>
+    <form class="gate-form" id="gate-form" autocomplete="off" novalidate>
+      <label class="gf-row"><span class="gf-lab">姓名</span><input class="gf-inp" id="gf-name" name="name" maxlength="20" placeholder="请输入姓名" required></label>
+      <label class="gf-row"><span class="gf-lab">手机</span><input class="gf-inp" id="gf-phone" name="phone" type="tel" maxlength="11" inputmode="numeric" placeholder="仅用于接收备考资料" required></label>
+      <label class="gf-row"><span class="gf-lab">学校</span><input class="gf-inp" id="gf-school" name="school" maxlength="50" placeholder="在读 / 毕业院校" required></label>
+      <label class="gf-row"><span class="gf-lab">专业</span><input class="gf-inp" id="gf-major" name="major" maxlength="50" placeholder="如：电气工程及其自动化" required></label>
+      <p class="gf-err" id="gf-err"></p>
+      <button class="gate-btn gf-submit" id="gate-btn" type="submit">提交并解锁时间线</button>
+      <p class="gate-note" id="gate-note">信息安全 · 仅用于备考资料对接</p>
+    </form>
+    <div class="gate-sig">思格电网教研院整理 · 2026.09 → 2028.06</div>
+  </div>
+
+<script>
+(function(){
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var els = document.querySelectorAll('.reveal');
+  if(reduced || !('IntersectionObserver' in window)){
+    els.forEach(function(el){el.classList.add('in')});
+  } else {
+    /* 交错延迟：时刻表行=列车逐站进站，报考卡片=车厢依次到位 */
+    els.forEach(function(el){
+      var d = 0;
+      if(el.classList.contains('tt-row')){
+        d = (parseInt(el.querySelector('.no').textContent,10)-1) * 0.07;
+      }else if(el.classList.contains('recruit-card')){
+        d = (Array.prototype.indexOf.call(el.parentNode.children,el) % 3) * 0.09;
+      }else if(el.classList.contains('depart-rail')){
+        d = 0.25;
+      }
+      if(d) el.style.transitionDelay = d + 's';
+    });
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    },{threshold:0.1,rootMargin:'0px 0px -30px 0px'});
+    els.forEach(function(el){io.observe(el)});
+  }
+
+    /* Patch #13：双轨合并时间线——滚动驱动列车沿中轴行驶 + 站号跳转 */
+  var dtboard = document.getElementById('dtboard');
+  if(dtboard){
+    var rows = Array.prototype.slice.call(dtboard.querySelectorAll('.dt-row'));
+    var nos   = Array.prototype.slice.call(dtboard.querySelectorAll('.no'));
+    var track = dtboard.querySelector('.dt-track');
+    var fill  = dtboard.querySelector('.dt-fill');
+    var train = dtboard.querySelector('.dt-train');
+
+    function syncLink(_idx){ /* noop */ }
+
+    function railHeight(){
+      if(!track) return 0;
+      var trackRect = track.getBoundingClientRect();
+      return trackRect.height;
+    }
+    function setTrain(p){
+      if(!train) return;
+      var maxTop = railHeight();
+      var top = Math.max(0, Math.min(maxTop, p * maxTop));
+      if(reduced) train.style.transition = 'none';
+      train.style.top = top + 'px';
+      if(fill) fill.classList.toggle('fill', p > 0.02);
+      /* 当前站高亮 */
+      var idx = Math.max(0, Math.min(rows.length - 1, Math.round(p * (rows.length - 1))));
+      rows.forEach(function(r,i){ r.classList.toggle('current', i === idx); });
+    }
+    function update(){
+      if(!track || rows.length < 2) return;
+      var vh = window.innerHeight || document.documentElement.clientHeight;
+      var probe = vh * 0.5; /* 视口中心线 */
+      var curIdx = 0;
+      rows.forEach(function(r,i){
+        if(r.getBoundingClientRect().top <= probe) curIdx = i;
+      });
+      var next = Math.min(curIdx + 1, rows.length - 1);
+      var curTop = rows[curIdx].getBoundingClientRect().top;
+      var nextTop = rows[next].getBoundingClientRect().top;
+      var span = (nextTop - curTop) || 1;
+      var t = Math.max(0, Math.min(1, (probe - curTop) / span));
+      var p = (curIdx + t) / (rows.length - 1);
+      setTrain(p);
+    }
+    var ticking = false;
+    window.addEventListener('scroll', function(){
+      if(!ticking){ requestAnimationFrame(function(){ update(); ticking = false; }); ticking = true; }
+    }, {passive:true});
+    window.addEventListener('resize', function(){ update(); });
+    update();
+
+    /* 站号点击：平滑滚动到对应站（目标对齐视口中线） */
+    nos.forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        var idx = parseInt(btn.getAttribute('data-station'), 10);
+        var target = rows[idx];
+        if(!target) return;
+        var vh = window.innerHeight || document.documentElement.clientHeight;
+        var top = target.getBoundingClientRect().top + window.pageYOffset - vh * 0.5;
+        window.scrollTo({ top: Math.max(0, top), behavior: reduced ? 'auto' : 'smooth' });
+        setTrain(idx / (rows.length - 1));
+      });
+    });
+  }
+
+  /* Patch #9：表单门控（lead gate，自托管版）——本页内填写并提交，成功后直接解锁 */
+  (function(){
+    var UNLOCK_KEY = 'dl_timeline_unlocked';
+    var gate = document.getElementById('gate');
+    var form = document.getElementById('gate-form');
+    var btn  = document.getElementById('gate-btn');
+    var err  = document.getElementById('gf-err');
+    var note = document.getElementById('gate-note');
+    if(!gate || !form) return;
+
+    function isUnlocked(){
+      try { return sessionStorage.getItem(UNLOCK_KEY) === '1'; }
+      catch(e){ return false; }
+    }
+    function unlock(){
+      if(!gate) return;
+      gate.classList.add('hidden');
+      document.body.classList.remove('gated');
+      try { sessionStorage.setItem(UNLOCK_KEY, '1'); } catch(e){}
+    }
+    function lock(){
+      document.body.classList.add('gated');
+      gate.classList.remove('hidden');
+    }
+    function showErr(m){
+      if(!err) return;
+      err.textContent = m;
+      err.style.display = 'block';
+    }
+    function clearErr(){
+      if(err){ err.textContent = ''; err.style.display = 'none'; }
+    }
+    function trim(v){ return (v || '').replace(/^\s+|\s+$/g, ''); }
+    function resetBtn(){
+      if(btn){ btn.disabled = false; btn.textContent = '提交并解锁时间线'; }
+      if(note) note.textContent = '';
+    }
+
+    if(/[?&]unlocked=1/.test(location.search)){ unlock(); }
+    if(isUnlocked()){ unlock(); return; }
+    lock();
+
+    ['gf-name','gf-phone','gf-school','gf-major'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.addEventListener('input', clearErr);
+    });
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      clearErr();
+      var name   = trim(document.getElementById('gf-name')   && document.getElementById('gf-name').value);
+      var phone  = trim(document.getElementById('gf-phone')  && document.getElementById('gf-phone').value);
+      var school = trim(document.getElementById('gf-school') && document.getElementById('gf-school').value);
+      var major  = trim(document.getElementById('gf-major')  && document.getElementById('gf-major').value);
+      if(!name || !phone || !school || !major){
+        showErr('请完整填写 姓名 / 手机 / 学校 / 专业');
+        return;
+      }
+      if(!/^1[3-9]\d{9}$/.test(phone)){
+        showErr('手机号格式不正确，请检查后重试');
+        return;
+      }
+      if(btn) btn.disabled = true;
+      if(btn) btn.textContent = '提交中…';
+      if(note) note.textContent = '正在提交，请稍候…';
+      fetch('/api/public/forms/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, phone: phone, school: school, major: major, page: 'timeline28' })
+      })
+      .then(function(r){
+        return r.json().catch(function(){ return {}; }).then(function(j){ return { ok: r.ok, j: j }; });
+      })
+      .then(function(res){
+        if(res.ok && res.j && res.j.ok === true){
+          unlock();   /* 提交成功即解锁本页 */
+        } else {
+          resetBtn();
+          showErr((res.j && res.j.error) ? res.j.error : '提交失败，请稍后重试');
+        }
+      })
+      .catch(function(){
+        resetBtn();
+        showErr('网络异常，请检查网络后重试');
+      });
+    });
+
+    /* 兼容：其他标签页 / 其他入口解锁后本页同步解锁 */
+    window.addEventListener('storage', function(e){
+      if(e.key === UNLOCK_KEY && e.newValue === '1') unlock();
+    });
+  })();
+})();
+</script>
+</body>
+</html>
