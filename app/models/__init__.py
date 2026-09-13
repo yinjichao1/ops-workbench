@@ -5,3 +5,4 @@ from .monthly_target import MonthlyTarget
 from .lead import Lead, LeadDeal
 from .form_submission import FormSubmission
 from .live_stream import LiveStream
+from .match_lead import MatchLead
