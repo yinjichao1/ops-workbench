@@ -53,7 +53,7 @@
     <div class="t">
       <a class="back" href="/">← 返回运营工作台</a>
       <h1>团队项目</h1>
-      <div class="sub">集中承接面向学员 / 员工的线上项目入口与数据管理。当前已接入：<b>919 模考排位赛</b>报名数据。点击卡片即可查看对应项目的数据管理页。</div>
+      <div class="sub">集中承接面向学员 / 员工的线上项目入口与数据管理。当前已接入：<b>919 模考排位赛</b>报名数据管理、<b>思格模考</b>系统入口、<b>央国企匹配工具</b>。数据管理类项目点击卡片在本页查看；学员入口类项目点击卡片新标签打开。</div>
       <div class="meta">
         <span class="chip">认证范围：<b>工作台账号（Basic Auth）</b></span>
         <span class="chip">接入项目：<b id="cnt">0</b></span>
@@ -89,6 +89,28 @@ var PROJECTS = [
     status: '运行中',
     statusOff: false,
     meta: '数据实时 · 同机代理'
+  },
+  {
+    id: 'sigexam',
+    name: '思格模考',
+    code: 'sig-exam',
+    desc: '思格模考系统入口（学员模考 / 报名线索收集页）。模考报名数据由 919 模考排位赛卡片承接管理。',
+    href: '/exam/',
+    blank: true,
+    status: '运行中',
+    statusOff: false,
+    meta: '学员入口 · 新标签打开'
+  },
+  {
+    id: 'matchtool',
+    name: '央国企匹配工具',
+    code: 'match',
+    desc: '央国企岗位匹配工具：学员填写信息后匹配适合的央国企报考方向，可作为引流与线索收集触点。',
+    href: '/match/',
+    blank: true,
+    status: '运行中',
+    statusOff: false,
+    meta: '学员入口 · 新标签打开'
   }
 ];
 /* ================================================== */
@@ -117,6 +139,7 @@ function renderCards(){
 }
 
 function openProject(p){
+  if (p.blank) { window.open(p.href, '_blank'); return; }
   cur = p;
   renderCards();
   document.getElementById('pTitle').textContent = p.name + ' · 数据管理';

@@ -67,6 +67,13 @@ function switchDashtab(el, tab) {
     }
     loadLeads();
   }
+  if (tab === "live") {
+    const lw = $qs("#live-week");
+    const lm = $qs("#live-month");
+    if (lw && !lw.value) lw.value = dateToIsoWeek(getPreviousWeekDate());
+    if (lm && !lm.value) lm.value = getCurrentMonthValue();
+    loadLive();
+  }
 }
 
 function switchDashtabFromSidebar(tab) {
@@ -2918,3 +2925,178 @@ async function saveDealEdit(id, modalId) {
 
 // ========== INIT ==========
 loadDashboard();
+
+// ========== LIVE DATA（直播数据统计：手动录入 + 周/月汇总） ==========
+let liveCurrentMode = "week";
+
+function liveEsc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function switchLiveMode(mode) {
+  liveCurrentMode = mode;
+  const w = document.getElementById("live-mode-week");
+  const m = document.getElementById("live-mode-month");
+  const wp = document.getElementById("live-week");
+  const mp = document.getElementById("live-month");
+  if (!w || !m || !wp || !mp) return;
+  w.style.background = mode === "week" ? "var(--accent)" : "var(--bg-elevated)";
+  w.style.color = mode === "week" ? "#fff" : "var(--text-muted)";
+  w.style.border = mode === "week" ? "none" : "1px solid var(--border)";
+  m.style.background = mode === "month" ? "var(--accent)" : "var(--bg-elevated)";
+  m.style.color = mode === "month" ? "#fff" : "var(--text-muted)";
+  m.style.border = mode === "month" ? "none" : "1px solid var(--border)";
+  wp.style.display = mode === "week" ? "" : "none";
+  mp.style.display = mode === "month" ? "" : "none";
+}
+
+function onLiveFilterChange() { loadLive(); }
+
+async function loadLive() {
+  const mode = liveCurrentMode || "week";
+  const wp = $qs("#live-week");
+  const mp = $qs("#live-month");
+  const weekVal = wp ? wp.value : "";
+  const monthVal = mp ? mp.value : "";
+  let url = API + `/live?mode=${mode}`;
+  if (mode === "month" && monthVal) url += `&month=${monthVal}`;
+  if (mode === "week" && weekVal) url += `&week=${weekVal}`;
+  const sumEl = document.getElementById("live-summary");
+  const tblEl = document.getElementById("live-table");
+  const lbl = document.getElementById("live-period-label");
+  if (!sumEl || !tblEl) return;
+  sumEl.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>加载中…</p></div>';
+  let d;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("fail");
+    d = await r.json();
+  } catch(e) {
+    sumEl.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>直播数据加载失败</p></div>';
+    return;
+  }
+  if (lbl) lbl.textContent = `统计周期：${d.start} ~ ${d.end}`;
+  const s = d.summary || {};
+  sumEl.innerHTML = [
+    { label: "直播场次", val: s.count ?? 0, cls: "" },
+    { label: "观看人次", val: (s.viewers ?? 0).toLocaleString(), cls: "up" },
+    { label: "峰值在线", val: (s.peak_online ?? 0).toLocaleString(), cls: "", sub: "周期内单场最高" },
+    { label: "互动量", val: (s.engagement ?? 0).toLocaleString(), cls: "" },
+    { label: "新增粉丝", val: (s.new_followers ?? 0).toLocaleString(), cls: "up" },
+    { label: "留资线索", val: (s.leads_count ?? 0).toLocaleString(), cls: "", sub: "含评论区/私信留资" },
+    { label: "直播总时长", val: (s.duration_min ?? 0).toLocaleString() + " 分钟", cls: "" },
+  ].map(c => `<div class="stat-card">
+    <div class="stat-label">${c.label}</div>
+    <div class="stat-value ${c.cls}">${c.val}</div>
+    ${c.sub ? `<div class="stat-change">${c.sub}</div>` : ""}
+  </div>`).join("");
+
+  const rows = d.rows || [];
+  tblEl.innerHTML = rows.length ? `
+    <div style="overflow-x:auto"><table class="data-table" style="width:100%" cellpadding="0" cellspacing="0">
+      <thead><tr><th>日期</th><th>平台</th><th>账号</th><th>直播主题</th><th>时长(分)</th><th>观看人次</th><th>峰值在线</th><th>互动量</th><th>新增粉丝</th><th>留资线索</th><th>备注</th><th>操作</th></tr></thead>
+      <tbody>
+      ${rows.map(x => `
+        <tr>
+          <td>${x.live_date}</td>
+          <td>${liveEsc(x.platform)}</td>
+          <td>${liveEsc(x.account) || "—"}</td>
+          <td style="max-width:200px">${liveEsc(x.title) || "—"}</td>
+          <td>${x.duration_min || 0}</td>
+          <td>${(x.viewers||0).toLocaleString()}</td>
+          <td>${(x.peak_online||0).toLocaleString()}</td>
+          <td>${(x.engagement||0).toLocaleString()}</td>
+          <td>${(x.new_followers||0).toLocaleString()}</td>
+          <td><b>${(x.leads_count||0).toLocaleString()}</b></td>
+          <td style="max-width:160px">${liveEsc(x.note) || "—"}</td>
+          <td>
+            <button type="button" class="ct-btn edit" title="编辑" onclick="openLiveForm(${x.id})">✎</button>
+            <button type="button" class="ct-btn del" title="删除" onclick="deleteLive(${x.id})">🗑</button>
+          </td>
+        </tr>`).join("")}
+      </tbody>
+    </table></div>`
+    : '<div class="empty-state"><p>当前周期暂无直播记录，点击右上角"＋ 录入直播"添加</p></div>';
+}
+
+async function openLiveForm(id) {
+  let d = null;
+  if (id) {
+    // 编辑：先拉取该周期数据找到对应记录
+    const mode = liveCurrentMode || "week";
+    const wp = $qs("#live-week");
+    const mp = $qs("#live-month");
+    let url = API + `/live?mode=${mode}`;
+    if (mode === "month" && mp && mp.value) url += `&month=${mp.value}`;
+    if (mode === "week" && wp && wp.value) url += `&week=${wp.value}`;
+    try {
+      const r = await fetch(url);
+      const j = await r.json();
+      d = (j.rows || []).find(x => x.id === id) || null;
+    } catch(e) { d = null; }
+    if (!d) { toast("未找到该直播记录", "error"); return; }
+  }
+  const mid = "live-" + Date.now();
+  const today = new Date().toISOString().split("T")[0];
+  const PLAT = ["抖音", "视频号", "公众号", "小红书"];
+  const html = `<div class="modal-overlay show" id="${mid}"><div class="modal" style="max-width:520px">
+    <h2>${d ? "编辑直播记录" : "录入直播"}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label>直播日期 <span class="required">*</span></label><input type="date" id="lv-date" value="${d ? d.live_date : today}"></div>
+      <div class="form-group"><label>平台 <span class="required">*</span></label><select id="lv-plat">${PLAT.map(p => `<option ${d && d.platform === p ? "selected" : ""}>${p}</option>`).join("")}</select></div>
+      <div class="form-group"><label>账号</label><input id="lv-acct" value="${d ? liveEsc(d.account) : ""}" placeholder="如：思格电网"></div>
+      <div class="form-group"><label>直播主题</label><input id="lv-title" value="${d ? liveEsc(d.title) : ""}" placeholder="如：919模考答疑专场"></div>
+      <div class="form-group"><label>时长（分钟）</label><input type="number" id="lv-dur" value="${d ? d.duration_min : 0}" min="0"></div>
+      <div class="form-group"><label>观看人次</label><input type="number" id="lv-viewers" value="${d ? d.viewers : 0}" min="0"></div>
+      <div class="form-group"><label>峰值在线</label><input type="number" id="lv-peak" value="${d ? d.peak_online : 0}" min="0"></div>
+      <div class="form-group"><label>互动量</label><input type="number" id="lv-eng" value="${d ? d.engagement : 0}" min="0" placeholder="评论+点赞+分享"></div>
+      <div class="form-group"><label>新增粉丝</label><input type="number" id="lv-newf" value="${d ? d.new_followers : 0}" min="0"></div>
+      <div class="form-group"><label>留资线索</label><input type="number" id="lv-leads" value="${d ? d.leads_count : 0}" min="0"></div>
+    </div>
+    <div class="form-group"><label>备注</label><input id="lv-note" value="${d ? liveEsc(d.note) : ""}" placeholder="可选"></div>
+    <div class="form-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('${mid}')">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveLive('${mid}'${d ? `,${d.id}` : ""})">保存</button>
+    </div>
+  </div></div>`;
+  document.body.insertAdjacentHTML("beforeend", html);
+}
+
+async function saveLive(modalId, id) {
+  const dateVal = $qs("#lv-date").value;
+  if (!dateVal) { toast("请选择直播日期", "error"); return; }
+  const body = {
+    live_date: dateVal,
+    platform: $qs("#lv-plat").value,
+    account: $qs("#lv-acct").value.trim(),
+    title: $qs("#lv-title").value.trim(),
+    duration_min: +($qs("#lv-dur").value) || 0,
+    viewers: +($qs("#lv-viewers").value) || 0,
+    peak_online: +($qs("#lv-peak").value) || 0,
+    engagement: +($qs("#lv-eng").value) || 0,
+    new_followers: +($qs("#lv-newf").value) || 0,
+    leads_count: +($qs("#lv-leads").value) || 0,
+    note: $qs("#lv-note").value.trim(),
+  };
+  try {
+    const r = await fetch(API + `/live${id ? "/" + id : ""}`, {
+      method: id ? "PUT" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || j.ok === false) throw new Error(j.detail || "保存失败");
+    closeModal(modalId);
+    toast(id ? "直播记录已更新" : "直播已录入", "success");
+    loadLive();
+  } catch(e) { toast("保存失败：" + e.message, "error"); }
+}
+
+async function deleteLive(id) {
+  if (!confirm("确定删除这条直播记录吗？")) return;
+  const r = await fetch(API + `/live/${id}`, { method: "DELETE" });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || j.ok === false) { toast("删除失败", "error"); return; }
+  toast("直播记录已删除", "success");
+  loadLive();
+}

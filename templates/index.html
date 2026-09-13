@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#1D4ED8">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231D4ED8'/%3E%3Ctext x='32' y='43' font-size='30' font-weight='700' fill='%23fff' text-anchor='middle' font-family='-apple-system,sans-serif'%3E%E6%80%9D%3C/text%3E%3C/svg%3E">
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=0901b">
+<link rel="stylesheet" href="/static/css/style.css?v=0901c">
 </head>
 <body>
 
@@ -38,6 +38,7 @@
       <button class="sidebar-sub-item" data-tab="trend" onclick="switchDashtabFromSidebar('trend')">平台趋势</button>
       <button class="sidebar-sub-item" data-tab="hot" onclick="switchDashtabFromSidebar('hot')">本周热门</button>
       <button class="sidebar-sub-item" data-tab="leads" onclick="switchDashtabFromSidebar('leads')">线索数据</button>
+      <button class="sidebar-sub-item" data-tab="live" onclick="switchDashtabFromSidebar('live')">直播数据</button>
     </div>
     <button class="sidebar-item" data-page="calendar" aria-label="内容排期">
       <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><span class="nav-text">内容排期</span>
@@ -221,6 +222,7 @@
             <button class="btn btn-outline btn-sm" onclick="loadLeads()">查询</button>
             <button class="btn btn-primary btn-sm" onclick="document.getElementById('leads-upload').click()">📁 上传</button>
             <input type="file" id="leads-upload" accept=".xlsx,.xls" style="display:none" onchange="uploadLeadsFile(this)">
+            <button class="btn btn-outline btn-sm" onclick="window.open('/exam/','_blank')" title="思格模考线索收集页（学员报名入口）">🎓 模考线索收集页 ↗</button>
           </div>
         </div>
         <div class="stat-grid cols-4" id="leads-cards"></div>
@@ -254,6 +256,24 @@
           <div class="stat-grid cols-4" id="deals-cards"></div>
           <div id="deals-table" style="margin-top:14px"></div>
         </div>
+      </div>
+
+      <!-- 区块6: 直播数据（手动录入，周/月汇总） -->
+      <div class="dashtab" id="dashtab-live" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+          <span class="card-title">直播数据统计</span>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-sm" id="live-mode-week" style="background:var(--accent);color:#fff;border:none;border-radius:4px 0 0 4px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer" onclick="switchLiveMode('week')">按周</button>
+            <button class="btn btn-sm" id="live-mode-month" style="background:var(--bg-elevated);color:var(--text-muted);border:1px solid var(--border);border-radius:0 4px 4px 0;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer" onclick="switchLiveMode('month')">按月</button>
+            <input type="week" id="live-week" aria-label="选择直播周次" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary)">
+            <input type="month" id="live-month" aria-label="选择直播月份" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg-surface);color:var(--text-primary);display:none">
+            <button class="btn btn-outline btn-sm" onclick="onLiveFilterChange()">查询</button>
+            <button class="btn btn-primary btn-sm" onclick="openLiveForm()">＋ 录入直播</button>
+          </div>
+        </div>
+        <span class="card-subtitle" id="live-period-label"></span>
+        <div class="stat-grid cols-4" id="live-summary" style="margin-top:12px"></div>
+        <div id="live-table" style="margin-top:18px"></div>
       </div>
     </div>
   </div>
@@ -432,7 +452,7 @@ document.querySelectorAll('.toggle-pill').forEach(function(pill){
   });
 });
 </script>
-<script src="/static/js/app.js?v=0901b"></script>
+<script src="/static/js/app.js?v=0901c"></script>
 <div class="grain-overlay" aria-hidden="true"></div>
 </body>
 </html>
