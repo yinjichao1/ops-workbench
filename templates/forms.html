@@ -58,7 +58,7 @@
   <div class="top">
     <div>
       <h1>线索收集 · 按项目分类</h1>
-      <div class="sub">各落地页/活动共用同一提交通道，按项目分开查看与导出，互不混淆。页面在「运营工作台」内维护，公开页填写提交后即进入对应项目。</div>
+      <div class="sub">各落地页 / 活动 / 工具共用统一线索视图，按渠道分开查看与导出，互不混淆。当前渠道：表单落地页项目、<b>匹配工具线索收集</b>、<b>模考线索收集</b>。页面在「运营工作台」内维护，公开页填写提交后即进入对应渠道。</div>
     </div>
     <div class="stats">
       <div class="stat"><b id="stToday">-</b><span>今日全部</span></div>
@@ -71,29 +71,57 @@
   <div class="actions">
     <input type="search" id="kw" placeholder="搜索 姓名 / 手机 / 学校 / 专业…">
     <button class="primary" onclick="loadOverview()">刷新</button>
-    <a class="btn primary" id="btnExport" href="/api/forms/export">导出当前项目 CSV</a>
+    <a class="btn primary" id="btnExport" href="/api/collect/export">导出当前渠道 CSV</a>
   </div>
 
   <div class="cur" id="cur"></div>
   <div class="card">
     <table>
-      <thead>
+      <thead id="th">
         <tr><th>ID</th><th>提交时间</th><th>姓名</th><th>手机</th><th>学校</th><th>专业</th><th>来源项目</th><th>操作</th></tr>
       </thead>
       <tbody id="tb"></tbody>
     </table>
-    <div class="empty" id="empty" style="display:none">该项目暂无数据</div>
+    <div class="empty" id="empty" style="display:none">该渠道暂无数据</div>
   </div>
-  <div class="hint">使用提示：切到某个项目 Tab 后，上方的「导出当前项目 CSV」只会导出该项目线索；删除操作仅对当前项目内的记录生效。新项目上线时，页面代号由发布通道统一登记并出现在上方 Tab 中。</div>
+  <div class="hint">使用提示：切到某个渠道 Tab 后，上方的「导出当前渠道 CSV」只导出该渠道线索（各渠道列结构不同）；删除操作仅对当前渠道的记录生效。新增渠道时，渠道代号由发布通道统一登记并出现在上方 Tab 中。</div>
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
 var PAGE_LABELS = {
-  'timeline28': '28届备考时间线'
+  'timeline28': '28届备考时间线',
+  'match': '匹配工具线索收集',
+  'exam': '模考线索收集'
 };
-var PAGE_ORDER = [];       // 项目代号顺序（来自 overview）
-var curPage = 'all';       // all 或具体代号
+// 各渠道明细列配置（kind：form / match / exam；all 用统一简版列）
+var COLS = {
+  form: [
+    {k:'id', t:'ID'}, {k:'created_at', t:'提交时间'}, {k:'name', t:'姓名'},
+    {k:'phone', t:'手机', cls:'phone'}, {k:'school', t:'学校'}, {k:'major', t:'专业'},
+    {k:'channel_label', t:'来源项目', tag:true}
+  ],
+  match: [
+    {k:'id', t:'ID'}, {k:'created_at', t:'提交时间'}, {k:'name', t:'姓名'},
+    {k:'phone', t:'手机', cls:'phone'}, {k:'school', t:'学校'}, {k:'major', t:'专业'},
+    {k:'degree', t:'学历'}, {k:'year', t:'毕业年份'}, {k:'province', t:'意向地区'},
+    {k:'match_total', t:'匹配岗位'}, {k:'match_exact', t:'完全符合'},
+    {k:'match_family', t:'基本符合'}, {k:'match_review', t:'需人工确认'}
+  ],
+  exam: [
+    {k:'id', t:'ID'}, {k:'created_at', t:'提交时间'}, {k:'name', t:'姓名'},
+    {k:'phone', t:'手机', cls:'phone'}, {k:'school', t:'学校'}, {k:'grade', t:'年级'},
+    {k:'score', t:'得分'}, {k:'duration', t:'用时(秒)'}
+  ],
+  all: [
+    {k:'id', t:'ID'}, {k:'created_at', t:'提交时间'}, {k:'name', t:'姓名'},
+    {k:'phone', t:'手机', cls:'phone'}, {k:'school', t:'学校'}, {k:'major', t:'专业'},
+    {k:'channel_label', t:'来源渠道', tag:true}
+  ]
+};
+var CHANNELS = [];         // overview 返回的渠道列表
+var curPage = 'all';       // all 或具体渠道代号
+var curKind = 'all';       // 当前渠道类型（决定列）
 var all = [];
 
 function label(code){
@@ -113,62 +141,74 @@ function esc(s){
 function fmtCount(n){ return (n == null ? 0 : n); }
 
 function loadOverview(){
-  fetch('/api/forms/overview')
+  fetch('/api/collect/overview')
     .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(j){
       if(!j.ok) throw new Error(j.error || '加载失败');
       document.getElementById('stToday').textContent = fmtCount(j.today);
       document.getElementById('stTotal').textContent = fmtCount(j.total);
-      var pages = j.pages || [];
-      PAGE_ORDER = pages.map(function(p){ return p.page; });
-      renderTabs(j.total, j.today, pages);
+      CHANNELS = j.channels || [];
+      renderTabs(j.total, j.today);
       loadList();   // 保持当前 tab 的明细刷新
     })
     .catch(function(e){ toast('加载失败：' + e.message); });
 }
 
-function renderTabs(total, today, pages){
+function renderTabs(total, today){
   var el = document.getElementById('tabs');
   var html = '';
-  // 「全部」Tab
-  html += '<div class="tab' + (curPage === 'all' ? ' active' : '') + '" data-page="all" onclick="switchPage(\'all\')">' +
+  html += '<div class="tab' + (curPage === 'all' ? ' active' : '') + '" onclick="switchPage(\'all\')">' +
           '全部 <span class="badge t">今 ' + fmtCount(today) + '</span><span class="badge">' + fmtCount(total) + '</span></div>';
-  pages.forEach(function(p){
-    var code = p.page;
+  CHANNELS.forEach(function(c){
+    var code = c.channel;
     var cls = curPage === code ? ' active' : '';
-    html += '<div class="tab' + cls + '" data-page="' + esc(code) + '" onclick="switchPage(\'' + esc(code) + '\')">' +
-            esc(label(code)) + '<span class="code">' + esc(code || 'none') + '</span>' +
-            '<span class="badge t">今 ' + fmtCount(p.today) + '</span><span class="badge">' + fmtCount(p.total) + '</span></div>';
+    html += '<div class="tab' + cls + '" onclick="switchPage(\'' + esc(code) + '\')">' +
+            esc(c.label || label(code)) + '<span class="code">' + esc(code || 'none') + '</span>' +
+            '<span class="badge t">今 ' + fmtCount(c.today) + '</span><span class="badge">' + fmtCount(c.total) + '</span></div>';
   });
   el.innerHTML = html;
   updateCurTitle();
 }
 
+function kindOf(code){
+  if(code === 'all') return 'all';
+  var hit = CHANNELS.filter(function(c){ return c.channel === code; })[0];
+  return (hit && hit.kind) ? hit.kind : 'form';
+}
+
 function switchPage(code){
   curPage = code;
+  curKind = kindOf(code);
   all = [];
+  renderHead();
   render();
   loadOverview();      // 重新拉徽标并触发 loadList（保持新 tab）
 }
 
 function updateCurTitle(){
-  var el = document.getElementById('cur');
-  var name = curPage === 'all' ? '全部项目' : label(curPage) + '（' + (curPage || '未标注') + '）';
-  el.innerHTML = '当前查看：<b>' + esc(name) + '</b>';
+  var name = curPage === 'all' ? '全部渠道' : label(curPage) + '（' + (curPage || '未标注') + '）';
+  document.getElementById('cur').innerHTML = '当前查看：<b>' + esc(name) + '</b>';
   var exp = document.getElementById('btnExport');
-  exp.setAttribute('href', '/api/forms/export' + (curPage === 'all' ? '' : '?page=' + encodeURIComponent(curPage)));
+  exp.setAttribute('href', '/api/collect/export' + (curPage === 'all' ? '' : '?channel=' + encodeURIComponent(curPage)));
+}
+
+function renderHead(){
+  var cols = COLS[curKind] || COLS.form;
+  var html = '<tr>' + cols.map(function(c){ return '<th>' + esc(c.t) + '</th>'; }).join('') + '<th>操作</th></tr>';
+  document.getElementById('th').innerHTML = html;
 }
 
 function loadList(){
-  var url = '/api/forms/list?limit=2000';
-  if(curPage !== 'all') url += '&page=' + encodeURIComponent(curPage);
+  curKind = kindOf(curPage);
+  var url = '/api/collect/list?channel=' + encodeURIComponent(curPage);
   fetch(url)
     .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(j){
       if(!j.ok) throw new Error(j.error || '加载失败');
       all = j.data || [];
-      var name = curPage === 'all' ? '全部项目' : label(curPage) + '（' + (curPage || '未标注') + '）';
+      var name = curPage === 'all' ? '全部渠道' : label(curPage) + '（' + (curPage || '未标注') + '）';
       document.getElementById('cur').innerHTML = '当前查看：<b>' + esc(name) + '</b> · 共 <b>' + fmtCount(j.total) + '</b> 条（今日 ' + fmtCount(j.today) + '）';
+      renderHead();
       render();
     })
     .catch(function(e){ toast('加载失败：' + e.message); });
@@ -178,32 +218,34 @@ function render(){
   var kw = (document.getElementById('kw').value || '').trim().toLowerCase();
   var rows = all.filter(function(r){
     if(!kw) return true;
-    return [r.name, r.phone, r.school, r.major].some(function(v){
-      return String(v || '').toLowerCase().indexOf(kw) >= 0;
+    return [r.name, r.phone, r.school, r.major, r.grade, r.channel_label].some(function(v){
+      return String(v == null ? '' : v).toLowerCase().indexOf(kw) >= 0;
     });
   });
   document.getElementById('empty').style.display = rows.length ? 'none' : 'block';
+  var cols = COLS[curKind] || COLS.form;
   document.getElementById('tb').innerHTML = rows.map(function(r){
-    var none = r.page ? '' : ' none';
-    return '<tr>' +
-      '<td>' + r.id + '</td>' +
-      '<td>' + esc(r.created_at) + '</td>' +
-      '<td>' + esc(r.name) + '</td>' +
-      '<td class="phone">' + esc(r.phone) + '</td>' +
-      '<td>' + esc(r.school) + '</td>' +
-      '<td>' + esc(r.major) + '</td>' +
-      '<td><span class="tag' + none + '">' + esc(label(r.page)) + '</span></td>' +
-      '<td><button class="del" onclick="del(' + r.id + ')">删除</button></td>' +
+    var tds = cols.map(function(c){
+      var v = r[c.k];
+      var txt = (v == null || v === '') ? (c.k === 'score' ? '—' : '') : esc(v);
+      if(c.tag){
+        var none = v ? '' : ' none';
+        return '<td><span class="tag' + none + '">' + esc(v || '未标注') + '</span></td>';
+      }
+      return '<td' + (c.cls ? ' class="' + c.cls + '"' : '') + '>' + txt + '</td>';
+    }).join('');
+    return '<tr>' + tds +
+      '<td><button class="del" onclick="del(' + r.id + ',\'' + (r.source || 'form') + '\')">删除</button></td>' +
     '</tr>';
   }).join('');
 }
 
-function del(id){
-  if(!confirm('确认删除 ID=' + id + ' 这条记录？此操作不可恢复。')) return;
-  fetch('/api/forms/delete', {
+function del(id, source){
+  if(!confirm('确认删除 渠道「' + (source === 'match' ? '匹配工具' : source === 'exam' ? '模考' : '表单') + '」 ID=' + id + ' 这条记录？此操作不可恢复。')) return;
+  fetch('/api/collect/delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: id })
+    body: JSON.stringify({ id: id, source: source || 'form' })
   })
   .then(function(r){ return r.json(); })
   .then(function(j){
@@ -212,6 +254,7 @@ function del(id){
   .catch(function(){ toast('删除失败，请重试'); });
 }
 document.getElementById('kw').addEventListener('input', render);
+renderHead();
 loadOverview();
 </script>
 </body>
