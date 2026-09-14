@@ -517,6 +517,48 @@ function toast(msg, type) {
   setTimeout(() => t.remove(), 2500);
 }
 
+// 读取接口返回的错误信息：detail 可能是字符串、数组（Pydantic 校验）或对象。
+// 以前直接 String(detail) 会显示成 "[object Object]"，看不出到底哪填错了。
+const FIELD_CN = {
+  live_date: "直播日期", platform: "平台", account: "账号", title: "直播主题",
+  duration_min: "时长（分钟）", viewers: "观看人次", peak_online: "峰值在线",
+  engagement: "互动量", new_followers: "新增粉丝", leads_count: "留资线索", note: "备注",
+  impressions: "曝光量", likes: "点赞", comments: "评论", shares: "分享",
+  bookmarks: "收藏", completion_rate: "完播率", reads: "阅读量", plays: "播放量",
+  note_reads: "笔记阅读量", followers: "粉丝数", publish_count: "发布数",
+  ad_spend: "投放费用", conversion_count: "转化数", amount: "金额",
+  year: "年份", month: "月份", date: "日期", week: "周次", name: "姓名",
+  phone: "手机号", school: "学校", grade: "年级", channel: "渠道", source: "来源",
+};
+function apiErrMsg(j, fallback) {
+  fallback = fallback || "提交失败";
+  if (!j) return fallback;
+  const d = j.detail !== undefined ? j.detail : j.error;
+  if (typeof d === "string" && d.trim()) return d;
+  if (Array.isArray(d)) {
+    const parts = d.map(x => {
+      const loc = (x.loc || []).filter(k => k !== "body" && k !== "query");
+      const f = loc.length ? loc[loc.length - 1] : "";
+      const label = FIELD_CN[f] || f || "提交内容";
+      const msg = (x.msg || "").replace("Value error, ", "");
+      if (x.type === "missing") return `「${label}」未填写`;
+      return `「${label}」${msg || "填写有误"}`;
+    });
+    const uniq = Array.from(new Set(parts.filter(Boolean)));
+    if (uniq.length) return uniq.join("；");
+  }
+  if (d && typeof d === "object") { try { return JSON.stringify(d); } catch (e) { /* ignore */ } }
+  return fallback;
+}
+
+// 数值输入统一取非负整数（浏览器 number 框允许输入 81.8 这类小数）
+function numOr0(sel) {
+  const el = typeof sel === "string" ? $qs(sel) : sel;
+  if (!el) return 0;
+  const v = Math.round(Number(String(el.value).trim().replace(/,/g, "")));
+  return Number.isFinite(v) && v > 0 ? v : 0;
+}
+
 // ---------- Form Validation (P1) ----------
 function validateForm(modalId, requiredFields) {
   let valid = true;
@@ -2627,7 +2669,7 @@ async function uploadLeadsFile(input) {
       toast(`导入成功: ${result.imported} 条新增, 清除 ${result.deleted} 条旧数据`, "success");
       loadLeads();
     } else {
-      const errMsg = result.error || result.detail?.[0]?.msg || "未知错误";
+      const errMsg = result.error || apiErrMsg(result, "未知错误");
       toast("上传失败: " + errMsg, "error", 8000);
       console.error("Upload error:", result);
     }
@@ -3071,12 +3113,12 @@ async function saveLive(modalId, id) {
     platform: $qs("#lv-plat").value,
     account: $qs("#lv-acct").value.trim(),
     title: $qs("#lv-title").value.trim(),
-    duration_min: +($qs("#lv-dur").value) || 0,
-    viewers: +($qs("#lv-viewers").value) || 0,
-    peak_online: +($qs("#lv-peak").value) || 0,
-    engagement: +($qs("#lv-eng").value) || 0,
-    new_followers: +($qs("#lv-newf").value) || 0,
-    leads_count: +($qs("#lv-leads").value) || 0,
+    duration_min: numOr0("#lv-dur"),
+    viewers: numOr0("#lv-viewers"),
+    peak_online: numOr0("#lv-peak"),
+    engagement: numOr0("#lv-eng"),
+    new_followers: numOr0("#lv-newf"),
+    leads_count: numOr0("#lv-leads"),
     note: $qs("#lv-note").value.trim(),
   };
   try {
@@ -3086,18 +3128,18 @@ async function saveLive(modalId, id) {
       body: JSON.stringify(body),
     });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok || j.ok === false) throw new Error(j.detail || "保存失败");
+    if (!r.ok || j.ok === false) throw new Error(apiErrMsg(j, "保存失败"));
     closeModal(modalId);
     toast(id ? "直播记录已更新" : "直播已录入", "success");
     loadLive();
-  } catch(e) { toast("保存失败：" + e.message, "error"); }
+  } catch(e) { toast("保存失败：" + (e && e.message ? e.message : "未知错误"), "error"); }
 }
 
 async function deleteLive(id) {
   if (!confirm("确定删除这条直播记录吗？")) return;
   const r = await fetch(API + `/live/${id}`, { method: "DELETE" });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok || j.ok === false) { toast("删除失败", "error"); return; }
+  if (!r.ok || j.ok === false) { toast("删除失败：" + apiErrMsg(j, "请稍后重试"), "error"); return; }
   toast("直播记录已删除", "success");
   loadLive();
 }

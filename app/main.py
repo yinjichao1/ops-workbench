@@ -2,6 +2,7 @@
 
 import os
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -79,6 +80,88 @@ app.add_middleware(
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"error": str(exc)[:200]})
+
+
+# 字段中文名（用于 422 提示，让用户看得懂到底哪一栏填错了）。
+# 通用名保持中性，避免不同模块同名不同义（如 tasks.title 与 live.title）。
+FIELD_LABELS = {
+    "live_date": "直播日期", "platform": "平台", "account": "账号",
+    "duration_min": "时长（分钟）", "viewers": "观看人次", "peak_online": "峰值在线",
+    "engagement": "互动量", "new_followers": "新增粉丝", "leads_count": "留资线索",
+    "impressions": "曝光量", "likes": "点赞", "comments": "评论",
+    "shares": "分享", "bookmarks": "收藏", "completion_rate": "完播率", "reads": "阅读量",
+    "plays": "播放量", "note_reads": "笔记阅读量", "followers": "粉丝数",
+    "publish_count": "发布数", "ad_spend": "投放费用",
+    "conversion_count": "转化数", "is_viral": "是否爆款", "is_promoted": "是否投流",
+    "promote_amount": "投流金额", "target_new_followers": "目标新增粉丝",
+    "target_plays_reads": "目标播放/阅读", "target_publish_count": "目标发布数",
+    "target_engagement": "目标互动量", "amount": "金额", "year": "年份", "month": "月份",
+    "date": "日期", "week": "周次", "start_date": "开始日期", "end_date": "结束日期",
+    "phone": "手机号", "school": "学校", "grade": "年级",
+    "channel": "渠道", "source": "来源", "report_type": "报表类型", "status": "状态",
+    # 中性兜底
+    "title": "标题", "name": "名称", "note": "备注", "desc": "说明", "content": "内容",
+    "url": "链接", "file": "文件", "id": "编号", "ids": "编号",
+}
+
+# 模块专属名称（按路径前缀命中，优先级高于通用名）
+SCOPED_LABELS = {
+    "/api/live": {"title": "直播主题", "note": "备注", "account": "账号"},
+    "/api/tasks": {"title": "任务标题", "desc": "任务说明", "due_date": "截止日期"},
+    "/api/topics": {"title": "选题标题", "note": "备注"},
+    "/api/content": {"title": "内容标题"},
+    "/api/leads": {"amount": "成交金额", "intent": "意向等级"},
+}
+
+_ERR_CN = {
+    "missing": "未填写",
+    "int_from_float": "需要整数（不要填小数）",
+    "int_parsing": "需要数字",
+    "float_parsing": "需要数字",
+    "string_type": "需要文本",
+    "date_from_datetime_parsing": "日期格式不对",
+    "date_parsing": "日期格式不对",
+    "datetime_parsing": "时间格式不对",
+    "list_type": "需要是列表",
+    "dict_type": "格式不对",
+}
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """把 FastAPI 的英文校验错误转成一句看得懂的中文，并让 detail 保持为字符串。"""
+    path = request.url.path
+    scope = next((v for k, v in SCOPED_LABELS.items() if path.startswith(k)), {})
+
+    msgs = []
+    for err in exc.errors():
+        etype = err.get("type", "")
+        if etype == "json_invalid":
+            msgs.append("提交的数据格式不对，请刷新页面后重试")
+            continue
+        loc = [str(x) for x in (err.get("loc") or []) if x not in ("body", "query", "path")]
+        field = ".".join(loc) or "提交内容"
+        # 自定义校验器（如 live 的数字校验）已经给了中文原文，直接用
+        if etype == "value_error":
+            raw = (err.get("msg") or "").replace("Value error, ", "").strip()
+            msgs.append(raw or f"{field} 填写有误")
+            continue
+        key = field.split(".")[-1]
+        label = scope.get(key) or FIELD_LABELS.get(key) or field
+        if etype == "missing":
+            msgs.append(f"「{label}」未填写")
+            continue
+        reason = _ERR_CN.get(etype)
+        if not reason:
+            if etype.startswith("int_") or etype.startswith("float_"):
+                reason = "需要填写数字（可填小数）"
+            elif etype.startswith("string_too"):
+                reason = "长度不符合要求"
+            else:
+                reason = "填写有误"
+        msgs.append(f"「{label}」{reason}")
+    detail = "；".join(dict.fromkeys(msgs)) or "提交内容格式有误"
+    return JSONResponse(status_code=422, content={"detail": detail})
 
 # Mount static files
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
