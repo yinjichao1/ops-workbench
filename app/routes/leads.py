@@ -22,6 +22,24 @@ def _last_week_range(today: date):
     return last_mon, last_mon + timedelta(days=6)  # 确保匹配
 
 
+def parse_week_start(week_val: str) -> date | None:
+    """周次入参兼容两种格式：
+    - ISO 周（前端 <input type="week"> 原生格式）："2026-W37" → 该周周一
+    - 日期："2026-09-07" → 当天
+    解析失败返回 None（调用方保留默认周期）。
+    """
+    if not week_val:
+        return None
+    s = week_val.strip()
+    try:
+        if "-W" in s.upper():
+            y, wk = s.upper().split("-W")
+            return date.fromisocalendar(int(y), int(wk), 1)  # 周一
+        return date.fromisoformat(s)
+    except Exception:  # noqa: BLE001
+        return None
+
+
 @router.delete("/leads/clear")
 def clear_leads(db: SqlSession = Depends(get_db)):
     """清空所有线索数据。"""
@@ -156,12 +174,11 @@ def leads_summary(
         start = date(year_val, 1, 1)
         end = date(year_val, 12, 31)
     elif week_val:
-        start = date.fromisoformat(week_val)
+        start = parse_week_start(week_val) or _last_week_range(today)[0]
         end = start + timedelta(days=6)
     else:
+        # 默认上周（与前端"每周一录入上周数据"的默认周次保持一致）
         start, end = _last_week_range(today)
-        start = start - timedelta(days=7)
-        end = end - timedelta(days=7)
 
     rows = db.query(Lead).filter(Lead.date >= start, Lead.date <= end).all()
     total = len(rows)
@@ -487,12 +504,12 @@ async def upload_leads(
         start = date(year_val, 1, 1)
         end = date(year_val, 12, 31)
     elif week_val:
-        start = date.fromisoformat(week_val)
+        # 兼容 ISO 周（2026-W37）与日期（2026-09-07）两种入参
+        start = parse_week_start(week_val) or _last_week_range(date.today())[0]
         end = start + timedelta(days=6)
     else:
-        # 默认本周
-        start = date.today()
-        end = start + timedelta(days=6)
+        # 默认上周
+        start, end = _last_week_range(date.today())
 
     deleted = db.query(Lead).filter(Lead.date >= start, Lead.date <= end).delete()
     db.commit()
@@ -506,7 +523,7 @@ async def upload_leads(
             if hasattr(date_val, "strftime"):
                 date_str = date_val.strftime("%Y-%m-%d")
             elif week_val:
-                date_str = week_val  # 按周上传，无日期用周一
+                date_str = start.isoformat()  # 按周上传且表内无日期列 → 统一落到该周周一
             else:
                 date_str = str(date_val or "")
 

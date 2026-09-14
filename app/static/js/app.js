@@ -57,7 +57,8 @@ function switchDashtab(el, tab) {
   }
   if (tab === "leads") {
     const wi = $qs("#leads-week");
-    if (wi && !wi.value) wi.value = getLastWeek();
+    // type=week 输入框只接受 ISO 周格式（2026-W37），默认上周
+    if (wi && !wi.value) wi.value = dateToIsoWeek(getLastWeek());
     const yr = $qs("#leads-year");
     if (yr && !yr.value) yr.value = new Date().getFullYear();
     const mn = $qs("#leads-month");
@@ -2609,7 +2610,7 @@ async function uploadLeadsFile(input) {
   const file = input.files[0]; if (!file) return;
   const mode = $qs("#leads-mode")?.value || "week";
   let week = "", month = "", year = 0;
-  if (mode === "week") week = $qs("#leads-week")?.value || getLastWeek();
+  if (mode === "week") week = $qs("#leads-week")?.value || dateToIsoWeek(getLastWeek());
   else if (mode === "month") month = $qs("#leads-month")?.value || getPreviousMonthValue();
   else if (mode === "year") {
     const yv = parseInt($qs("#leads-year")?.value);
@@ -2654,8 +2655,8 @@ async function loadLeads() {
   const mode = $qs("#leads-mode")?.value || "week";
   toggleMonthAccumBlock(mode);
   let week = "", month = "", year = 0;
-  if (mode === "week") week = $qs("#leads-week")?.value || getCurrentWeekDate();
-  else if (mode === "month") month = $qs("#leads-month")?.value || getCurrentMonthValue();
+  if (mode === "week") week = $qs("#leads-week")?.value || dateToIsoWeek(getLastWeek());
+  else if (mode === "month") month = $qs("#leads-month")?.value || getPreviousMonthValue();
   else if (mode === "year") {
     const yv = parseInt($qs("#leads-year")?.value);
     year = (yv >= 2020 && yv <= 2030) ? yv : new Date().getFullYear();
