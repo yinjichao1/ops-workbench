@@ -8,3 +8,9 @@ seed.json
 /tmp/
 deploy/
 .DS_Store
+
+# 数据备份（含手机号等个人信息，禁止入库/上传 GitHub）
+backups/
+*_backup_*.json
+*_backup_*.csv
+*_backup_*.sql
