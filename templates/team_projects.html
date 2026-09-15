@@ -53,7 +53,7 @@
     <div class="t">
       <a class="back" href="/">← 返回运营工作台</a>
       <h1>团队项目</h1>
-      <div class="sub">集中承接面向学员 / 员工的线上项目入口与数据管理。当前已接入：<b>919 模考排位赛</b>报名数据管理、<b>思格模考</b>系统入口、<b>央国企匹配工具</b>。数据管理类项目点击卡片在本页查看；学员入口类项目点击卡片新标签打开。</div>
+      <div class="sub">集中承接面向学员 / 员工的线上项目入口与数据管理。当前已接入：<b>919 模考排位赛</b>报名数据管理、<b>思格模考</b>系统入口、<b>央国企匹配工具</b>、<b>央国企备考列车时间线</b>。数据管理类项目点击卡片在本页查看；学员入口类项目点击卡片新标签打开。</div>
       <div class="meta">
         <span class="chip">认证范围：<b>工作台账号（Basic Auth）</b></span>
         <span class="chip">接入项目：<b id="cnt">0</b></span>
@@ -107,6 +107,17 @@ var PROJECTS = [
     code: 'match',
     desc: '央国企岗位匹配工具：学员填写信息后匹配适合的央国企报考方向，可作为引流与线索收集触点。',
     href: '/match/',
+    blank: true,
+    status: '运行中',
+    statusOff: false,
+    meta: '学员入口 · 新标签打开'
+  },
+  {
+    id: 'timeline28',
+    name: '央国企备考列车时间线',
+    code: 'timeline28',
+    desc: '28届电力备考时间线（国网 / 南网 / 蒙西 / 电力央国企）：以「列车」形式串联 2026.09 → 2028.06 完整备考周期，含班型对比与二维码分享，适合移动端扫码给学员。',
+    href: '/timeline/',
     blank: true,
     status: '运行中',
     statusOff: false,
