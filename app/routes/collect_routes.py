@@ -9,9 +9,15 @@
 | 概念 | 字段 | 取值 | 含义 |
 |---|---|---|---|
 | **收集入口** | `channel` | `match` / `exam` / `timeline28` … | 线索从哪个**页面/工具**收集来的 |
-| **投放渠道** | `platform` | `douyin` / `shipinhao` / `gzh` / `xhs` … | 线索从哪个**平台**来的（入口链接 `?ch=` 参数） |
+| **投放渠道** | `platform` | `douyin` / `xhs` / `liaoning` / `919` … | 线索从哪个**来路**（入口链接 `?ch=` 参数） |
 口语上都被叫"渠道"，但在代码与 UI 里必须分开命名。投放渠道目前**只有匹配工具（match）有**，
 其余入口的历史与现有记录一律为「未标注」。
+
+投放渠道 `platform` 是一个**自由维度**，不限于"平台"，也可以是**地域**（`liaoning` 辽宁省）
+或**活动**（`919`）：发一条带对应 `?ch=` 的专属链接即可，未登记的代号不会被丢弃。
+管理页筛选条上的可选项来自
+`match_routes.PLATFORM_ACTIVE`（常驻，0 条也显示）∪ 实际分布（含自定义代号）——
+由 `match_routes.platform_options()` 合并，见本模块 `overview()` 的 `platform_options` 字段。
 
 端点：
 - GET /api/collect/overview   统一总览：各渠道今日/累计计数 + 匹配工具的投放渠道分布
@@ -33,7 +39,7 @@ from sqlalchemy.orm import Session as SqlSession
 
 from ..models import get_db, ExamSignup, FormSubmission, MatchLead
 # 投放渠道的中文名与规范化只维护一份（在 match_routes 里），此处直接复用
-from .match_routes import platform_label, norm_platform
+from .match_routes import platform_label, platform_options, norm_platform
 
 router = APIRouter()
 
@@ -125,6 +131,14 @@ def collect_overview(db: SqlSession = Depends(get_db)):
          "total": int(n or 0), "today": int(t or 0)}
         for c, n, t in match_plat_rows
     ]
+    # 管理页筛选条专用：常驻渠道清单（0 条也返回）+ 实际分布里的自定义代号。
+    # 与上面的 match_platforms 分工：
+    #   platforms         = 纯分布，只有"有数据"的渠道（用于统计/画图）
+    #   platform_options  = 待展示渠道，含已配置但暂无数据的（用于筛选条，见 platform_options()）
+    match_plat_counts = {
+        (c or ""): {"total": int(n or 0), "today": int(t or 0)}
+        for c, n, t in match_plat_rows
+    }
     channels.append(
         {
             "channel": MATCH_CHANNEL,
@@ -133,6 +147,7 @@ def collect_overview(db: SqlSession = Depends(get_db)):
             "total": int(match_total),
             "today": int(match_today),
             "platforms": match_platforms,
+            "platform_options": platform_options(match_plat_counts),
         }
     )
 

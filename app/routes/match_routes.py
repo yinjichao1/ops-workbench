@@ -28,9 +28,17 @@ PHONE_RE = re.compile(r"^1[3-9]\d{9}$")
 DEGREE_LABEL = {2: "大专", 3: "本科", 4: "硕士", 5: "博士"}
 
 # ── 投放渠道（platform）─────────────────────────────────────────────
-# ⚠️ 命名约定：本模块的 platform = **投放平台**（线索从哪个平台来）；
+# ⚠️ 命名约定：本模块的 platform = **线索从哪来**（投放渠道）；
 #    collect_routes 里的 channel = **收集入口**（form / match / exam）。
 #    两者都常被口语称作"渠道"，但语义不同，代码里不要混用。
+#
+# platform 是一个**自由维度**：不限于"平台"，也能承载"地域""活动"这类切分方式。
+#   平台：?ch=douyin / ?ch=xhs
+#   地域：?ch=liaoning（辽宁校区）/ ?ch=jilin（吉林校区）/ ?ch=heilongjiang（黑龙江校区）
+#   活动：?ch=919
+# 想要什么维度就发一条对应 ?ch= 的专属链接，一个链接一个值，互不干扰。
+# 未登记的代号**不丢弃**（见 norm_platform），所以新维度随时能先用起来，
+# 之后再来这里补一行中文名即可（不影响已落库的数据）。
 #
 # 各投放渠道发专属链接：https://sigedianwang.cn/match/?ch=douyin
 # 运营手打链接时写中文也能认（下面 ALIAS 兜底），避免"发错链接导致渠道全空"。
@@ -44,6 +52,10 @@ PLATFORM_LABELS = {
     "ditui": "线下地推",
     "zhuanjie": "转介绍",
     "ziran": "自然流量",
+    # 地域维度：黑吉辽三地校区各发一条专属链接，各地来量分开看
+    "liaoning": "辽宁校区",
+    "jilin": "吉林校区",
+    "heilongjiang": "黑龙江校区",
 }
 PLATFORM_ALIAS = {
     "抖音": "douyin",
@@ -55,7 +67,27 @@ PLATFORM_ALIAS = {
     "地推": "ditui", "线下地推": "ditui",
     "转介绍": "zhuanjie", "老带新": "zhuanjie",
     "自然流量": "ziran",
+    # 中文别名（含"省"和不含"省"两种写法），手打链接也能认
+    "辽宁省": "liaoning", "辽宁": "liaoning", "辽宁校区": "liaoning",
+    "吉林省": "jilin", "吉林": "jilin", "吉林校区": "jilin",
+    "黑龙江省": "heilongjiang", "黑龙江": "heilongjiang", "黑龙江校区": "heilongjiang",
 }
+
+# 常驻渠道清单 —— 已发过物料/链接的渠道。
+# 这些渠道在管理页筛选条上**常驻显示**（哪怕暂时 0 条），作用有两个：
+#   ① 运营能分清"这个渠道没配置"和"配置了但还没人扫码"（后者点击会看到 0 条）
+#   ② 新渠道上线后可以直接盯着它有没有起量，不用等第一条线索进来才看得见
+# 新加渠道时的动作：登记 PLATFORM_LABELS + PLATFORM_ALIAS → 决定是否加进这里
+# → 用 build/gen_qr.py 出码。**加进来不影响任何已有数据**（0 条也是合法状态）。
+PLATFORM_ACTIVE = [
+    "douyin",
+    "shipinhao",
+    "gzh",
+    "xhs",
+    "liaoning",
+    "jilin",
+    "heilongjiang",
+]
 _PLATFORM_BAD = re.compile(r"[^a-z0-9_-]")
 
 
@@ -85,6 +117,45 @@ def platform_label(code: str) -> str:
     if not code:
         return "未标注"
     return PLATFORM_LABELS.get(code, code)
+
+
+def platform_options(counts: dict) -> list:
+    """把「常驻渠道清单」和「实际分布」合并成管理页筛选用的一份渠道选项。
+
+    入参 counts: {代号: {"total": n, "today": n}}（来自 GROUP BY platform 的实际分布）
+
+    规则（顺序即管理页上胶囊的排列顺序）：
+    1. 先按 PLATFORM_ACTIVE 登记顺序输出**常驻渠道**，没有数据也输出（total=0），
+       标记 preset=True —— 前端据此弱化显示但**仍然可点**。
+    2. 再把分布里出现、但不在常驻清单里的**自定义代号**（如活动用的 ?ch=919）
+       追加在后，按线索数倒序，标记 preset=False，保证临时渠道的数据不会"隐身"。
+    3. 空代号（未标注）不在这里返回，由前端单独出一个「未标注」胶囊。
+    """
+    out: list = []
+    seen = set()
+    for code in PLATFORM_ACTIVE:
+        if code in seen:
+            continue
+        seen.add(code)
+        c = counts.get(code) or {}
+        out.append({
+            "code": code,
+            "label": platform_label(code),
+            "total": int(c.get("total") or 0),
+            "today": int(c.get("today") or 0),
+            "preset": True,
+        })
+    extra = [(k, v) for k, v in counts.items() if k and k not in seen]
+    extra.sort(key=lambda kv: (-int(kv[1].get("total") or 0), kv[0]))
+    for code, c in extra:
+        out.append({
+            "code": code,
+            "label": platform_label(code),
+            "total": int(c.get("total") or 0),
+            "today": int(c.get("today") or 0),
+            "preset": False,
+        })
+    return out
 
 
 # ── 简易内存限流（同 IP 10 分钟最多 5 次） ──

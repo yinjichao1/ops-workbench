@@ -57,6 +57,9 @@
   .pchip{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:4px 12px;font-size:12px;cursor:pointer;color:var(--ink-soft);white-space:nowrap}
   .pchip:hover{border-color:var(--primary);color:var(--primary)}
   .pchip.on{background:var(--primary);border-color:var(--primary);color:#fff}
+  /* 已配置但暂无数据：虚线 + 半透明，告诉运营"渠道在，只是还没起量"，仍可点击 */
+  .pchip.off{opacity:.5;border-style:dashed}
+  .pchip.off:hover{opacity:1}
   .pchip i{font-style:normal;opacity:.65;font-size:11px;margin-left:3px}
   .pchip.on i{opacity:.85}
   code{background:#f1f2f5;border-radius:4px;padding:1px 5px;font-size:11px}
@@ -67,7 +70,7 @@
   <div class="top">
     <div>
       <h1>线索收集 · 按项目分类</h1>
-      <div class="sub">各落地页 / 活动 / 工具共用统一线索视图，按 <b>收集入口</b> 分 Tab 查看与导出，互不混淆。当前入口：表单落地页项目、<b>匹配工具线索收集</b>、<b>模考线索收集</b>。<br>匹配工具还多一维 <b>投放渠道</b>（抖音 / 视频号 / 公众号 / 小红书…）：各平台发专属链接（<code>?ch=代号</code>）即自动打标，切到该 Tab 后用下方渠道条筛选。</div>
+      <div class="sub">各落地页 / 活动 / 工具共用统一线索视图，按 <b>收集入口</b> 分 Tab 查看与导出，互不混淆。当前入口：表单落地页项目、<b>匹配工具线索收集</b>、<b>模考线索收集</b>。<br>匹配工具还多一维 <b>投放渠道</b>（哪个平台 / 哪个校区 / 哪场活动来的）：发一条专属链接（<code>?ch=代号</code>）即自动打标，切到该 Tab 后用下方渠道条筛选。已配置但暂无数据的渠道会以<span style="opacity:.6">浅灰虚线</span>显示，点开可确认「确实还没起量」。</div>
     </div>
     <div class="stats">
       <div class="stat"><b id="stToday">-</b><span>今日全部</span></div>
@@ -95,8 +98,9 @@
     <div class="empty" id="empty" style="display:none">当前筛选下暂无数据</div>
   </div>
   <div class="hint">
-    使用提示：<b>收集入口</b>（上方 Tab）＝线索从哪个页面/工具收的；<b>投放渠道</b>（匹配工具 Tab 下的渠道条）＝线索从哪个平台来的。<br>
-    各平台发专属链接即可自动打标：抖音 <code>…/match/?ch=douyin</code>、视频号 <code>?ch=shipinhao</code>、公众号 <code>?ch=gzh</code>、小红书 <code>?ch=xhs</code>（中文也认，如 <code>?ch=抖音</code>）。没带参数的访问与历史数据归入「未标注」。<br>
+    使用提示：<b>收集入口</b>（上方 Tab）＝线索从哪个页面/工具收的；<b>投放渠道</b>（匹配工具 Tab 下的渠道条）＝线索从哪个来路（平台 / 校区 / 活动）。<br>
+    发一条专属链接即可自动打标：抖音 <code>…/match/?ch=douyin</code>、视频号 <code>?ch=shipinhao</code>、公众号 <code>?ch=gzh</code>、小红书 <code>?ch=xhs</code>、辽宁校区 <code>?ch=liaoning</code>、吉林校区 <code>?ch=jilin</code>、黑龙江校区 <code>?ch=heilongjiang</code>（中文也认，如 <code>?ch=抖音</code>、<code>?ch=辽宁校区</code>）。没带参数的访问与历史数据归入「未标注」。<br>
+    渠道条里<b>浅灰虚线</b>的＝已配置但还没有线索（点开可确认），有量后自动变实。<br>
     「导出当前渠道 CSV」按当前 Tab + 当前投放渠道筛选导出（各入口列结构不同）；删除只对当前入口的记录生效。
   </div>
 </div>
@@ -135,7 +139,9 @@ var COLS = {
   ]
 };
 var CHANNELS = [];         // overview 返回的渠道列表
-var MATCH_PLATS = [];      // 匹配工具的投放渠道分布（overview → channels[match].platforms）
+var MATCH_PLATS = [];      // 匹配工具的投放渠道**实际分布**（overview → channels[match].platforms）
+var PLAT_OPTIONS = [];     // 匹配工具的**待展示渠道**（overview → channels[match].platform_options）
+                           // = 常驻渠道清单（含 0 条）+ 分布里的自定义代号；筛选条以它为准
 var curPage = 'all';       // all 或具体渠道代号
 var curKind = 'all';       // 当前渠道类型（决定列）
 var curPlat = '';          // 投放渠道筛选：'' 全部 / 代号 / 'none' 未标注
@@ -167,6 +173,8 @@ function loadOverview(){
       CHANNELS = j.channels || [];
       var m = CHANNELS.filter(function(c){ return c.channel === 'match'; })[0];
       MATCH_PLATS = (m && m.platforms) || [];
+      // 老版本后端没有 platform_options 字段 → 退回纯分布（至少不报错、不丢现有胶囊）
+      PLAT_OPTIONS = (m && m.platform_options) || MATCH_PLATS;
       renderTabs(j.total, j.today);
       renderPlats();
       loadList();   // 保持当前 tab 的明细刷新
@@ -207,11 +215,13 @@ function switchPage(code){
   loadOverview();      // 重新拉徽标并触发 loadList（保持新 tab）
 }
 
-// 投放渠道代号 → 中文名（用 overview 返回的分布表，避免前端再维护一份映射）
+// 投放渠道代号 → 中文名（用 overview 返回的表，避免前端再维护一份映射）
+// 先查 PLAT_OPTIONS（含常驻渠道，0 条也在，能查出「辽宁省」这类名字），再退回实际分布
 function platLabel(v){
   if(!v) return '';
   if(v === 'none') return '未标注';
-  var hit = MATCH_PLATS.filter(function(p){ return (p.code || '') === v; })[0];
+  var pool = PLAT_OPTIONS.concat(MATCH_PLATS);
+  var hit = pool.filter(function(p){ return (p.code || '') === v; })[0];
   return (hit && hit.label) || v;
 }
 
@@ -230,6 +240,13 @@ function updateCurTitle(){
 }
 
 // 投放渠道筛选条：只在匹配工具 Tab 出现（其他入口没有 ?ch= 打标这一维）
+//
+// 选项 = 后端 platform_options（常驻渠道清单 ∪ 实际分布），这样：
+//   · 已发过链接但还没人扫码的渠道（如刚加的「辽宁省」）也会出现 → 能点开确认"确实 0 条"，
+//     而不是让人以为"渠道没配上"；也便于新渠道上线后盯着它有没有起量
+//   · 临时自定义代号（?ch=919 之类）只要有数据就会自动出现，不会隐身
+//   · 0 条的胶囊用虚线弱化（.off），一眼区分"还没起量"和"有量"
+// 「未标注」（空代号）不在常驻清单里，只要存在历史无渠道数据就单独补一个入口。
 function renderPlats(){
   var el = document.getElementById('plats');
   if(curKind !== 'match'){
@@ -238,13 +255,20 @@ function renderPlats(){
     return;
   }
   el.style.display = 'flex';
-  var sum = MATCH_PLATS.reduce(function(s, p){ return s + (p.total || 0); }, 0);
+
+  var opts = PLAT_OPTIONS.slice();
+  var un = MATCH_PLATS.filter(function(p){ return !(p.code || ''); })[0];
+  if(un) opts.push({ code: '', label: '未标注', total: un.total, today: un.today });
+
+  var sum = opts.reduce(function(s, p){ return s + (p.total || 0); }, 0);
   var html = '<span class="plabel">投放渠道</span>';
   html += '<span class="pchip' + (curPlat ? '' : ' on') + '" onclick="setPlat(\'\')">全部<i>' + fmtCount(sum) + '</i></span>';
-  MATCH_PLATS.forEach(function(p){
+  opts.forEach(function(p){
     var code = p.code || '';
     var val = code || 'none';                     // 空代号 → none，对应后端「未标注」特殊值
-    html += '<span class="pchip' + (curPlat === val ? ' on' : '') + '" onclick="setPlat(\'' + esc(val) + '\')">' +
+    var cls = 'pchip' + (curPlat === val ? ' on' : '') + (p.total ? '' : ' off');
+    var tip = p.total ? '' : ' title="已配置，暂无线索"';
+    html += '<span class="' + cls + '"' + tip + ' onclick="setPlat(\'' + esc(val) + '\')">' +
             esc(p.label || code || '未标注') + '<i>' + fmtCount(p.total) + '</i></span>';
   });
   el.innerHTML = html;
