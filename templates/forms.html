@@ -208,10 +208,18 @@ function switchPage(code){
   curPage = code;
   curKind = kindOf(code);
   curPlat = '';        // 换 Tab 时重置投放渠道筛选（各入口的投放渠道不通用）
-  all = [];
-  renderPlats();
+  // 立即把 Tab 高亮切过去 + 表头换到新口径，别等接口回来 ——
+  // 旧写法是 all=[] 后直接 render()，于是切换的零点几秒里会先闪一张空表
+  // （写着"当前筛选下暂无数据"，看着像数据丢了），而且点了 Tab 像是在发呆。
+  var elT = document.getElementById('stTotal'), elD = document.getElementById('stToday');
+  renderTabs(Number(elT.textContent) || 0, Number(elD.textContent) || 0);
+  renderPlats();       // 换 Tab 时投递渠道条要跟着显示/隐藏
   renderHead();
-  render();
+  // 表体先给一句"加载中"，等 loadOverview→loadList 回来整体替换
+  document.getElementById('empty').style.display = 'none';
+  document.getElementById('tb').innerHTML =
+    '<tr><td colspan="' + ((COLS[curKind] || COLS.form).length + 1) +
+    '" style="text-align:center;color:var(--ink-3);padding:30px 0">加载中…</td></tr>';
   loadOverview();      // 重新拉徽标并触发 loadList（保持新 tab）
 }
 
