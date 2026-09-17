@@ -51,6 +51,15 @@
   .toast.show{opacity:1}
   .cur{font-size:13px;font-weight:600;margin-bottom:8px;color:var(--ink-soft)}
   .cur b{color:var(--ink)}
+  /* 投放渠道筛选条（只在匹配工具 Tab 显示） */
+  .plats{display:none;gap:7px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
+  .plabel{font-size:12px;color:var(--ink-faint);margin-right:2px}
+  .pchip{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:4px 12px;font-size:12px;cursor:pointer;color:var(--ink-soft);white-space:nowrap}
+  .pchip:hover{border-color:var(--primary);color:var(--primary)}
+  .pchip.on{background:var(--primary);border-color:var(--primary);color:#fff}
+  .pchip i{font-style:normal;opacity:.65;font-size:11px;margin-left:3px}
+  .pchip.on i{opacity:.85}
+  code{background:#f1f2f5;border-radius:4px;padding:1px 5px;font-size:11px}
 </style>
 </head>
 <body>
@@ -58,7 +67,7 @@
   <div class="top">
     <div>
       <h1>线索收集 · 按项目分类</h1>
-      <div class="sub">各落地页 / 活动 / 工具共用统一线索视图，按渠道分开查看与导出，互不混淆。当前渠道：表单落地页项目、<b>匹配工具线索收集</b>、<b>模考线索收集</b>。页面在「运营工作台」内维护，公开页填写提交后即进入对应渠道。</div>
+      <div class="sub">各落地页 / 活动 / 工具共用统一线索视图，按 <b>收集入口</b> 分 Tab 查看与导出，互不混淆。当前入口：表单落地页项目、<b>匹配工具线索收集</b>、<b>模考线索收集</b>。<br>匹配工具还多一维 <b>投放渠道</b>（抖音 / 视频号 / 公众号 / 小红书…）：各平台发专属链接（<code>?ch=代号</code>）即自动打标，切到该 Tab 后用下方渠道条筛选。</div>
     </div>
     <div class="stats">
       <div class="stat"><b id="stToday">-</b><span>今日全部</span></div>
@@ -71,9 +80,10 @@
   <div class="actions">
     <input type="search" id="kw" placeholder="搜索 姓名 / 手机 / 学校 / 专业…">
     <button class="primary" onclick="loadOverview()">刷新</button>
-    <a class="btn primary" id="btnExport" href="/api/collect/export">导出当前渠道 CSV</a>
+    <a class="btn primary" id="btnExport" href="/api/collect/export">导出当前筛选 CSV</a>
   </div>
 
+  <div class="plats" id="plats"></div>
   <div class="cur" id="cur"></div>
   <div class="card">
     <table>
@@ -82,9 +92,13 @@
       </thead>
       <tbody id="tb"></tbody>
     </table>
-    <div class="empty" id="empty" style="display:none">该渠道暂无数据</div>
+    <div class="empty" id="empty" style="display:none">当前筛选下暂无数据</div>
   </div>
-  <div class="hint">使用提示：切到某个渠道 Tab 后，上方的「导出当前渠道 CSV」只导出该渠道线索（各渠道列结构不同）；删除操作仅对当前渠道的记录生效。新增渠道时，渠道代号由发布通道统一登记并出现在上方 Tab 中。</div>
+  <div class="hint">
+    使用提示：<b>收集入口</b>（上方 Tab）＝线索从哪个页面/工具收的；<b>投放渠道</b>（匹配工具 Tab 下的渠道条）＝线索从哪个平台来的。<br>
+    各平台发专属链接即可自动打标：抖音 <code>…/match/?ch=douyin</code>、视频号 <code>?ch=shipinhao</code>、公众号 <code>?ch=gzh</code>、小红书 <code>?ch=xhs</code>（中文也认，如 <code>?ch=抖音</code>）。没带参数的访问与历史数据归入「未标注」。<br>
+    「导出当前渠道 CSV」按当前 Tab + 当前投放渠道筛选导出（各入口列结构不同）；删除只对当前入口的记录生效。
+  </div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -105,6 +119,7 @@ var COLS = {
     {k:'id', t:'ID'}, {k:'created_at', t:'提交时间'}, {k:'name', t:'姓名'},
     {k:'phone', t:'手机', cls:'phone'}, {k:'school', t:'学校'}, {k:'major', t:'专业'},
     {k:'degree', t:'学历'}, {k:'year', t:'毕业年份'}, {k:'province', t:'意向地区'},
+    {k:'platform_label', t:'投放渠道', tag:true},
     {k:'match_total', t:'匹配岗位'}, {k:'match_exact', t:'完全符合'},
     {k:'match_family', t:'基本符合'}, {k:'match_review', t:'需人工确认'}
   ],
@@ -116,12 +131,14 @@ var COLS = {
   all: [
     {k:'id', t:'ID'}, {k:'created_at', t:'提交时间'}, {k:'name', t:'姓名'},
     {k:'phone', t:'手机', cls:'phone'}, {k:'school', t:'学校'}, {k:'major', t:'专业'},
-    {k:'channel_label', t:'来源渠道', tag:true}
+    {k:'channel_label', t:'收集入口', tag:true}, {k:'platform_label', t:'投放渠道', tag:true}
   ]
 };
 var CHANNELS = [];         // overview 返回的渠道列表
+var MATCH_PLATS = [];      // 匹配工具的投放渠道分布（overview → channels[match].platforms）
 var curPage = 'all';       // all 或具体渠道代号
 var curKind = 'all';       // 当前渠道类型（决定列）
+var curPlat = '';          // 投放渠道筛选：'' 全部 / 代号 / 'none' 未标注
 var all = [];
 
 function label(code){
@@ -148,7 +165,10 @@ function loadOverview(){
       document.getElementById('stToday').textContent = fmtCount(j.today);
       document.getElementById('stTotal').textContent = fmtCount(j.total);
       CHANNELS = j.channels || [];
+      var m = CHANNELS.filter(function(c){ return c.channel === 'match'; })[0];
+      MATCH_PLATS = (m && m.platforms) || [];
       renderTabs(j.total, j.today);
+      renderPlats();
       loadList();   // 保持当前 tab 的明细刷新
     })
     .catch(function(e){ toast('加载失败：' + e.message); });
@@ -179,17 +199,62 @@ function kindOf(code){
 function switchPage(code){
   curPage = code;
   curKind = kindOf(code);
+  curPlat = '';        // 换 Tab 时重置投放渠道筛选（各入口的投放渠道不通用）
   all = [];
+  renderPlats();
   renderHead();
   render();
   loadOverview();      // 重新拉徽标并触发 loadList（保持新 tab）
 }
 
+// 投放渠道代号 → 中文名（用 overview 返回的分布表，避免前端再维护一份映射）
+function platLabel(v){
+  if(!v) return '';
+  if(v === 'none') return '未标注';
+  var hit = MATCH_PLATS.filter(function(p){ return (p.code || '') === v; })[0];
+  return (hit && hit.label) || v;
+}
+
+// 导出链接统一在这里拼，保证「当前 Tab + 当前投放渠道」与页面所见一致
+function buildExportUrl(){
+  var q = [];
+  if(curPage !== 'all') q.push('channel=' + encodeURIComponent(curPage));
+  if(curPlat) q.push('platform=' + encodeURIComponent(curPlat));
+  return '/api/collect/export' + (q.length ? '?' + q.join('&') : '');
+}
+
 function updateCurTitle(){
   var name = curPage === 'all' ? '全部渠道' : label(curPage) + '（' + (curPage || '未标注') + '）';
   document.getElementById('cur').innerHTML = '当前查看：<b>' + esc(name) + '</b>';
-  var exp = document.getElementById('btnExport');
-  exp.setAttribute('href', '/api/collect/export' + (curPage === 'all' ? '' : '?channel=' + encodeURIComponent(curPage)));
+  document.getElementById('btnExport').setAttribute('href', buildExportUrl());
+}
+
+// 投放渠道筛选条：只在匹配工具 Tab 出现（其他入口没有 ?ch= 打标这一维）
+function renderPlats(){
+  var el = document.getElementById('plats');
+  if(curKind !== 'match'){
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+  el.style.display = 'flex';
+  var sum = MATCH_PLATS.reduce(function(s, p){ return s + (p.total || 0); }, 0);
+  var html = '<span class="plabel">投放渠道</span>';
+  html += '<span class="pchip' + (curPlat ? '' : ' on') + '" onclick="setPlat(\'\')">全部<i>' + fmtCount(sum) + '</i></span>';
+  MATCH_PLATS.forEach(function(p){
+    var code = p.code || '';
+    var val = code || 'none';                     // 空代号 → none，对应后端「未标注」特殊值
+    html += '<span class="pchip' + (curPlat === val ? ' on' : '') + '" onclick="setPlat(\'' + esc(val) + '\')">' +
+            esc(p.label || code || '未标注') + '<i>' + fmtCount(p.total) + '</i></span>';
+  });
+  el.innerHTML = html;
+}
+
+function setPlat(v){
+  curPlat = v || '';
+  renderPlats();
+  updateCurTitle();    // 改了筛选，导出链接要跟着变
+  loadList();
 }
 
 function renderHead(){
@@ -201,13 +266,16 @@ function renderHead(){
 function loadList(){
   curKind = kindOf(curPage);
   var url = '/api/collect/list?channel=' + encodeURIComponent(curPage);
+  if(curPlat) url += '&platform=' + encodeURIComponent(curPlat);
   fetch(url)
     .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(j){
       if(!j.ok) throw new Error(j.error || '加载失败');
       all = j.data || [];
       var name = curPage === 'all' ? '全部渠道' : label(curPage) + '（' + (curPage || '未标注') + '）';
-      document.getElementById('cur').innerHTML = '当前查看：<b>' + esc(name) + '</b> · 共 <b>' + fmtCount(j.total) + '</b> 条（今日 ' + fmtCount(j.today) + '）';
+      var platTxt = curPlat ? ' · 投放渠道 <b>' + esc(platLabel(curPlat)) + '</b>' : '';
+      document.getElementById('cur').innerHTML = '当前查看：<b>' + esc(name) + '</b>' + platTxt +
+        ' · 共 <b>' + fmtCount(j.total) + '</b> 条（今日 ' + fmtCount(j.today) + '）';
       renderHead();
       render();
     })
@@ -218,7 +286,7 @@ function render(){
   var kw = (document.getElementById('kw').value || '').trim().toLowerCase();
   var rows = all.filter(function(r){
     if(!kw) return true;
-    return [r.name, r.phone, r.school, r.major, r.grade, r.channel_label].some(function(v){
+    return [r.name, r.phone, r.school, r.major, r.grade, r.channel_label, r.platform_label].some(function(v){
       return String(v == null ? '' : v).toLowerCase().indexOf(kw) >= 0;
     });
   });

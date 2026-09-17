@@ -27,6 +27,12 @@ def _migrate_columns():
         if "campus" not in cols:
             with engine.begin() as conn:
                 conn.execute(text("ALTER TABLE leads ADD COLUMN campus VARCHAR(50) DEFAULT ''"))
+    if "match_leads" in insp.get_table_names():
+        # 投放渠道（?ch= 参数）。历史记录保持空串，管理页显示"未标注"。
+        cols = {c["name"] for c in insp.get_columns("match_leads")}
+        if "platform" not in cols:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE match_leads ADD COLUMN platform VARCHAR(20) DEFAULT ''"))
 
 
 def _fix_double_counting():

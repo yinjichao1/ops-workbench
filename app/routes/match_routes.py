@@ -27,6 +27,66 @@ router = APIRouter()
 PHONE_RE = re.compile(r"^1[3-9]\d{9}$")
 DEGREE_LABEL = {2: "大专", 3: "本科", 4: "硕士", 5: "博士"}
 
+# ── 投放渠道（platform）─────────────────────────────────────────────
+# ⚠️ 命名约定：本模块的 platform = **投放平台**（线索从哪个平台来）；
+#    collect_routes 里的 channel = **收集入口**（form / match / exam）。
+#    两者都常被口语称作"渠道"，但语义不同，代码里不要混用。
+#
+# 各投放渠道发专属链接：https://sigedianwang.cn/match/?ch=douyin
+# 运营手打链接时写中文也能认（下面 ALIAS 兜底），避免"发错链接导致渠道全空"。
+PLATFORM_LABELS = {
+    "douyin": "抖音",
+    "shipinhao": "微信视频号",
+    "gzh": "微信公众号",
+    "xhs": "小红书",
+    "pengyouquan": "朋友圈",
+    "qun": "社群/微信群",
+    "ditui": "线下地推",
+    "zhuanjie": "转介绍",
+    "ziran": "自然流量",
+}
+PLATFORM_ALIAS = {
+    "抖音": "douyin",
+    "视频号": "shipinhao", "微信视频号": "shipinhao",
+    "公众号": "gzh", "微信公众号": "gzh",
+    "小红书": "xhs",
+    "朋友圈": "pengyouquan",
+    "社群": "qun", "微信群": "qun", "社群/微信群": "qun",
+    "地推": "ditui", "线下地推": "ditui",
+    "转介绍": "zhuanjie", "老带新": "zhuanjie",
+    "自然流量": "ziran",
+}
+_PLATFORM_BAD = re.compile(r"[^a-z0-9_-]")
+
+
+def norm_platform(v: str) -> str:
+    """规范化投放渠道代号。
+
+    - 中文 / 中文别名 → 标准代号（`抖音` → `douyin`）
+    - 其余只保留 `[a-z0-9_-]`，截断 20 字符
+    - **未知代号不丢弃**（允许临时活动用 `?ch=919` 这类自定义值，便于回溯），
+      但必须过字符集与长度，防止脏数据进库
+    """
+    s = (v or "").strip()
+    if not s:
+        return ""
+    if s in PLATFORM_ALIAS:                    # 中文原名
+        return PLATFORM_ALIAS[s]
+    low = s.lower()
+    if low in PLATFORM_ALIAS:                  # 大小写变体
+        return PLATFORM_ALIAS[low]
+    if low in PLATFORM_LABELS:                 # 已是标准代号
+        return low
+    return _PLATFORM_BAD.sub("", low)[:20]
+
+
+def platform_label(code: str) -> str:
+    """代号 → 中文名，未登记的原样返回（便于发现自定义渠道），空值 → 未标注。"""
+    if not code:
+        return "未标注"
+    return PLATFORM_LABELS.get(code, code)
+
+
 # ── 简易内存限流（同 IP 10 分钟最多 5 次） ──
 _RATE = {}
 _WINDOW = timedelta(minutes=10)
@@ -57,6 +117,8 @@ class MatchSubmitIn(BaseModel):
     province: str = ""
     group: str = ""
     season: str = ""
+    # 投放渠道代号（前端从入口链接 ?ch= 读出来带过来的），空串 = 未标注
+    platform: str = ""
     # 容错：前端可能尚未拿到匹配结果就提交，传 null/缺省一律按 0 处理
     match_total: Optional[int] = 0
     match_exact: Optional[int] = 0
@@ -80,6 +142,8 @@ def submit_match_lead(body: MatchSubmitIn, db: SqlSession = Depends(get_db),
     if len(name) > 50 or len(school) > 100 or len(major) > 100:
         return {"ok": False, "error": "字段长度超出限制"}
 
+    plat = norm_platform(body.platform)
+
     # 同手机号当日重复提交 -> 更新，避免重复线索
     today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     exist = (
@@ -94,6 +158,10 @@ def submit_match_lead(body: MatchSubmitIn, db: SqlSession = Depends(get_db),
         exist.grad_year = (body.year or "")[:10]
         exist.province = (body.province or "")[:20]
         exist.match_total = body.match_total
+        # 渠道以**首次**为准（首次落地最接近真实来源）；
+        # 但如果首次没带上（老链接/直接访问），这次带了就补上，避免渠道永远空着。
+        if not exist.platform and plat:
+            exist.platform = plat
         db.commit()
         return {"ok": True, "id": exist.id, "dup": True}
 
@@ -113,6 +181,7 @@ def submit_match_lead(body: MatchSubmitIn, db: SqlSession = Depends(get_db),
         match_family=body.match_family,
         match_review=body.match_review,
         source="match-tool",
+        platform=plat,
         ip=request_ip[:45],
     )
     db.add(rec)
@@ -143,16 +212,24 @@ def match_overview(db: SqlSession = Depends(get_db)):
         for m, c in db.query(MatchLead.major, func.count(MatchLead.id))
         .group_by(MatchLead.major).order_by(func.count(MatchLead.id).desc()).limit(10).all()
     ]
+    # 投放渠道分布（空串归到"未标注"，即历史数据 / 直接访问未带 ?ch= 的线索）
+    by_platform = [
+        {"code": c or "", "label": platform_label(c), "count": n}
+        for c, n in db.query(MatchLead.platform, func.count(MatchLead.id))
+        .group_by(MatchLead.platform).order_by(func.count(MatchLead.id).desc()).all()
+    ]
     return {
         "ok": True, "total": total, "today": today_n,
         "by_degree": by_deg, "by_province": by_prov, "top_major": top_major,
+        "by_platform": by_platform,
     }
 
 
 @router.get("/match/list")
 def match_list(page: int = Query(1, ge=1), size: int = Query(50, ge=1, le=500),
-               keyword: str = "", db: SqlSession = Depends(get_db)):
-    """线索明细，支持按姓名/手机/学校/专业模糊搜索。"""
+               keyword: str = "", platform: str = "",
+               db: SqlSession = Depends(get_db)):
+    """线索明细，支持按姓名/手机/学校/专业模糊搜索，可按投放渠道过滤。"""
     q = db.query(MatchLead)
     kw = (keyword or "").strip()
     if kw:
@@ -161,6 +238,9 @@ def match_list(page: int = Query(1, ge=1), size: int = Query(50, ge=1, le=500),
             MatchLead.name.like(like) | MatchLead.phone.like(like)
             | MatchLead.school.like(like) | MatchLead.major.like(like)
         )
+    plat = norm_platform(platform) if platform else ""
+    if plat:
+        q = q.filter(MatchLead.platform == plat)
     total = q.count()
     rows = q.order_by(MatchLead.created_at.desc()).offset((page - 1) * size).limit(size).all()
     return {
@@ -169,29 +249,33 @@ def match_list(page: int = Query(1, ge=1), size: int = Query(50, ge=1, le=500),
             "id": r.id, "name": r.name, "phone": r.phone, "school": r.school,
             "major": r.major, "degree": r.degree_label, "year": r.grad_year,
             "province": r.province, "match_total": r.match_total,
+            "platform": r.platform or "", "platform_label": platform_label(r.platform),
             "time": r.created_at.strftime("%Y-%m-%d %H:%M") if r.created_at else "",
         } for r in rows],
     }
 
 
 @router.get("/match/export")
-def match_export(keyword: str = "", db: SqlSession = Depends(get_db)):
-    """导出 CSV（UTF-8 BOM，Excel 可直接打开）。"""
+def match_export(keyword: str = "", platform: str = "", db: SqlSession = Depends(get_db)):
+    """导出 CSV（UTF-8 BOM，Excel 可直接打开）。可按投放渠道过滤。"""
     q = db.query(MatchLead)
     kw = (keyword or "").strip()
     if kw:
         like = "%%%s%%" % kw
         q = q.filter(MatchLead.name.like(like) | MatchLead.phone.like(like)
                      | MatchLead.school.like(like) | MatchLead.major.like(like))
+    plat = norm_platform(platform) if platform else ""
+    if plat:
+        q = q.filter(MatchLead.platform == plat)
     rows = q.order_by(MatchLead.created_at.desc()).all()
 
     buf = io.StringIO()
     w = csv.writer(buf)
     w.writerow(["姓名", "手机号", "学校", "专业", "学历", "毕业年份",
-                "意向地区", "匹配岗位数", "招聘集团", "届次", "提交时间"])
+                "意向地区", "投放渠道", "匹配岗位数", "招聘集团", "届次", "提交时间"])
     for r in rows:
         w.writerow([r.name, r.phone, r.school, r.major, r.degree_label, r.grad_year,
-                    r.province, r.match_total, r.group, r.season,
+                    r.province, platform_label(r.platform), r.match_total, r.group, r.season,
                     r.created_at.strftime("%Y-%m-%d %H:%M") if r.created_at else ""])
     data = "\ufeff" + buf.getvalue()
     return Response(

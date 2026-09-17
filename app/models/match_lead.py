@@ -26,5 +26,9 @@ class MatchLead(Base):
     match_family = Column(Integer, default=0, comment="基本符合数")
     match_review = Column(Integer, default=0, comment="需人工确认数")
     source = Column(String(30), default="match-tool", comment="来源标记")
+    # ⚠️ 与 collect_routes 的 channel 不是一回事：
+    #   channel = 收集入口（form / match / exam）
+    #   platform = 投放平台（这条线索是从哪个平台来的），来自入口链接的 ?ch= 参数
+    platform = Column(String(20), default="", comment="投放平台渠道代号，如 douyin/shipinhao/gzh/xhs")
     ip = Column(String(45), default="", comment="提交IP，用于风控")
     created_at = Column(DateTime, server_default=func.now())
