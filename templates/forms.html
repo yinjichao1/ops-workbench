@@ -70,7 +70,7 @@
   <div class="top">
     <div>
       <h1>线索收集 · 按项目分类</h1>
-      <div class="sub">各落地页 / 活动 / 工具共用统一线索视图，按 <b>收集入口</b> 分 Tab 查看与导出，互不混淆。当前入口：表单落地页项目、<b>匹配工具线索收集</b>、<b>模考线索收集</b>。<br>匹配工具还多一维 <b>投放渠道</b>（哪个平台 / 哪个校区 / 哪场活动来的）：发一条专属链接（<code>?ch=代号</code>）即自动打标，切到该 Tab 后用下方渠道条筛选。已配置但暂无数据的渠道会以<span style="opacity:.6">浅灰虚线</span>显示，点开可确认「确实还没起量」。</div>
+      <div class="sub">各落地页 / 活动 / 工具共用统一线索视图，按 <b>收集入口</b> 分 Tab 查看与导出，互不混淆。当前入口：表单落地页项目、<b>匹配工具线索收集</b>、<b>模考线索收集</b>、<b>小程序线索收集</b>。<br>匹配工具还多一维 <b>投放渠道</b>（哪个平台 / 哪个校区 / 哪场活动来的）：发一条专属链接（<code>?ch=代号</code>）即自动打标，切到该 Tab 后用下方渠道条筛选。已配置但暂无数据的渠道会以<span style="opacity:.6">浅灰虚线</span>显示，点开可确认「确实还没起量」。</div>
     </div>
     <div class="stats">
       <div class="stat"><b id="stToday">-</b><span>今日全部</span></div>
@@ -99,6 +99,7 @@
   </div>
   <div class="hint">
     使用提示：<b>收集入口</b>（上方 Tab）＝线索从哪个页面/工具收的；<b>投放渠道</b>（匹配工具 Tab 下的渠道条）＝线索从哪个来路（平台 / 校区 / 活动）。<br>
+    <b>小程序线索收集</b>：用户在「思格电网资料库」小程序授权手机号后自动入库的线索；「来源细分」指用户从哪个入口进的小程序（公众号菜单 / 视频号简介等）。它与其他入口不同 —— 数据源是<b>线索主表</b>，所以同一条也会出现在「线索分析」模块里，两处是同一批数据，不是重复计数。<br>
     发一条专属链接即可自动打标：抖音 <code>…/match/?ch=douyin</code>、视频号 <code>?ch=shipinhao</code>、公众号 <code>?ch=gzh</code>、小红书 <code>?ch=xhs</code>、辽宁校区 <code>?ch=liaoning</code>、吉林校区 <code>?ch=jilin</code>、黑龙江校区 <code>?ch=heilongjiang</code>（中文也认，如 <code>?ch=抖音</code>、<code>?ch=辽宁校区</code>）。没带参数的访问与历史数据归入「未标注」。<br>
     渠道条里<b>浅灰虚线</b>的＝已配置但还没有线索（点开可确认），有量后自动变实。<br>
     「导出当前渠道 CSV」按当前 Tab + 当前投放渠道筛选导出（各入口列结构不同）；删除只对当前入口的记录生效。
@@ -110,9 +111,12 @@
 var PAGE_LABELS = {
   'timeline28': '28届备考时间线',
   'match': '匹配工具线索收集',
-  'exam': '模考线索收集'
+  'exam': '模考线索收集',
+  'miniapp': '小程序线索收集'
 };
-// 各渠道明细列配置（kind：form / match / exam；all 用统一简版列）
+// 删除确认文案里的来源名（表口径，与上面"收集入口"名分开写，避免读起来别扭）
+var SRC_NAME = { form:'表单', match:'匹配工具', exam:'模考', miniapp:'小程序' };
+// 各渠道明细列配置（kind：form / match / exam / miniapp；all 用统一简版列）
 var COLS = {
   form: [
     {k:'id', t:'ID'}, {k:'created_at', t:'提交时间'}, {k:'name', t:'姓名'},
@@ -131,6 +135,13 @@ var COLS = {
     {k:'id', t:'ID'}, {k:'created_at', t:'提交时间'}, {k:'name', t:'姓名'},
     {k:'phone', t:'手机', cls:'phone'}, {k:'school', t:'学校'}, {k:'grade', t:'年级'},
     {k:'score', t:'得分'}, {k:'duration', t:'用时(秒)'}
+  ],
+  // 小程序线索：数据源是主线索表，字段结构与表单侧不同 —— 没有学校/专业，
+  // 但有「来源细分」（小程序-公众号菜单 → 公众号菜单）、校区、有效性、跟进状态
+  miniapp: [
+    {k:'id', t:'ID'}, {k:'created_at', t:'提交时间'}, {k:'name', t:'姓名'},
+    {k:'phone', t:'手机', cls:'phone'}, {k:'source_detail', t:'来源细分', tag:true},
+    {k:'campus', t:'校区'}, {k:'validity', t:'有效性', tag:true}, {k:'status', t:'状态'}
   ],
   all: [
     {k:'id', t:'ID'}, {k:'created_at', t:'提交时间'}, {k:'name', t:'姓名'},
@@ -318,7 +329,8 @@ function render(){
   var kw = (document.getElementById('kw').value || '').trim().toLowerCase();
   var rows = all.filter(function(r){
     if(!kw) return true;
-    return [r.name, r.phone, r.school, r.major, r.grade, r.channel_label, r.platform_label].some(function(v){
+    return [r.name, r.phone, r.school, r.major, r.grade, r.channel_label,
+            r.platform_label, r.source_detail, r.campus, r.validity, r.status].some(function(v){
       return String(v == null ? '' : v).toLowerCase().indexOf(kw) >= 0;
     });
   });
@@ -341,7 +353,8 @@ function render(){
 }
 
 function del(id, source){
-  if(!confirm('确认删除 渠道「' + (source === 'match' ? '匹配工具' : source === 'exam' ? '模考' : '表单') + '」 ID=' + id + ' 这条记录？此操作不可恢复。')) return;
+  var sname = SRC_NAME[source] || '表单';
+  if(!confirm('确认删除 渠道「' + sname + '」 ID=' + id + ' 这条记录？此操作不可恢复。')) return;
   fetch('/api/collect/delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
