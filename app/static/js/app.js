@@ -2051,7 +2051,10 @@ function updateReportStatus() {
   }
   var regen = $qs("#report-regen-btn");
   if (regen) {
-    regen.style.display = (reportState.freshMd && !reportState.busy) ? "" : "none";
+    // 「重新生成」只在有意义时出现：载入过保存版本、或有未保存的手工修改
+    // （刚生成完的内容本身就是最新数据，此时再点「重新生成」没意义）
+    var needsRegen = !!reportState.loadedDraftAt || reportState.dirty;
+    regen.style.display = (reportState.freshMd && needsRegen && !reportState.busy) ? "" : "none";
     regen.disabled = reportState.busy;
   }
 }
