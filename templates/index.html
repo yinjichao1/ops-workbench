@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#1D4ED8">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231D4ED8'/%3E%3Ctext x='32' y='43' font-size='30' font-weight='700' fill='%23fff' text-anchor='middle' font-family='-apple-system,sans-serif'%3E%E6%80%9D%3C/text%3E%3C/svg%3E">
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/style.css?v=0901c">
+<link rel="stylesheet" href="/static/css/style.css?v=0901g">
 </head>
 <body>
 
@@ -419,19 +419,43 @@
     <div class="page-header">
       <div><h1>报表生成</h1><div class="breadcrumb">思格教育 <span>/</span> 运营工作台 <span>/</span> 报表生成</div></div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="btn btn-primary btn-sm" onclick="loadReports('weekly')">生成周报</button>
-        <button class="btn btn-outline btn-sm" onclick="loadReports('monthly')">生成月报</button>
-        <span style="width:1px;height:22px;background:var(--border-soft)"></span>
+        <button class="btn btn-primary btn-sm" id="report-save-btn" onclick="saveReport()">💾 保存</button>
         <button class="btn btn-outline btn-sm" onclick="copyReport()">📋 复制内容</button>
         <button class="btn btn-outline btn-sm" onclick="downloadReport()">⬇ 下载 Markdown</button>
-        <span class="card-subtitle" id="report-period-label"></span>
+        <button class="btn btn-outline btn-sm" onclick="openSavedReports()">🗂 已保存报表</button>
       </div>
     </div>
     <div class="page-body">
+
+      <!-- 周期选择区 -->
+      <div class="report-picker">
+        <div class="rp-row">
+          <span class="rp-label">报表类型</span>
+          <div class="rp-seg" id="report-type-seg">
+            <button type="button" class="rp-seg-btn active" data-rt="weekly">周报</button>
+            <button type="button" class="rp-seg-btn" data-rt="monthly">月报</button>
+          </div>
+
+          <span class="rp-label">周期</span>
+          <input type="week" id="report-week" class="rp-input" aria-label="选择周">
+          <input type="month" id="report-month" class="rp-input" aria-label="选择月" style="display:none">
+
+          <div class="rp-nav">
+            <button type="button" class="btn btn-outline btn-sm" onclick="shiftReportPeriod(-1)" title="上一期">‹ 上一期</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="shiftReportPeriod(1)" title="下一期">下一期 ›</button>
+          </div>
+
+          <button type="button" class="btn btn-primary btn-sm" onclick="generateReport()">生成报表</button>
+          <button type="button" class="btn btn-outline btn-sm" id="report-regen-btn" onclick="regenerateReport()" style="display:none">↻ 重新生成</button>
+        </div>
+        <div class="rp-status" id="report-status"></div>
+      </div>
+
       <div id="report-area">
         <div class="empty-state">
           <h3>报表生成</h3>
-          <p>基于已录入的平台运营数据，一键生成结构化运营周报或月报。</p>
+          <p>先在上面选好周期，再点「生成报表」。基于已录入的平台运营数据自动生成结构化周报/月报。</p>
+          <p style="font-size:12px">生成后的内容可直接编辑，改完点「💾 保存」；下次选到同一周期会自动载入你保存过的版本。</p>
         </div>
       </div>
     </div>
@@ -452,7 +476,7 @@ document.querySelectorAll('.toggle-pill').forEach(function(pill){
   });
 });
 </script>
-<script src="/static/js/app.js?v=0901f"></script>
+<script src="/static/js/app.js?v=0901g"></script>
 <div class="grain-overlay" aria-hidden="true"></div>
 </body>
 </html>

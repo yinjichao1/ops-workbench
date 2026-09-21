@@ -497,7 +497,7 @@ document.querySelectorAll(".sidebar-item[data-page]").forEach(item => {
       case "calendar": loadCalendar(); break;
       case "tasks": loadTasks(); break;
       case "topics": loadTopics(); break;
-      case "reports": loadReports(); break;
+      case "reports": initReportPage(); break;
     }
   });
 });
@@ -1942,59 +1942,376 @@ async function convertTopic(id, modalId) {
 }
 
 // ========== REPORTS ==========
-async function loadReports(type) {
-  type = type || 'weekly';
-  $qs("#report-area").innerHTML = '<div class="empty-state"><div class="skeleton skeleton-title" style="margin:0 auto 16px;width:200px"></div><div class="skeleton skeleton-text" style="margin:0 auto;width:300px"></div><p style="margin-top:12px">正在生成报表...</p></div>';
-  try {
-    const r = await fetch(API + `/reports?report_type=${type}`);
-    if (!r.ok) throw new Error("报表生成失败");
-    const { markdown } = await r.json();
-    let html = markdown
-      .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-      .replace(/^---$/gm, '<hr>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/^- (.+)$/gm, '<li>$1</li>');
-    html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
-    // Markdown 表格 → 单个完整 <table>（表头 th + 表体 td）
-    // 旧写法把表头行和表体行分别包成两个 <table>，导致表头单独成表、th 样式失效
-    html = html.replace(/(?:^\|.+\|[ \t]*\r?\n?)+/gm, function (block) {
-      var lines = block.replace(/[\r\n]+$/, '').split(/\r?\n/);
-      var out = '<table><thead>', inBody = false;
-      lines.forEach(function (line) {
-        line = line.trim();
-        if (!line) return;
-        if (/^\|[\s:|-]*-[\s:|-]*\|$/.test(line)) { out += '</thead><tbody>'; inBody = true; return; }
-        var cells = line.split('|');
-        cells = cells.slice(1, cells.length - 1);
-        var tag = inBody ? 'td' : 'th';
-        out += '<tr>' + cells.map(function (c) { return '<' + tag + '>' + c.trim() + '</' + tag + '>'; }).join('') + '</tr>';
-      });
-      return out + '</tbody></table>';
-    });
-    html = html.replace(/<blockquote>/g, '<blockquote>').replace(/<\/blockquote>/g, '</blockquote>');
-    // 周期标签（后端返回的是默认上周/上月）
-    const lbl = document.getElementById("report-period-label");
-    const m = markdown.match(/汇报周期：\*\*(\S+) 至 (\S+)\*\*/);
-    if (lbl) lbl.textContent = m ? `当前周期：${m[1]} ~ ${m[2]}` : "";
-    // 可编辑：contenteditable 让用户可直接修改内容
-    $qs("#report-area").innerHTML = `<div class="report-body" contenteditable="true" spellcheck="false">${html}</div>
-      <div class="report-edit-hint">✏️ 内容可直接编辑，编辑后点「复制内容」或「下载 Markdown」导出</div>`;
-  } catch(e) {
-    $qs("#report-area").innerHTML = `<div class="empty-state">
-      <div class="empty-icon">&#128203;</div>
-      <h3>暂无数据生成报表</h3>
-      <p>请先在数据看板中录入平台运营数据，才能自动生成周报。录入后回到此处，点击「生成周报」即可。</p>
-      <button class="btn btn-primary btn-sm empty-cta" onclick="openMetricForm()">去录入数据</button>
-    </div>`;
+// 报表页状态：类型 / 周期 / 是否载入了已保存稿 / 是否有未保存修改
+var reportState = {
+  type: "weekly",
+  periodStart: "",      // 后端归一化后的周期起点（周报=周一，月报=该月 1 号）
+  label: "",            // 展示用文案，如「2026 年第 38 周（09-14 ~ 09-20）」
+  loadedDraftAt: "",    // 载入的已保存版本时间（空 = 当前是系统新生成的）
+  dirty: false,         // 有未保存的手工修改
+  freshMd: "",          // 本次新生成的 markdown，供「重新生成」零请求使用
+  busy: false
+};
+
+function escHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function toIsoDate(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") +
+    "-" + String(d.getDate()).padStart(2, "0");
+}
+
+function reportTypeFromUI() {
+  var b = document.querySelector("#report-type-seg .rp-seg-btn.active");
+  return (b && b.dataset.rt) || reportState.type || "weekly";
+}
+
+/** 当前选择器对应的周期起点（周报=周一日期，月报=该月 1 号）。 */
+function currentReportPeriod() {
+  if (reportTypeFromUI() === "weekly") {
+    var w = $qs("#report-week");
+    if (!w || !w.value) return "";
+    return getWeekFilterRange(w.value).start;
+  }
+  var m = $qs("#report-month");
+  if (!m || !m.value) return "";
+  return getMonthFilterRange(m.value).start;
+}
+
+function ensureReportPeriodDefaults() {
+  var w = $qs("#report-week"), m = $qs("#report-month");
+  // 与后端默认保持一致：周报默认上周，月报默认上月
+  if (w && !w.value) w.value = dateToIsoWeek(getPreviousWeekDate());
+  if (m && !m.value) m.value = getPreviousMonthValue();
+}
+
+function bindReportTypeSeg() {
+  var seg = $qs("#report-type-seg");
+  if (!seg || seg.dataset.bound) return;
+  seg.dataset.bound = "1";
+  seg.addEventListener("click", function (e) {
+    var btn = e.target.closest(".rp-seg-btn");
+    if (!btn || btn.classList.contains("active")) return;
+    if (reportState.dirty && !confirm("当前报表有未保存的修改，切换类型会丢失，确定继续？")) return;
+    seg.querySelectorAll(".rp-seg-btn").forEach(function (b) { b.classList.remove("active"); });
+    btn.classList.add("active");
+    toggleReportInputs(btn.dataset.rt);
+    reportState.dirty = false;
+    ensureReportPeriodDefaults();
+    updateReportStatus();
+    generateReport({ silent: true });
+  });
+}
+
+function toggleReportInputs(type) {
+  var w = $qs("#report-week"), m = $qs("#report-month");
+  if (w) w.style.display = type === "weekly" ? "" : "none";
+  if (m) m.style.display = type === "monthly" ? "" : "none";
+}
+
+/** 把后端归一化后的周期回写到输入框（用户传的周会被归一到周一）。 */
+function syncReportPeriodInputs(ps) {
+  if (!ps) return;
+  if (reportTypeFromUI() === "weekly") {
+    var w = $qs("#report-week");
+    if (w) w.value = dateToIsoWeek(ps);
+  } else {
+    var m = $qs("#report-month");
+    if (m) m.value = ps.slice(0, 7);
   }
 }
 
-// ========== MODAL ==========
-function closeModal(id) { const el = document.getElementById(id); if (el) el.remove(); }
+function updateReportStatus() {
+  var el = $qs("#report-status");
+  if (!el) return;
+  var cur = currentReportPeriod();
+  var parts = ['<span class="rp-chip rp-chip-type">' +
+    (reportTypeFromUI() === "weekly" ? "周报" : "月报") + "</span>"];
+  if (reportState.label) parts.push('<span class="rp-chip">' + escHtml(reportState.label) + "</span>");
 
-// 周报复制 / 下载（读取编辑后的内容）
+  if (reportState.dirty) {
+    parts.push('<span class="rp-chip rp-chip-dirty">● 有未保存的修改</span>');
+  } else if (reportState.loadedDraftAt) {
+    parts.push('<span class="rp-chip rp-chip-saved">✓ 已载入 ' +
+      escHtml(reportState.loadedDraftAt) + " 保存的版本</span>");
+  } else if (reportState.periodStart) {
+    parts.push('<span class="rp-chip rp-chip-dim">系统新生成 · 尚未保存</span>');
+  }
+  if (reportState.periodStart && cur && cur !== reportState.periodStart) {
+    parts.push('<span class="rp-chip rp-chip-dirty">周期已改，点「生成报表」刷新</span>');
+  }
+  el.innerHTML = parts.join('<span class="rp-sep"></span>');
+
+  var saveBtn = $qs("#report-save-btn");
+  if (saveBtn) {
+    saveBtn.classList.toggle("rp-save-dirty", reportState.dirty);
+    saveBtn.textContent = reportState.dirty ? "💾 保存 *" : "💾 保存";
+  }
+  var regen = $qs("#report-regen-btn");
+  if (regen) {
+    regen.style.display = (reportState.freshMd && !reportState.busy) ? "" : "none";
+    regen.disabled = reportState.busy;
+  }
+}
+
+/** 进入报表页：保留现场，必要时按默认周期自动生成一份。 */
+function initReportPage() {
+  bindReportTypeSeg();
+  toggleReportInputs(reportTypeFromUI());
+  ensureReportPeriodDefaults();
+  var hasBody = !!document.querySelector("#report-area .report-body");
+  if (hasBody && !reportState.dirty && reportState.periodStart === currentReportPeriod()) {
+    updateReportStatus();
+    return;
+  }
+  if (hasBody && reportState.dirty) {
+    updateReportStatus();
+    return;
+  }
+  generateReport({ silent: true });
+}
+
+function setReportLoading() {
+  reportState.busy = true;
+  updateReportStatus();
+  $qs("#report-area").innerHTML =
+    '<div class="empty-state"><div class="skeleton skeleton-title" style="margin:0 auto 16px;width:200px"></div>' +
+    '<div class="skeleton skeleton-text" style="margin:0 auto;width:300px"></div>' +
+    '<p style="margin-top:12px">正在生成报表...</p></div>';
+}
+
+/** Markdown → 报表正文 HTML（表格输出单个 <table>，表头 th / 表体 td）。 */
+function mdToReportHtml(md) {
+  var html = String(md || "").replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  html = html
+    .replace(/^# (.+)$/gm, "<h1>$1</h1>")
+    .replace(/^## (.+)$/gm, "<h2>$1</h2>")
+    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
+    .replace(/^#### (.+)$/gm, "<h4>$1</h4>")
+    .replace(/^---$/gm, "<hr>")
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/^> (.*)$/gm, "<blockquote>$1</blockquote>")
+    .replace(/^- (.+)$/gm, "<li>$1</li>");
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, "<ul>$&</ul>");
+  // 旧写法把表头行和表体行分别包成两个 <table>，导致表头单独成表、th 样式失效
+  html = html.replace(/(?:^\|.+\|[ \t]*\r?\n?)+/gm, function (block) {
+    var lines = block.replace(/[\r\n]+$/, "").split(/\r?\n/);
+    var out = "<table><thead>", inBody = false;
+    lines.forEach(function (line) {
+      line = line.trim();
+      if (!line) return;
+      if (/^\|[\s:|-]*-[\s:|-]*\|$/.test(line)) { out += "</thead><tbody>"; inBody = true; return; }
+      var cells = line.split("|");
+      cells = cells.slice(1, cells.length - 1);
+      var tag = inBody ? "td" : "th";
+      out += "<tr>" + cells.map(function (c) {
+        return "<" + tag + ">" + c.trim() + "</" + tag + ">";
+      }).join("") + "</tr>";
+    });
+    return out + "</tbody></table>";
+  });
+  return html;
+}
+
+/** 渲染报表正文（可编辑），并挂上「未保存」跟踪。 */
+function renderReportBody(html, isDraft) {
+  var area = $qs("#report-area");
+  area.innerHTML =
+    '<div class="report-body" contenteditable="true" spellcheck="false">' + html + "</div>" +
+    '<div class="report-edit-hint">✏️ 内容可直接编辑' +
+    (isDraft ? "（当前是已保存的版本，改完记得再点「💾 保存」）" : "") +
+    "；点右上角「💾 保存」留底，「📋 复制内容」可直接粘到 Word/飞书</div>";
+  var body = area.querySelector(".report-body");
+  if (body) {
+    body.addEventListener("input", function () {
+      if (!reportState.dirty) { reportState.dirty = true; updateReportStatus(); }
+    });
+  }
+}
+
+async function generateReport(opts) {
+  opts = opts || {};
+  if (reportState.busy) return;
+  if (reportState.dirty && !opts.silent && !opts.force &&
+      !confirm("当前报表有未保存的修改，生成会覆盖，确定继续？")) return;
+
+  var type = reportTypeFromUI();
+  var period = currentReportPeriod();
+  setReportLoading();
+  try {
+    var url = API + "/reports?report_type=" + type + (period ? "&week=" + encodeURIComponent(period) : "");
+    var r = await fetch(url);
+    var j = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw new Error(apiErrMsg(j, "报表生成失败"));
+
+    reportState.type = type;
+    reportState.periodStart = j.period_start || period;
+    reportState.label = j.label || "";
+    reportState.freshMd = j.markdown || "";
+    reportState.dirty = false;
+    syncReportPeriodInputs(j.period_start);
+
+    if (j.has_draft && j.draft && j.draft.content_html) {
+      reportState.loadedDraftAt = j.draft.updated_at || "";
+      renderReportBody(j.draft.content_html, true);
+      if (!opts.silent) toast("已载入该周期保存过的内容", "success");
+    } else {
+      reportState.loadedDraftAt = "";
+      renderReportBody(mdToReportHtml(j.markdown), false);
+      if (!opts.silent) toast("报表已生成", "success");
+    }
+  } catch (e) {
+    reportState.periodStart = "";
+    reportState.loadedDraftAt = "";
+    $qs("#report-area").innerHTML =
+      '<div class="empty-state"><div class="empty-icon">&#128203;</div>' +
+      "<h3>报表生成失败</h3><p>" + escHtml(e.message || e) + "</p>" +
+      (reportTypeFromUI() === "weekly"
+        ? "<p style=\"font-size:12px\">若该周还没录入平台数据，报表内容会是空的；先去数据看板录入后再回来。</p>"
+        : "<p style=\"font-size:12px\">若该月还没录入月度数据，报表内容会是空的。</p>") +
+      '<button class="btn btn-primary btn-sm empty-cta" onclick="openMetricForm()">去录入数据</button></div>';
+  } finally {
+    reportState.busy = false;
+    updateReportStatus();
+  }
+}
+
+/** 用本次请求带回来的最新 markdown 覆盖当前内容（不再发请求）。 */
+function regenerateReport() {
+  if (!reportState.freshMd) { toast("请先点「生成报表」", "error"); return; }
+  if (!confirm("放弃手工修改，按最新数据重新生成？\n\n已保存的版本不会被删除；重新生成后需要点「保存」才会覆盖它。")) return;
+  reportState.loadedDraftAt = "";
+  reportState.dirty = true;
+  renderReportBody(mdToReportHtml(reportState.freshMd), false);
+  var body = document.querySelector("#report-area .report-body");
+  if (body) body.scrollIntoView({ block: "start" });
+  updateReportStatus();
+  toast("已按最新数据重新生成，点「保存」覆盖已保存版本", "success");
+}
+
+/** 上一期 / 下一期。 */
+function shiftReportPeriod(delta) {
+  if (reportState.dirty && !confirm("当前报表有未保存的修改，切换周期会丢失，确定继续？")) return;
+  if (reportTypeFromUI() === "weekly") {
+    var w = $qs("#report-week");
+    if (!w.value) w.value = dateToIsoWeek(getPreviousWeekDate());
+    var d = new Date(getWeekFilterRange(w.value).start + "T00:00:00");
+    d.setDate(d.getDate() + delta * 7);
+    w.value = dateToIsoWeek(toIsoDate(d));
+  } else {
+    var m = $qs("#report-month");
+    if (!m.value) m.value = getPreviousMonthValue();
+    var p = m.value.split("-").map(Number);
+    var dt = new Date(p[0], p[1] - 1 + delta, 1);
+    m.value = dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0");
+  }
+  reportState.dirty = false;
+  updateReportStatus();
+  generateReport({ silent: true });
+}
+
+/** 保存当前编辑内容（每个周期一份，再次打开自动载入）。 */
+async function saveReport() {
+  var body = document.querySelector("#report-area .report-body");
+  if (!body) { toast("请先生成报表", "error"); return; }
+  var period = reportState.periodStart || currentReportPeriod();
+  if (!period) { toast("请先选择周期并生成报表", "error"); return; }
+
+  var btn = $qs("#report-save-btn");
+  if (btn) { btn.disabled = true; btn.textContent = "保存中…"; }
+  try {
+    var h1 = body.querySelector("h1");
+    var r = await fetch(API + "/reports/draft", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        report_type: reportState.type || reportTypeFromUI(),
+        period_start: period,
+        content_html: body.innerHTML,
+        content_md: htmlToMarkdown(body),
+        title: h1 ? h1.textContent.trim() : ""
+      })
+    });
+    var j = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw new Error(apiErrMsg(j, "保存失败"));
+
+    reportState.dirty = false;
+    reportState.periodStart = j.period_start || period;
+    reportState.loadedDraftAt = j.updated_at || "";
+    toast("已保存（" + (j.updated_at || "") + "）", "success");
+  } catch (e) {
+    toast("保存失败：" + (e.message || e), "error");
+  } finally {
+    var b2 = $qs("#report-save-btn");
+    if (b2) b2.disabled = false;
+    updateReportStatus();
+  }
+}
+
+// ---------- 已保存报表列表 ----------
+async function openSavedReports() {
+  var mid = "saved-reports";
+  closeModal(mid);
+  var html;
+  try {
+    var r = await fetch(API + "/reports/drafts");
+    var j = await r.json();
+    var items = j.items || [];
+    var rows = items.length
+      ? items.map(function (it) {
+          return '<div class="saved-row">' +
+            '<div class="saved-main"><div class="saved-title">' + escHtml(it.label || it.period_start) + "</div>" +
+            '<div class="saved-sub">' + (it.report_type === "weekly" ? "周报" : "月报") +
+            " · 周期起 " + it.period_start + " · 保存于 " + escHtml(it.updated_at || "—") + "</div></div>" +
+            '<div class="saved-ops">' +
+            '<button class="btn btn-outline btn-sm" onclick="openSavedReport(\'' + it.report_type + "','" + it.period_start + "')\">打开</button>" +
+            '<button class="btn btn-outline btn-sm" onclick="deleteSavedReport(\'' + it.report_type + "','" + it.period_start + "')\">删除</button>" +
+            "</div></div>";
+        }).join("")
+      : '<p class="saved-empty">还没有保存过任何报表。生成后点「💾 保存」即可留底，下次选到同一周期会自动载入。</p>';
+    html = '<div class="modal-overlay show" id="' + mid + '"><div class="modal" style="max-width:660px">' +
+      "<h2>已保存报表（" + items.length + "）</h2>" +
+      '<div class="saved-list">' + rows + "</div>" +
+      '<div class="form-actions"><button class="btn btn-outline btn-sm" onclick="closeModal(\'' + mid + '\')">关闭</button></div>' +
+      "</div></div>";
+  } catch (e) {
+    toast("读取已保存报表失败", "error");
+    return;
+  }
+  document.body.insertAdjacentHTML("beforeend", html);
+}
+
+function openSavedReport(type, periodStart) {
+  closeModal("saved-reports");
+  if (reportState.dirty && !confirm("当前报表有未保存的修改，打开其他报表会丢失，确定继续？")) return;
+  var seg = $qs("#report-type-seg");
+  seg.querySelectorAll(".rp-seg-btn").forEach(function (b) {
+    b.classList.toggle("active", b.dataset.rt === type);
+  });
+  toggleReportInputs(type);
+  syncReportPeriodInputs(periodStart);
+  reportState.dirty = false;
+  generateReport({ force: true });
+}
+
+async function deleteSavedReport(type, periodStart) {
+  if (!confirm("删除「" + periodStart + "」起这期的已保存报表？\n删除后该周期会恢复为系统自动生成的内容。")) return;
+  try {
+    var r = await fetch(API + "/reports/draft?report_type=" + type +
+      "&period_start=" + encodeURIComponent(periodStart), { method: "DELETE" });
+    if (!r.ok) throw new Error("删除失败");
+    toast("已删除", "success");
+    if (reportState.periodStart === periodStart) {
+      reportState.loadedDraftAt = "";
+      updateReportStatus();
+    }
+    openSavedReports();
+  } catch (e) { toast("删除失败，请重试", "error"); }
+}
+
+// ---------- 复制 / 下载 ----------
 function reportText() {
   const el = document.querySelector("#report-area .report-body");
   return el ? el.innerText.trim() : "";
@@ -2012,17 +2329,99 @@ async function copyReport() {
     toast("内容已复制，可直接粘贴到 Word/飞书", "success");
   }
 }
+
+/** 把编辑后的 HTML 反推回 Markdown（下载用，比纯文本更可用）。 */
+function htmlToMarkdown(root) {
+  if (!root) return "";
+  function inline(node) {
+    var out = "";
+    node.childNodes.forEach(function (n) {
+      if (n.nodeType === 3) { out += n.nodeValue.replace(/\s+/g, " "); return; }
+      if (n.nodeType !== 1) return;
+      var tag = n.tagName.toLowerCase();
+      var inner = inline(n);
+      if (tag === "strong" || tag === "b") out += "**" + inner.trim() + "**";
+      else if (tag === "em" || tag === "i") out += "*" + inner.trim() + "*";
+      else if (tag === "br") out += " ";
+      else out += inner;
+    });
+    return out;
+  }
+  var lines = [];
+  function walk(node) {
+    node.childNodes.forEach(function (n) {
+      if (n.nodeType !== 1) return;
+      var tag = n.tagName.toLowerCase();
+      var t;
+      if (tag === "h1") lines.push("# " + inline(n).trim(), "");
+      else if (tag === "h2") lines.push("## " + inline(n).trim(), "");
+      else if (tag === "h3") lines.push("### " + inline(n).trim(), "");
+      else if (tag === "h4") lines.push("#### " + inline(n).trim(), "");
+      else if (tag === "p") { t = inline(n).trim(); if (t) lines.push(t, ""); }
+      else if (tag === "blockquote") {
+        t = inline(n).trim();
+        if (t) lines.push("> " + t.replace(/\n+/g, " "), "");
+      } else if (tag === "hr") lines.push("---", "");
+      else if (tag === "ul" || tag === "ol") {
+        var lis = n.querySelectorAll(":scope > li");
+        Array.prototype.forEach.call(lis, function (li, i) {
+          lines.push((tag === "ol" ? (i + 1) + ". " : "- ") + inline(li).trim());
+        });
+        if (lis.length) lines.push("");
+      } else if (tag === "table") {
+        var trs = n.querySelectorAll("tr");
+        Array.prototype.forEach.call(trs, function (tr, ri) {
+          var cells = Array.prototype.map.call(tr.children, function (c) {
+            return inline(c).trim().replace(/\|/g, "\\|").replace(/\n+/g, " ");
+          });
+          if (!cells.length) return;
+          lines.push("| " + cells.join(" | ") + " |");
+          if (ri === 0) lines.push("|" + cells.map(function () { return "------"; }).join("|") + "|");
+        });
+        if (trs.length) lines.push("");
+      } else if (tag === "div" || tag === "section" || tag === "article" || tag === "tbody" || tag === "thead") {
+        walk(n);
+      } else {
+        t = inline(n).trim();
+        if (t) lines.push(t, "");
+      }
+    });
+  }
+  walk(root);
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 function downloadReport() {
-  const txt = reportText();
-  if (!txt) { toast("请先生成报表", "error"); return; }
-  const blob = new Blob([txt], { type: "text/markdown;charset=utf-8" });
+  const body = document.querySelector("#report-area .report-body");
+  if (!body) { toast("请先生成报表", "error"); return; }
+  const md = htmlToMarkdown(body) || reportText();
+  const kind = reportState.type === "weekly" ? "周报" : "月报";
+  const stamp = reportState.periodStart || new Date().toISOString().slice(0, 10);
+  const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `运营周报_${new Date().toISOString().slice(0, 10)}.md`;
+  a.download = `运营${kind}_${stamp}.md`;
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(a.href);
-  toast("周报已下载", "success");
+  toast(kind + "已下载", "success");
 }
+
+// 兼容旧调用（数据看板「生成周报」按钮跳过来时）
+function loadReports(type) {
+  if (type && type !== reportTypeFromUI()) {
+    var seg = $qs("#report-type-seg");
+    seg.querySelectorAll(".rp-seg-btn").forEach(function (b) {
+      b.classList.toggle("active", b.dataset.rt === type);
+    });
+    toggleReportInputs(type);
+    reportState.dirty = false;
+    ensureReportPeriodDefaults();
+  }
+  initReportPage();
+}
+
+// ========== MODAL ==========
+function closeModal(id) { const el = document.getElementById(id); if (el) el.remove(); }
 
 // ========== BATCH ENTRY ==========
 async function openBatchEntry(platform, mode) {

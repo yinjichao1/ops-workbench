@@ -1,12 +1,17 @@
 """Report generation API — 周报/月报."""
 
-from datetime import date, timedelta
-from fastapi import APIRouter, Depends, Query
+import re
+from datetime import date, datetime, timedelta
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
+
 from ..models import get_db
 from ..models.platform_metrics import PlatformDailyMetrics
 from ..models.content import ContentDetail, ContentCalendar, Task
 from ..models.lead import Lead, LeadDeal
+from ..models.report_draft import ReportDraft
 
 router = APIRouter()
 
@@ -122,6 +127,213 @@ def _next_week_range(today: date):
     this_monday = today - timedelta(days=today.weekday())
     next_monday = this_monday + timedelta(weeks=1)
     return next_monday, next_monday + timedelta(days=6)
+
+
+# ============ 周期解析 / 展示 / 草稿 ============
+
+# ISO 周格式：2026-W38 / 2026W38 / 2026-W38-4
+_WEEK_RE = re.compile(r"^(\d{4})-?W(\d{1,2})(?:-(\d))?$", re.IGNORECASE)
+
+
+def _parse_iso_week(raw: str):
+    """`2026-W38` → 该周周一 date；不是 ISO 周格式返回 None。
+
+    注意：Python 3.11+ 的 ``date.fromisoformat`` 原生支持 ISO 周，3.10 及以下不支持。
+    这里显式解析，保证服务器 Python 版本不同也能正确处理 ``<input type="week">`` 的值。
+    """
+    m = _WEEK_RE.match((raw or "").strip())
+    if not m:
+        return None
+    try:
+        return date.fromisocalendar(int(m.group(1)), int(m.group(2)), 1)
+    except ValueError:
+        return None
+
+
+def _parse_period(report_type: str, week: str):
+    """把前端传来的周期值解析成 (start, end)。
+
+    - 周报：week 传该周任意一天，或 ISO 周（``2026-W38``）；留空 = 上周
+    - 月报：week 传 ``YYYY-MM-01`` 或 ``YYYY-MM``；留空 = 上月
+
+    解析失败抛 400 中文提示，避免 date.fromisoformat 直接炸成 500。
+    """
+    today = date.today()
+    raw = (week or "").strip()
+
+    if report_type == "weekly":
+        if raw:
+            start = _parse_iso_week(raw)
+            if start is None:
+                try:
+                    start = date.fromisoformat(raw)
+                except ValueError:
+                    raise HTTPException(
+                        400,
+                        f"周期格式不正确：{raw}"
+                        "（应形如 2026-09-14，或 ISO 周 2026-W38）",
+                    )
+            start = start - timedelta(days=start.weekday())  # 归一化到周一
+        else:
+            start, _ = _last_week_range(today)
+        return start, start + timedelta(days=6)
+
+    if raw:
+        norm = raw if len(raw) > 7 else raw + "-01"
+        try:
+            start = date.fromisoformat(norm)
+        except ValueError:
+            raise HTTPException(
+                400, f"周期格式不正确：{raw}（应形如 2026-09-01 或 2026-09）"
+            )
+        start = start.replace(day=1)
+    else:
+        start, _ = _last_month_range(today)
+    if start.month == 12:
+        end = date(start.year + 1, 1, 1) - timedelta(days=1)
+    else:
+        end = date(start.year, start.month + 1, 1) - timedelta(days=1)
+    if end > today:
+        end = today
+    return start, end
+
+
+def _period_label(report_type: str, start: date, end: date) -> str:
+    if report_type == "weekly":
+        iso = start.isocalendar()
+        return (
+            f"{iso[0]} 年第 {iso[1]} 周"
+            f"（{start.strftime('%m-%d')} ~ {end.strftime('%m-%d')}）"
+        )
+    return f"{start.year} 年 {start.month} 月"
+
+
+def _fmt_dt(dt) -> str:
+    return dt.strftime("%Y-%m-%d %H:%M") if dt else ""
+
+
+def _normalize_period_start(report_type: str, raw: str) -> date:
+    """草稿的周期键归一化：周报取所在周的周一，月报取该月 1 号。"""
+    val = (raw or "").strip()
+    if not val:
+        raise HTTPException(400, "缺少周期参数")
+    if report_type == "weekly":
+        d = _parse_iso_week(val)
+        if d is None:
+            try:
+                d = date.fromisoformat(val)
+            except ValueError:
+                raise HTTPException(
+                    400, f"周期格式不正确：{val}（应形如 2026-09-14，或 ISO 周 2026-W38）"
+                )
+        return d - timedelta(days=d.weekday())
+    norm = val if len(val) > 7 else val + "-01"
+    try:
+        d = date.fromisoformat(norm)
+    except ValueError:
+        raise HTTPException(400, f"周期格式不正确：{val}（应形如 2026-09-01）")
+    return d.replace(day=1)
+
+
+class DraftIn(BaseModel):
+    """保存报表草稿的入参。"""
+
+    report_type: str
+    period_start: str
+    content_html: str = ""
+    content_md: str = ""
+    title: str = ""
+
+    @field_validator("report_type", mode="before")
+    @classmethod
+    def _check_type(cls, v):
+        val = str(v or "").strip().lower()
+        if val in ("week", "周报", "weekly"):
+            return "weekly"
+        if val in ("month", "月报", "monthly"):
+            return "monthly"
+        raise ValueError("报表类型只能是「周报」或「月报」")
+
+
+@router.get("/drafts")
+def list_drafts(
+    report_type: str = Query("", description="weekly / monthly，留空返回全部"),
+    limit: int = Query(60, ge=1, le=200),
+    db: Session = Depends(get_db),
+):
+    """已保存的报表列表（按周期倒序），前端用于提示「哪些周期存过稿」。"""
+    q = db.query(ReportDraft)
+    if report_type:
+        q = q.filter(ReportDraft.report_type == report_type)
+    rows = q.order_by(ReportDraft.period_start.desc()).limit(limit).all()
+    items = []
+    for r in rows:
+        end = r.period_start + timedelta(days=6) if r.report_type == "weekly" else r.period_start
+        items.append({
+            "report_type": r.report_type,
+            "period_start": r.period_start.isoformat(),
+            "label": _period_label(r.report_type, r.period_start, end),
+            "title": r.title or "",
+            "updated_at": _fmt_dt(r.updated_at),
+        })
+    return {"items": items, "count": len(items)}
+
+
+@router.put("/draft")
+def save_draft(payload: DraftIn = Body(...), db: Session = Depends(get_db)):
+    """保存（或覆盖）某个周期的报表草稿 —— 每个周期只保留一份。"""
+    ps = _normalize_period_start(payload.report_type, payload.period_start)
+
+    row = (
+        db.query(ReportDraft)
+        .filter(
+            ReportDraft.report_type == payload.report_type,
+            ReportDraft.period_start == ps,
+        )
+        .first()
+    )
+    created = row is None
+    if created:
+        row = ReportDraft(report_type=payload.report_type, period_start=ps)
+        db.add(row)
+
+    row.content_html = payload.content_html or ""
+    row.content_md = payload.content_md or ""
+    row.title = (payload.title or "")[:200]
+    row.updated_at = datetime.now()
+    db.commit()
+    db.refresh(row)
+
+    return {
+        "ok": True,
+        "created": created,
+        "report_type": row.report_type,
+        "period_start": row.period_start.isoformat(),
+        "updated_at": _fmt_dt(row.updated_at),
+        "chars": len(row.content_html or ""),
+    }
+
+
+@router.delete("/draft")
+def delete_draft(
+    report_type: str = Query(..., description="weekly / monthly"),
+    period_start: str = Query(..., description="周期起点"),
+    db: Session = Depends(get_db),
+):
+    """删除某个周期的已保存草稿（「重新生成并丢弃修改」时使用）。"""
+    if report_type not in ("weekly", "monthly"):
+        raise HTTPException(400, "报表类型只能是「周报」或「月报」")
+    ps = _normalize_period_start(report_type, period_start)
+    n = (
+        db.query(ReportDraft)
+        .filter(
+            ReportDraft.report_type == report_type,
+            ReportDraft.period_start == ps,
+        )
+        .delete()
+    )
+    db.commit()
+    return {"ok": True, "deleted": n, "period_start": ps.isoformat()}
 
 
 # ============ 线索 / 成单 章节 ============
@@ -335,25 +547,14 @@ def generate_report(
     week: str = Query("", description="指定周期（周报传周一日期 YYYY-MM-DD；月报传 YYYY-MM-01），默认上周/上月"),
     db: Session = Depends(get_db),
 ):
-    """生成周报或月报 Markdown。周报默认取上周数据。"""
-    today = date.today()
+    """生成周报或月报 Markdown，并附带该周期已保存的草稿（若有）。
 
-    if report_type == "weekly":
-        if week:
-            start = date.fromisoformat(week)
-        else:
-            start, _ = _last_week_range(today)  # 默认上周
-        end = start + timedelta(days=6)
-        period = "周"
-    else:
-        if week:
-            start = date.fromisoformat(week)
-            end = (date(start.year + 1, 1, 1) - timedelta(days=1)) if start.month == 12 else (date(start.year, start.month + 1, 1) - timedelta(days=1))
-            if end > today:
-                end = today
-        else:
-            start, end = _last_month_range(today)  # 默认上月
-        period = "月"
+    前端约定：**有草稿就载入草稿**（保住手工修改），同时把新生成的 markdown 一并
+    返回，这样点「重新生成」时无需再发一次请求。
+    """
+    today = date.today()
+    start, end = _parse_period(report_type, week)
+    period = "周" if report_type == "weekly" else "月"
 
     # Collect data（周报排除每月1号月记录，月报只取1号月记录，避免相互污染）
     from sqlalchemy import extract
@@ -595,4 +796,30 @@ def generate_report(
         next_plan=next_plan,
     )
 
-    return {"markdown": report}
+    # 该周期已保存的手工编辑稿（每个周期一份）
+    draft = (
+        db.query(ReportDraft)
+        .filter(
+            ReportDraft.report_type == report_type,
+            ReportDraft.period_start == start,
+        )
+        .first()
+    )
+    draft_payload = None
+    if draft and (draft.content_html or draft.content_md):
+        draft_payload = {
+            "content_html": draft.content_html or "",
+            "content_md": draft.content_md or "",
+            "title": draft.title or "",
+            "updated_at": _fmt_dt(draft.updated_at),
+        }
+
+    return {
+        "markdown": report,
+        "report_type": report_type,
+        "period_start": start.isoformat(),
+        "period_end": end.isoformat(),
+        "label": _period_label(report_type, start, end),
+        "has_draft": draft_payload is not None,
+        "draft": draft_payload,
+    }
