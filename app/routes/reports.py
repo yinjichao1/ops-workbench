@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from ..models import get_db
 from ..models.platform_metrics import PlatformDailyMetrics
 from ..models.content import ContentDetail, ContentCalendar, Task
+from ..models.lead import Lead, LeadDeal
 
 router = APIRouter()
 
@@ -33,13 +34,19 @@ REPORT_TEMPLATE = """# {period}新媒体运营汇报
 
 ---
 
-## 四、核心指标达成分析
+## 四、线索与成单转化
+
+{lead_deal}
+
+---
+
+## 五、核心指标达成分析
 
 {kpi_analysis}
 
 ---
 
-## 五、问题与不足
+## 六、问题与不足
 
 > 【自动生成模板，请根据实际情况修改】
 
@@ -57,7 +64,7 @@ REPORT_TEMPLATE = """# {period}新媒体运营汇报
 
 ---
 
-## 六、优化策略与行动计划
+## 七、优化策略与行动计划
 
 > 【自动生成模板，请根据实际情况修改】
 
@@ -67,13 +74,13 @@ REPORT_TEMPLATE = """# {period}新媒体运营汇报
 
 ---
 
-## 七、下周工作计划（联动任务管理与内容排期）
+## 八、下周工作计划（联动任务管理与内容排期）
 
 {next_week_plan}
 
 ---
 
-## 八、下周期目标与KPI规划
+## 九、下周期目标与KPI规划
 
 {next_plan}
 
@@ -115,6 +122,211 @@ def _next_week_range(today: date):
     this_monday = today - timedelta(days=today.weekday())
     next_monday = this_monday + timedelta(weeks=1)
     return next_monday, next_monday + timedelta(days=6)
+
+
+# ============ 线索 / 成单 章节 ============
+
+def _pct(a, b):
+    return round(a / b * 100, 1) if b else 0.0
+
+
+def _qoq(this_val, last_val):
+    """环比：上期为 0 时显示 —，持平显示「持平」，避免除零。"""
+    if not last_val:
+        return "—"
+    if this_val == last_val:
+        return "持平"
+    arrow = "↑" if this_val > last_val else "↓"
+    return f"{arrow}{abs(round((this_val - last_val) / last_val * 100, 1))}%"
+
+
+def _money(v):
+    v = round(float(v or 0), 2)
+    return f"¥{v:,.0f}" if v == int(v) else f"¥{v:,.2f}"
+
+
+def _blank(v):
+    return v if v not in (None, "") else "—"
+
+
+def _lead_deal_section(db: Session, start: date, end: date,
+                       last_start: date, last_end: date,
+                       today: date, report_type: str, period: str) -> str:
+    """「线索与成单转化」章节：线索总览 / 分渠道全链路 / 细分来源 / 分校区 / 每日趋势。"""
+    from .leads import _parse_sub_source  # 复用看板的「备注细分渠道」口径
+
+    lines = []
+
+    # ---------- 本周期线索 ----------
+    rows = db.query(Lead).filter(Lead.date >= start, Lead.date <= end).all()
+    total = len(rows)
+    valid = sum(1 for r in rows if r.validity == "有效")
+    invalid = sum(1 for r in rows if r.validity == "无效")
+    pending = sum(1 for r in rows if r.validity == "待定")
+    contact_sum = sum(r.contact_count or 0 for r in rows)
+    high_contact = sum(1 for r in rows if (r.contact_count or 0) >= 3)
+
+    last_rows = db.query(Lead).filter(Lead.date >= last_start, Lead.date <= last_end).all()
+    last_total = len(last_rows)
+
+    # ---------- 本周期成单 ----------
+    deals = (
+        db.query(LeadDeal)
+        .filter(LeadDeal.deal_date >= start, LeadDeal.deal_date <= end)
+        .all()
+    )
+    deal_count = len(deals)
+    deal_amount = round(sum(d.amount or 0 for d in deals), 2)
+    deal_avg = round(deal_amount / deal_count, 2) if deal_count else 0
+
+    # ---------- 4.1 总览 ----------
+    avg_contact = round(contact_sum / total, 1) if total else 0
+    lines.append("### 4.1 线索总览\n")
+    lines.append(
+        f"本{period}新增线索 **{total}** 条"
+        f"（有效 **{valid}** / 无效 {invalid} / 待定 {pending}，"
+        f"有效率 **{_pct(valid, total)}%**），环比 {_qoq(total, last_total)}；"
+        f"累计沟通 **{contact_sum}** 次，人均沟通 **{avg_contact}** 次，"
+        f"高意向（沟通 ≥3 次）**{high_contact}** 人。\n"
+    )
+    lines.append(
+        f"本{period}成单 **{deal_count}** 单，成交金额 **{_money(deal_amount)}**，"
+        f"客单价 **{_money(deal_avg)}**，线索→成单转化率 **{_pct(deal_count, total)}%**。\n"
+    )
+
+    # 本月累计（周报里用于看月度进度；月报周期本身就是本月，不再重复）
+    if report_type == "weekly":
+        m_start = today.replace(day=1)
+        m_lead = db.query(Lead).filter(Lead.date >= m_start, Lead.date <= today).all()
+        m_total = len(m_lead)
+        m_valid = sum(1 for r in m_lead if r.validity == "有效")
+        m_deal = (
+            db.query(LeadDeal)
+            .filter(LeadDeal.deal_date >= m_start, LeadDeal.deal_date <= today)
+            .all()
+        )
+        m_amount = round(sum(d.amount or 0 for d in m_deal), 2)
+        m_customers = len({(d.name or "").strip() for d in m_deal if (d.name or "").strip()})
+        lines.append(
+            f"> **本月累计**（{m_start} 至 {today}）：线索 **{m_total}** 条"
+            f"（有效 **{m_valid}** 条，有效率 **{_pct(m_valid, m_total)}%**）；"
+            f"成单 **{len(m_deal)}** 单（去重客户 {m_customers} 人），"
+            f"成交金额 **{_money(m_amount)}**。\n"
+        )
+    else:
+        m_start = start  # 月报：本月累计即本周期
+
+    # ---------- 4.2 分渠道全链路（来源维度，与成单可对齐） ----------
+    src_bucket = {}
+
+    def _bucket(name):
+        return src_bucket.setdefault(
+            name or "其他",
+            {"total": 0, "有效": 0, "无效": 0, "待定": 0, "i1": 0, "i3": 0, "i5": 0,
+             "deal": 0, "amount": 0.0},
+        )
+
+    for r in rows:
+        b = _bucket(r.source)
+        b["total"] += 1
+        b["有效" if r.validity == "有效" else ("无效" if r.validity == "无效" else "待定")] += 1
+        it = r.intent or 0
+        if it == 1:
+            b["i1"] += 1
+        elif it == 3:
+            b["i3"] += 1
+        elif it == 5:
+            b["i5"] += 1
+    for d in deals:
+        b = _bucket(d.source)
+        b["deal"] += 1
+        b["amount"] += d.amount or 0
+
+    lines.append("### 4.2 分渠道线索与成单\n")
+    if src_bucket:
+        lines.append("| 来源 | 线索数 | 有效 | 无效 | 待定 | 有效率 | 意向1 | 意向3 | 意向5 | 成单 | 转化率 | 成交金额 |")
+        lines.append("|------|--------|------|------|------|--------|-------|-------|-------|------|--------|----------|")
+        for name, b in sorted(src_bucket.items(), key=lambda x: -x[1]["total"]):
+            lines.append(
+                f"| {name} | {b['total']} | {b['有效']} | {b['无效']} | {b['待定']} | "
+                f"{_pct(b['有效'], b['total'])}% | {b['i1']} | {b['i3']} | {b['i5']} | "
+                f"{b['deal']} | {_pct(b['deal'], b['total'])}% | {_money(b['amount'])} |"
+            )
+        # 合计行
+        lines.append(
+            f"| **合计** | **{total}** | **{valid}** | **{invalid}** | **{pending}** | "
+            f"**{_pct(valid, total)}%** | "
+            f"**{sum(b['i1'] for b in src_bucket.values())}** | "
+            f"**{sum(b['i3'] for b in src_bucket.values())}** | "
+            f"**{sum(b['i5'] for b in src_bucket.values())}** | "
+            f"**{deal_count}** | **{_pct(deal_count, total)}%** | **{_money(deal_amount)}** |"
+        )
+        lines.append("")
+    else:
+        lines.append(f"本{period}暂无线索与成单记录。\n")
+
+    # ---------- 4.3 备注细分来源（Top 8） ----------
+    sub_bucket = {}
+    for r in rows:
+        subs = _parse_sub_source(r.source, r.note or "")
+        name = subs[0][1] if subs else (r.source or "其他")
+        b = sub_bucket.setdefault(name, {"total": 0, "有效": 0})
+        b["total"] += 1
+        if r.validity == "有效":
+            b["有效"] += 1
+
+    if sub_bucket:
+        top = sorted(sub_bucket.items(), key=lambda x: -x[1]["total"])[:8]
+        lines.append("### 4.3 细分来源 Top（按备注识别）\n")
+        lines.append("| 细分来源 | 线索数 | 有效 | 有效率 |")
+        lines.append("|---------|--------|------|--------|")
+        for name, b in top:
+            lines.append(f"| {name} | {b['total']} | {b['有效']} | {_pct(b['有效'], b['total'])}% |")
+        if len(sub_bucket) > len(top):
+            lines.append(f"| *（其余 {len(sub_bucket) - len(top)} 个来源）* | "
+                         f"{sum(b['total'] for _, b in sorted(sub_bucket.items(), key=lambda x: -x[1]['total'])[8:])} | — | — |")
+        lines.append("")
+
+    # ---------- 4.4 分校区 ----------
+    cam_bucket = {}
+    for r in rows:
+        c = r.campus or r.owner or "未分配"
+        b = cam_bucket.setdefault(c, {"total": 0, "有效": 0, "deal": 0, "amount": 0.0})
+        b["total"] += 1
+        if r.validity == "有效":
+            b["有效"] += 1
+    for d in deals:
+        c = d.campus or "未分配"
+        b = cam_bucket.setdefault(c, {"total": 0, "有效": 0, "deal": 0, "amount": 0.0})
+        b["deal"] += 1
+        b["amount"] += d.amount or 0
+
+    if cam_bucket:
+        lines.append("### 4.4 分校区线索与成单\n")
+        lines.append("| 校区 | 线索数 | 有效 | 有效率 | 成单 | 转化率 | 成交金额 |")
+        lines.append("|------|--------|------|--------|------|--------|----------|")
+        for name, b in sorted(cam_bucket.items(), key=lambda x: -x[1]["total"]):
+            lines.append(
+                f"| {name} | {b['total']} | {b['有效']} | {_pct(b['有效'], b['total'])}% | "
+                f"{b['deal']} | {_pct(b['deal'], b['total'])}% | {_money(b['amount'])} |"
+            )
+        lines.append("")
+
+    # ---------- 4.5 每日线索趋势（仅周报，月报天数太多不列） ----------
+    if report_type == "weekly":
+        by_day = {}
+        for r in rows:
+            by_day[r.date.isoformat()] = by_day.get(r.date.isoformat(), 0) + 1
+        # 补齐整周 7 天（无数据的日期显示 0，方便看断档）
+        days = [(start + timedelta(days=i)).isoformat() for i in range(7)]
+        lines.append("### 4.5 每日线索趋势\n")
+        lines.append("| 日期 | " + " | ".join(d[5:].replace("-", "/") for d in days) + " |")
+        lines.append("|------|" + "------|" * len(days))
+        lines.append("| 线索数 | " + " | ".join(str(by_day.get(d, 0)) for d in days) + " |")
+        lines.append("")
+
+    lines.append("> 【请补充线索质量、渠道投放与转化效率的复盘结论】\n")
+    return "\n".join(lines)
 
 
 @router.get("")
@@ -247,6 +459,23 @@ def generate_report(
         f"内容发布 **{total_publish}** 条。"
     )
 
+    # 周期概述补充：线索与成单（转化侧一句话摘要）
+    _ld_rows = db.query(Lead).filter(Lead.date >= start, Lead.date <= end).all()
+    _ld_total = len(_ld_rows)
+    _ld_valid = sum(1 for r in _ld_rows if r.validity == "有效")
+    _ld_deals = (
+        db.query(LeadDeal)
+        .filter(LeadDeal.deal_date >= start, LeadDeal.deal_date <= end)
+        .all()
+    )
+    _ld_amount = round(sum(d.amount or 0 for d in _ld_deals), 2)
+    overview += (
+        f"\n\n转化侧：新增线索 **{_ld_total}** 条"
+        f"（有效 **{_ld_valid}** 条，有效率 **{_pct(_ld_valid, _ld_total)}%**）；"
+        f"成单 **{len(_ld_deals)}** 单，成交金额 **{_money(_ld_amount)}**，"
+        f"线索→成单转化率 **{_pct(len(_ld_deals), _ld_total)}%**。"
+    )
+
     # Platform details
     platform_details = ""
     for plat in PLATFORMS:
@@ -343,6 +572,16 @@ def generate_report(
     plan_lines.append("### 📝 补充安排（自由编辑）\n（待填写）\n")
     next_week_plan = "\n".join(plan_lines)
 
+    # 线索与成单章节（周期口径与平台指标保持一致）
+    if report_type == "weekly":
+        ld_last_start, ld_last_end = start - timedelta(weeks=1), end - timedelta(weeks=1)
+    else:
+        ld_last_start = (start - timedelta(days=1)).replace(day=1)
+        ld_last_end = start - timedelta(days=1)
+    lead_deal = _lead_deal_section(
+        db, start, end, ld_last_start, ld_last_end, today, report_type, period
+    )
+
     report = REPORT_TEMPLATE.format(
         period=period,
         start=str(start),
@@ -350,6 +589,7 @@ def generate_report(
         overview=overview,
         platform_details=platform_details,
         data_overview=data_overview,
+        lead_deal=lead_deal,
         kpi_analysis=kpi_analysis,
         next_week_plan=next_week_plan,
         next_plan=next_plan,

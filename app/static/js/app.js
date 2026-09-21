@@ -1957,12 +1957,22 @@ async function loadReports(type) {
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/^- (.+)$/gm, '<li>$1</li>');
     html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
-    html = html.replace(/\|(.+)\|/g, m => {
-      const cells = m.split('|').filter(c => c.trim());
-      if (cells[0] && cells[0].includes('---')) return '</thead><tbody>';
-      return `<tr>${cells.map(c => `<td>${c.trim()}</td>`).join('')}</tr>`;
+    // Markdown 表格 → 单个完整 <table>（表头 th + 表体 td）
+    // 旧写法把表头行和表体行分别包成两个 <table>，导致表头单独成表、th 样式失效
+    html = html.replace(/(?:^\|.+\|[ \t]*\r?\n?)+/gm, function (block) {
+      var lines = block.replace(/[\r\n]+$/, '').split(/\r?\n/);
+      var out = '<table><thead>', inBody = false;
+      lines.forEach(function (line) {
+        line = line.trim();
+        if (!line) return;
+        if (/^\|[\s:|-]*-[\s:|-]*\|$/.test(line)) { out += '</thead><tbody>'; inBody = true; return; }
+        var cells = line.split('|');
+        cells = cells.slice(1, cells.length - 1);
+        var tag = inBody ? 'td' : 'th';
+        out += '<tr>' + cells.map(function (c) { return '<' + tag + '>' + c.trim() + '</' + tag + '>'; }).join('') + '</tr>';
+      });
+      return out + '</tbody></table>';
     });
-    html = html.replace(/(<tr>.*<\/tr>\n?)+/g, '<table><thead>$&</tbody></table>');
     html = html.replace(/<blockquote>/g, '<blockquote>').replace(/<\/blockquote>/g, '</blockquote>');
     // 周期标签（后端返回的是默认上周/上月）
     const lbl = document.getElementById("report-period-label");
