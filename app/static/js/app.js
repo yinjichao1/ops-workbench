@@ -2123,9 +2123,12 @@ function renderReportBody(html, isDraft) {
   var area = $qs("#report-area");
   area.innerHTML =
     '<div class="report-body" contenteditable="true" spellcheck="false">' + html + "</div>" +
-    '<div class="report-edit-hint">✏️ 内容可直接编辑' +
-    (isDraft ? "（当前是已保存的版本，改完记得再点「💾 保存」）" : "") +
-    "；点右上角「💾 保存」留底，「📋 复制内容」可直接粘到 Word/飞书</div>";
+    '<div class="report-edit-hint">' +
+    (isDraft
+      ? "✏️ 当前显示的是你保存过的版本，可直接编辑，改完再点右上角「💾 保存」。"
+        + '若报表模板有更新或数据有变动，点左上「↻ 按最新数据重新生成」可套用最新结构。'
+      : "✏️ 内容可直接编辑；点右上角「💾 保存」留底，「📋 复制内容」可直接粘到 Word/飞书。") +
+    "</div>";
   var body = area.querySelector(".report-body");
   if (body) {
     body.addEventListener("input", function () {
