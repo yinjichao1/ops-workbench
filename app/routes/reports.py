@@ -11,6 +11,7 @@ from ..models import get_db
 from ..models.platform_metrics import PlatformDailyMetrics
 from ..models.content import ContentDetail, ContentCalendar, Task
 from ..models.lead import Lead, LeadDeal
+from ..models.live_stream import LiveStream
 from ..models.report_draft import ReportDraft
 
 router = APIRouter()
@@ -45,13 +46,19 @@ REPORT_TEMPLATE = """# {period}新媒体运营汇报
 
 ---
 
-## 五、核心指标达成分析
+## 五、直播数据
+
+{live}
+
+---
+
+## 六、核心指标达成分析
 
 {kpi_analysis}
 
 ---
 
-## 六、问题与不足
+## 七、问题与不足
 
 > 【自动生成模板，请根据实际情况修改】
 
@@ -69,7 +76,7 @@ REPORT_TEMPLATE = """# {period}新媒体运营汇报
 
 ---
 
-## 七、优化策略与行动计划
+## 八、优化策略与行动计划
 
 > 【自动生成模板，请根据实际情况修改】
 
@@ -79,13 +86,13 @@ REPORT_TEMPLATE = """# {period}新媒体运营汇报
 
 ---
 
-## 八、下周工作计划（联动任务管理与内容排期）
+## 九、下周工作计划（联动任务管理与内容排期）
 
 {next_week_plan}
 
 ---
 
-## 九、下周期目标与KPI规划
+## 十、下周期目标与KPI规划
 
 {next_plan}
 
@@ -359,6 +366,133 @@ def _money(v):
 
 def _blank(v):
     return v if v not in (None, "") else "—"
+
+
+def _cell(v) -> str:
+    """表格单元格安全化：竖线换成全角、去掉换行，避免破坏 Markdown 表格。"""
+    s = str(v if v not in (None, "") else "—")
+    return s.replace("|", "｜").replace("\n", " ").replace("\r", " ").strip()
+
+
+def _fmt_duration(minutes) -> str:
+    """159 → 「2 小时 39 分钟」；45 → 「45 分钟」。"""
+    m = int(minutes or 0)
+    if m <= 0:
+        return "0 分钟"
+    h, mm = divmod(m, 60)
+    if h and mm:
+        return f"{h} 小时 {mm} 分钟"
+    if h:
+        return f"{h} 小时"
+    return f"{mm} 分钟"
+
+
+# ============ 直播数据 章节 ============
+
+def _live_section(db: Session, start: date, end: date,
+                  last_start: date, last_end: date, period: str) -> str:
+    """「直播数据」章节：总览 / 分平台 / 场次明细。
+
+    口径与「直播数据」页保持一致：峰值在线取场次最大值，其余字段求和。
+    """
+    rows = (
+        db.query(LiveStream)
+        .filter(LiveStream.live_date >= start, LiveStream.live_date <= end)
+        .order_by(LiveStream.live_date.asc(), LiveStream.id.asc())
+        .all()
+    )
+
+    def agg(rs):
+        return {
+            "count": len(rs),
+            "duration": sum(r.duration_min or 0 for r in rs),
+            "viewers": sum(r.viewers or 0 for r in rs),
+            "peak": max((r.peak_online or 0 for r in rs), default=0),
+            "engagement": sum(r.engagement or 0 for r in rs),
+            "followers": sum(r.new_followers or 0 for r in rs),
+            "leads": sum(r.leads_count or 0 for r in rs),
+        }
+
+    cur = agg(rows)
+    last = agg(
+        db.query(LiveStream)
+        .filter(LiveStream.live_date >= last_start, LiveStream.live_date <= last_end)
+        .all()
+    )
+
+    lines = ["### 5.1 直播总览\n"]
+    if not rows:
+        lines.append(f"本{period}暂无直播记录。若已开播，请到「直播数据」页录入场次后重新生成。\n")
+        lines.append("> 【请补充直播主题选择、开播时段与留资转化的复盘结论】\n")
+        return "\n".join(lines)
+
+    lines.append(
+        f"本{period}开播 **{cur['count']}** 场，累计直播 **{_fmt_duration(cur['duration'])}**"
+        f"（场均 **{round(cur['duration'] / cur['count'])}** 分钟）；"
+        f"总观看 **{cur['viewers']}** 人次，场均观看 **{round(cur['viewers'] / cur['count'])}** 人次，"
+        f"最高同时在线 **{cur['peak']}** 人；总互动 **{cur['engagement']}** 次"
+        f"（互动率 **{_pct(cur['engagement'], cur['viewers'])}%**），"
+        f"新增粉丝 **{cur['followers']}** 人，直播留资 **{cur['leads']}** 条"
+        f"（场均 **{round(cur['leads'] / cur['count'], 1)}** 条）。\n"
+    )
+    lines.append(
+        f"环比上{period}：场次 {_qoq(cur['count'], last['count'])}、"
+        f"观看人次 {_qoq(cur['viewers'], last['viewers'])}、"
+        f"新增粉丝 {_qoq(cur['followers'], last['followers'])}、"
+        f"留资线索 {_qoq(cur['leads'], last['leads'])}。\n"
+    )
+
+    # ---------- 5.2 分平台 ----------
+    by_plat = {}
+    for r in rows:
+        by_plat.setdefault(r.platform or "其他", []).append(r)
+
+    lines.append("### 5.2 分平台直播\n")
+    lines.append("| 平台 | 场次 | 直播时长 | 观看人次 | 场均观看 | 最高在线 | 互动量 | 互动率 | 新增粉丝 | 留资线索 |")
+    lines.append("|------|------|---------|---------|---------|---------|--------|--------|---------|---------|")
+    for name, rs in sorted(by_plat.items(), key=lambda x: -sum(r.viewers or 0 for r in x[1])):
+        a = agg(rs)
+        lines.append(
+            f"| {_cell(name)} | {a['count']} | {_fmt_duration(a['duration'])} | {a['viewers']} | "
+            f"{round(a['viewers'] / a['count'])} | {a['peak']} | {a['engagement']} | "
+            f"{_pct(a['engagement'], a['viewers'])}% | {a['followers']} | {a['leads']} |"
+        )
+    if len(by_plat) > 1:
+        lines.append(
+            f"| **合计** | **{cur['count']}** | **{_fmt_duration(cur['duration'])}** | "
+            f"**{cur['viewers']}** | **{round(cur['viewers'] / cur['count'])}** | "
+            f"**{cur['peak']}** | **{cur['engagement']}** | "
+            f"**{_pct(cur['engagement'], cur['viewers'])}%** | **{cur['followers']}** | "
+            f"**{cur['leads']}** |"
+        )
+    lines.append("")
+
+    # ---------- 5.3 场次明细 ----------
+    cap = 30 if period == "月" else 60
+    detail = list(rows)
+    truncated = False
+    if len(detail) > cap:
+        detail = sorted(rows, key=lambda r: -(r.viewers or 0))[:cap]
+        truncated = True
+
+    lines.append(f"### 5.3 直播场次明细（共 {cur['count']} 场）\n")
+    lines.append("| 日期 | 平台 | 账号 | 主题 | 时长 | 观看人次 | 最高在线 | 互动量 | 新增粉丝 | 留资线索 |")
+    lines.append("|------|------|------|------|------|---------|---------|--------|---------|---------|")
+    for r in detail:
+        lines.append(
+            f"| {r.live_date} | {_cell(r.platform)} | {_cell(r.account)} | {_cell(r.title)} | "
+            f"{_fmt_duration(r.duration_min)} | {r.viewers or 0} | {r.peak_online or 0} | "
+            f"{r.engagement or 0} | {r.new_followers or 0} | {r.leads_count or 0} |"
+        )
+    if truncated:
+        lines.append(f"| *（其余 {cur['count'] - cap} 场按观看人次排序略）* | | | | | | | | | |")
+    lines.append("")
+    lines.append(
+        "> 说明：本节「直播留资线索」为「直播数据」模块手工录入的口径，"
+        "与上一节「线索与成单转化」中的线索表相互独立，两者不做合并统计。\n"
+    )
+    lines.append("> 【请补充直播主题选择、开播时段与留资转化的复盘结论】\n")
+    return "\n".join(lines)
 
 
 def _lead_deal_section(db: Session, start: date, end: date,
@@ -677,6 +811,23 @@ def generate_report(
         f"线索→成单转化率 **{_pct(len(_ld_deals), _ld_total)}%**。"
     )
 
+    # 周期概述补充：直播侧
+    _lv_rows = (
+        db.query(LiveStream)
+        .filter(LiveStream.live_date >= start, LiveStream.live_date <= end)
+        .all()
+    )
+    if _lv_rows:
+        _lv_dur = sum(r.duration_min or 0 for r in _lv_rows)
+        _lv_viewers = sum(r.viewers or 0 for r in _lv_rows)
+        _lv_leads = sum(r.leads_count or 0 for r in _lv_rows)
+        _lv_followers = sum(r.new_followers or 0 for r in _lv_rows)
+        overview += (
+            f"\n\n直播侧：开播 **{len(_lv_rows)}** 场，累计直播 **{_fmt_duration(_lv_dur)}**，"
+            f"总观看 **{_lv_viewers}** 人次，新增粉丝 **{_lv_followers}** 人，"
+            f"直播留资 **{_lv_leads}** 条。"
+        )
+
     # Platform details
     platform_details = ""
     for plat in PLATFORMS:
@@ -783,6 +934,9 @@ def generate_report(
         db, start, end, ld_last_start, ld_last_end, today, report_type, period
     )
 
+    # 直播数据章节（周期口径与平台/线索保持一致）
+    live = _live_section(db, start, end, ld_last_start, ld_last_end, period)
+
     report = REPORT_TEMPLATE.format(
         period=period,
         start=str(start),
@@ -791,6 +945,7 @@ def generate_report(
         platform_details=platform_details,
         data_overview=data_overview,
         lead_deal=lead_deal,
+        live=live,
         kpi_analysis=kpi_analysis,
         next_week_plan=next_week_plan,
         next_plan=next_plan,
