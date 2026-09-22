@@ -239,8 +239,6 @@ var STATE = { batch: -1, cats: [true, true, true, true] };
 /* ---------- 门控 ---------- */
 var LS = window.localStorage;
 function isUnlocked(){ try{ return LS.getItem("s26_unlocked") === "1"; }catch(e){ return false; } }
-function freeSchool(){ try{ return LS.getItem("s26_free_school") || ""; }catch(e){ return ""; } }
-function markFree(name){ try{ if(!LS.getItem("s26_free_school")) LS.setItem("s26_free_school", name); }catch(e){} }
 function unlock(){ try{ LS.setItem("s26_unlocked", "1"); }catch(e){} }
 function openModal(school){
   var m = document.getElementById("mask");
@@ -365,8 +363,7 @@ function topRows(n){
 
 function renderSchool(s){
   if(!s){ renderHome(); return; }
-  if(!isUnlocked() && !freeSchool()) markFree(s.name);   /* 第一所查看的学校 = 免费校 */
-  var locked = !isUnlocked() && s.name !== freeSchool();
+  var locked = !isUnlocked();   /* 0次免费：所有学校/省份均需留资解锁 */
   var bt = STATE.batch, cats = STATE.cats;
   var agg = aggFor(s.combos, cats, bt);
   var frk = filteredRank(s);
