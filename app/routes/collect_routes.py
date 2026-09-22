@@ -66,6 +66,7 @@ MINIAPP_SOURCE_PREFIX = "小程序"      # source 形如「小程序-公众号�
 # 表单项目代号 → 中文名（新项目上线时在此登记，前端 PAGE_LABELS 保持同步）
 PAGE_LABELS = {
     "timeline28": "28届备考时间线",
+    "school26": "录用查询工具",
     MATCH_CHANNEL: MATCH_LABEL,
     EXAM_CHANNEL: EXAM_LABEL,
     MINIAPP_CHANNEL: MINIAPP_LABEL,
