@@ -19,9 +19,10 @@
   .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 16px;text-align:center;min-width:92px}
   .stat b{display:block;font-size:22px;color:var(--primary)}
   .stat span{font-size:12px;color:var(--ink-soft)}
-  /* 项目 Tab */
-  .tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;margin-bottom:2px;scrollbar-width:none}
+  /* 项目 Tab（横向可拖拽：按住拖动 / 悬停滚轮横移，两端渐隐提示后面还有） */
+  .tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;margin-bottom:2px;scrollbar-width:none;cursor:grab;user-select:none;-webkit-user-select:none}
   .tabs::-webkit-scrollbar{display:none}
+  .tabs.dragging{cursor:grabbing}
   .tab{flex:0 0 auto;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:7px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap;color:var(--ink-soft)}
   .tab .code{color:var(--ink-faint);font-size:11px}
   .tab.active{background:var(--primary);border-color:var(--primary);color:#fff}
@@ -207,6 +208,10 @@ function renderTabs(total, today){
             '<span class="badge t">今 ' + fmtCount(c.today) + '</span><span class="badge">' + fmtCount(c.total) + '</span></div>';
   });
   el.innerHTML = html;
+  // 切 Tab 重绘后把激活 Tab 滚回可视区：点的是被截断的后排 Tab 时，别让它又藏回去
+  var act = el.querySelector('.tab.active');
+  if(act && act.scrollIntoView){ try{ act.scrollIntoView({block:'nearest', inline:'nearest'}); }catch(_e){} }
+  updateTabsFade();
   updateCurTitle();
 }
 
@@ -369,6 +374,63 @@ function del(id, source){
 }
 document.getElementById('kw').addEventListener('input', render);
 renderHead();
+
+// ── Tab 条横向拖拽 ─────────────────────────────────────────────────
+// .tabs 是 overflow-x:auto 容器但滚动条被隐藏：桌面端鼠标用户既看不到滚动提示
+// 也拖不动，渠道一多（模考/小程序排在后面）就被截断。补三件事：
+//   1) 按住左键拖动 → 横向滚动（位移超 4px 视为拖拽，松手不触发 Tab 点击）
+//   2) 悬停时滚轮 → 映射为横向滚动（已滚到头则交还给页面正常滚动）
+//   3) 两端渐隐 mask → 提示"后面/前面还有"；滚到头的那侧恢复实色
+function updateTabsFade(){
+  var el = document.getElementById('tabs');
+  var m = el.scrollWidth - el.clientWidth;
+  if(m <= 1){ el.style.webkitMaskImage = 'none'; el.style.maskImage = 'none'; return; }
+  var l = el.scrollLeft;
+  var left = (l > 2 ? 'transparent 0' : '#000 0') + ',#000 22px';
+  var right = '#000 calc(100% - 22px),' + (l < m - 2 ? 'transparent 100%' : '#000 100%');
+  var v = 'linear-gradient(to right,' + left + ',' + right + ')';
+  el.style.webkitMaskImage = v; el.style.maskImage = v;
+}
+(function(){
+  var el = document.getElementById('tabs');
+  var down = false, moved = false, startX = 0, startLeft = 0;
+  function maxScroll(){ return el.scrollWidth - el.clientWidth; }
+
+  el.addEventListener('mousedown', function(e){
+    if(e.button !== 0 || maxScroll() <= 0) return;   // 没溢出就不接管
+    down = true; moved = false;
+    startX = e.clientX; startLeft = el.scrollLeft;
+    el.classList.add('dragging');
+  });
+  window.addEventListener('mousemove', function(e){
+    if(!down) return;
+    var dx = e.clientX - startX;
+    if(Math.abs(dx) > 4) moved = true;
+    el.scrollLeft = startLeft - dx;
+  });
+  window.addEventListener('mouseup', function(){
+    if(!down) return;
+    down = false;
+    el.classList.remove('dragging');
+    updateTabsFade();
+  });
+  // 拖过的松手不算点击，避免拖完误切 Tab
+  el.addEventListener('click', function(e){
+    if(moved){ e.preventDefault(); e.stopPropagation(); moved = false; }
+  }, true);
+
+  el.addEventListener('wheel', function(e){
+    if(maxScroll() <= 0) return;
+    var d = Math.abs(e.deltaX) >= Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if((d < 0 && el.scrollLeft <= 0) || (d > 0 && el.scrollLeft >= maxScroll() - .5)) return;
+    el.scrollLeft += d;
+    e.preventDefault();
+  }, { passive:false });
+
+  el.addEventListener('scroll', updateTabsFade, { passive:true });
+  window.addEventListener('resize', updateTabsFade);
+})();
+
 loadOverview();
 </script>
 </body>
