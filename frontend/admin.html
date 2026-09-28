@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>简历管理后台 · 思格教育</title>
+<style>
+:root{
+  --blue:#0a69cd; --blue-d:#0857a8; --blue-l:#e8f2fd;
+  --ink:#1e293b; --ink2:#475569; --muted:#94a3b8;
+  --line:#e2e8f0; --bg:#f4f7fb; --card:#fff; --ok:#12a150; --warn:#e6892e; --err:#dc3545;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei","PingFang SC",sans-serif;
+  background:var(--bg);color:var(--ink);font-size:14px;line-height:1.6}
+button{font-family:inherit;cursor:pointer}
+input,select{font-family:inherit;font-size:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;
+  border:none;border-radius:8px;font-size:13.5px;font-weight:600;background:var(--blue);
+  color:#fff;transition:.15s;white-space:nowrap}
+.btn:hover{background:var(--blue-d)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn-ghost{background:#fff;color:var(--ink2);border:1.5px solid var(--line)}
+.btn-ghost:hover{background:#f8fafc;color:var(--ink)}
+.btn-sm{padding:5px 11px;font-size:12.5px;border-radius:6px}
+.btn-ok{background:var(--ok)} .btn-ok:hover{background:#0f8a44}
+.btn-warn{background:var(--warn)} .btn-warn:hover{background:#cf7a22}
+.btn-err{background:#fff;color:var(--err);border:1.5px solid #fcc}
+
+/* 登录 */
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-box{background:#fff;border-radius:16px;box-shadow:0 8px 40px rgba(10,105,205,.10);
+  width:100%;max-width:400px;padding:38px 34px}
+.login-logo{font-size:20px;font-weight:700;color:var(--blue);text-align:center}
+.login-t{font-size:17px;font-weight:700;text-align:center;margin:22px 0 5px}
+.login-s{font-size:13px;color:var(--muted);text-align:center;margin-bottom:24px}
+.login-box input{width:100%;padding:13px 15px;border:1.5px solid var(--line);border-radius:9px;
+  font-size:15px;text-align:center;letter-spacing:1px}
+.login-box input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l)}
+.err{margin-top:13px;padding:10px 13px;background:#fef2f2;color:var(--err);border-radius:7px;
+  font-size:13px;display:none}
+
+/* 框架 */
+#app{display:none}
+.top{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:60;
+  display:flex;align-items:center;justify-content:space-between;padding:0 26px;height:58px}
+.top-l{display:flex;align-items:center;gap:13px}
+.top-logo{font-weight:700;color:var(--blue);font-size:15px}
+.sep{width:1px;height:19px;background:var(--line)}
+.top-title{font-size:13.5px;color:var(--ink2)}
+.top-r{display:flex;gap:9px;align-items:center}
+
+.tabs{background:#fff;border-bottom:1px solid var(--line);padding:0 26px;
+  display:flex;gap:4px;position:sticky;top:58px;z-index:55;overflow-x:auto}
+.tab{padding:13px 16px;border:none;background:none;font-size:13.5px;color:var(--ink2);
+  font-weight:600;border-bottom:2px solid transparent;transition:.15s;white-space:nowrap}
+.tab:hover{color:var(--blue)}
+.tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+
+main{max-width:1280px;margin:0 auto;padding:22px 26px 60px}
+
+/* 统计卡 */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:22px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:11px;padding:16px 18px}
+.stat-v{font-size:26px;font-weight:700;color:var(--blue);line-height:1.2}
+.stat-l{font-size:12.5px;color:var(--muted);margin-top:4px}
+.stat.g .stat-v{color:var(--ok)}
+.stat.w .stat-v{color:var(--warn)}
+.stat.n .stat-v{color:var(--ink2)}
+
+.card{background:#fff;border:1px solid var(--line);border-radius:11px;overflow:hidden;
+  margin-bottom:18px}
+.card-hd{padding:14px 18px;border-bottom:1px solid var(--line);background:#fbfcfe;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.card-hd h3{font-size:14.5px;font-weight:700}
+.card-bd{padding:16px 18px}
+.toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.toolbar input[type=text],.toolbar input[type=search],.toolbar select{
+  padding:8px 11px;border:1.5px solid var(--line);border-radius:8px;font-size:13px}
+.toolbar input:focus,.toolbar select:focus{outline:none;border-color:var(--blue)}
+
+/* 表格 */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f6f9fd;color:var(--ink2);font-weight:600;font-size:12px;padding:10px 11px;
+  text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 11px;border-bottom:1px solid #eef2f7;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#fafcfe}
+.tag{display:inline-block;padding:2px 9px;border-radius:11px;font-size:11.5px;font-weight:600}
+.tag-ok{background:#e8f8ee;color:var(--ok)}
+.tag-warn{background:#fdf3e6;color:var(--warn)}
+.tag-gray{background:#f1f5f9;color:var(--ink2)}
+.tag-err{background:#fef2f2;color:var(--err)}
+.tag-blue{background:var(--blue-l);color:var(--blue)}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+.mini{height:5px;background:#e8eef6;border-radius:3px;overflow:hidden;width:70px;display:inline-block;
+  vertical-align:middle;margin-right:7px}
+.mini i{display:block;height:100%;background:var(--blue);border-radius:3px}
+.empty{padding:44px;text-align:center;color:var(--muted);font-size:13.5px}
+
+/* 抽屉详情 */
+.mask{position:fixed;inset:0;background:rgba(15,23,42,.35);z-index:200;display:none}
+.mask.open{display:block}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:min(760px,94vw);background:#fff;z-index:201;
+  transform:translateX(100%);transition:transform .26s ease;overflow-y:auto;
+  box-shadow:-6px 0 32px rgba(0,0,0,.12)}
+.drawer.open{transform:translateX(0)}
+.d-hd{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:16px 22px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:2;flex-wrap:wrap}
+.d-hd h3{font-size:15.5px;font-weight:700}
+.d-x{border:none;background:#f1f5f9;width:30px;height:30px;border-radius:50%;color:var(--ink2);
+  font-size:16px;line-height:1}
+.d-bd{padding:20px 22px 50px}
+.d-sec{margin-bottom:22px}
+.d-sec h4{font-size:13.5px;color:var(--blue);font-weight:700;margin-bottom:10px;
+  padding-bottom:7px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.d-sec h4::before{content:"";width:3px;height:14px;background:var(--blue);border-radius:2px}
+.kv{display:grid;grid-template-columns:118px 1fr;gap:7px 14px;font-size:13px}
+.kv dt{color:var(--muted);font-size:12.5px}
+.kv dd{color:var(--ink);word-break:break-word}
+.d-tbl{width:100%;border-collapse:collapse;font-size:12.5px;border:1px solid var(--line);
+  border-radius:7px;overflow:hidden}
+.d-tbl th{background:#f6f9fd;padding:8px 10px;font-size:11.5px}
+.d-tbl td{padding:8px 10px;border-bottom:1px solid #eef2f7}
+.d-tbl tr:last-child td{border-bottom:none}
+.blk{background:#fcfdff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+  font-size:13px;line-height:1.75;white-space:pre-wrap;word-break:break-word;color:var(--ink2)}
+.blk+.blk{margin-top:11px}
+.blk-b{font-weight:600;color:var(--ink);margin-bottom:5px;font-size:12.5px}
+.photos{display:flex;gap:14px;flex-wrap:wrap;margin-top:4px}
+.photo{text-align:center}
+.photo img{max-width:150px;max-height:190px;border-radius:7px;border:1px solid var(--line);
+  display:block;margin-bottom:5px}
+.photo span{font-size:11.5px;color:var(--muted)}
+
+/* 添加名单 */
+.addrow{display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end}
+.fl{display:flex;flex-direction:column;gap:4px}
+.fl label{font-size:12px;color:var(--ink2);font-weight:600}
+.fl input{padding:8px 11px;border:1.5px solid var(--line);border-radius:8px;font-size:13px}
+.fl input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l)}
+
+/* toast */
+.toast{position:fixed;left:50%;top:74px;transform:translate(-50%,-14px);z-index:400;
+  padding:11px 20px;border-radius:9px;font-size:13.5px;font-weight:600;color:#fff;
+  box-shadow:0 6px 24px rgba(0,0,0,.16);opacity:0;pointer-events:none;transition:.22s}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.ok{background:var(--ok)} .toast.err{background:var(--err)} .toast.info{background:var(--blue)}
+
+.hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.7}
+.tabpane{display:none}
+.tabpane.on{display:block}
+</style>
+</head>
+<body>
+
+<!-- 登录 -->
+<div id="login">
+  <div class="login-box">
+    <div class="login-logo">思格教育 · 就业研究院</div>
+    <div class="login-t">简历管理后台</div>
+    <div class="login-s">请输入管理口令</div>
+    <input id="pwdInput" type="password" placeholder="管理口令">
+    <button id="loginBtn" class="btn" style="width:100%;margin-top:13px;padding:11px">
+      登录后台
+    </button>
+    <div id="loginErr" class="err"></div>
+  </div>
+</div>
+
+<!-- 主应用 -->
+<div id="app">
+  <div class="top">
+    <div class="top-l">
+      <span class="top-logo">思格教育</span>
+      <span class="sep"></span>
+      <span class="top-title">简历管理后台</span>
+    </div>
+    <div class="top-r">
+      <button class="btn btn-ghost btn-sm" onclick="logout()">退出</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" data-tab="overview" onclick="switchTab('overview')">总览</button>
+    <button class="tab" data-tab="whitelist" onclick="switchTab('whitelist')">学员名单</button>
+    <button class="tab" data-tab="resumes" onclick="switchTab('resumes')">简历列表</button>
+    <button class="tab" data-tab="notify" onclick="switchTab('notify')">提交通知</button>
+  </div>
+
+  <main>
+    <!-- 总览 -->
+    <div class="tabpane on" id="pane-overview">
+      <div class="stats" id="statsBox"></div>
+      <div class="card">
+        <div class="card-hd"><h3>快速操作</h3></div>
+        <div class="card-bd">
+          <div class="toolbar">
+            <button class="btn" onclick="switchTab('whitelist')">管理学员名单</button>
+            <button class="btn btn-ghost" onclick="expAll()">批量导出全部简历（Word 打包）</button>
+            <button class="btn btn-ghost" onclick="expExcel()">导出简历汇总表（Excel）</button>
+            <button class="btn btn-ghost" onclick="expWl()">导出学员名单（Excel）</button>
+          </div>
+          <div class="hint">
+            导出的 Word 简历使用「电力央国企简历模版」原格式，学员填写内容已自动回填，含证件照。
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>最近提交</h3></div>
+        <div class="tw"><table id="recentTbl"></table></div>
+      </div>
+    </div>
+
+    <!-- 名单 -->
+    <div class="tabpane" id="pane-whitelist">
+      <div class="card">
+        <div class="card-hd">
+          <h3>添加学员</h3>
+        </div>
+        <div class="card-bd">
+          <div class="addrow">
+            <div class="fl"><label>手机号 *</label>
+              <input id="addPhone" type="tel" maxlength="11" placeholder="11 位手机号" style="width:150px"></div>
+            <div class="fl"><label>姓名</label>
+              <input id="addName" type="text" placeholder="选填" style="width:110px"></div>
+            <div class="fl"><label>备注</label>
+              <input id="addRemark" type="text" placeholder="如：919购课节 / 辽宁校区" style="width:190px"></div>
+            <button class="btn" onclick="addWl()">添加</button>
+            <button class="btn btn-ghost" onclick="$('impFile').click()">批量导入 Excel / CSV</button>
+            <input type="file" id="impFile" accept=".xlsx,.xls,.csv,.txt" style="display:none"
+              onchange="importWl(this)">
+          </div>
+          <div class="hint">
+            导入文件格式：<strong>第 1 列手机号</strong>，第 2 列姓名（选填），第 3 列备注（选填）。
+            首行可为表头，系统会自动跳过。重复手机号会自动去重。
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <h3>学员名单</h3>
+          <div class="toolbar">
+            <input type="search" id="wlSearch" placeholder="搜索手机号 / 姓名 / 备注"
+              oninput="clearTimeout(this._t);this._t=setTimeout(loadWl,320)" style="width:220px">
+            <button class="btn btn-ghost btn-sm" onclick="expWl()">导出名单</button>
+          </div>
+        </div>
+        <div class="tw"><table id="wlTbl"></table></div>
+      </div>
+    </div>
+
+    <!-- 简历 -->
+    <div class="tabpane" id="pane-resumes">
+      <div class="card">
+        <div class="card-hd">
+          <h3>简历列表</h3>
+          <div class="toolbar">
+            <input type="search" id="rvSearch" placeholder="搜索姓名 / 手机号"
+              oninput="clearTimeout(this._t);this._t=setTimeout(loadRv,320)" style="width:190px">
+            <select id="rvStatus" onchange="loadRv()">
+              <option value="">全部状态</option>
+              <option value="submitted">已提交</option>
+              <option value="draft">草稿</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="expAll()">批量导出 Word</button>
+            <button class="btn btn-ghost btn-sm" onclick="expExcel()">汇总 Excel</button>
+          </div>
+        </div>
+        <div class="tw"><table id="rvTbl"></table></div>
+      </div>
+    </div>
+
+    <!-- 通知 -->
+    <div class="tabpane" id="pane-notify">
+      <div class="card">
+        <div class="card-hd"><h3>提交通知记录</h3>
+          <span id="notifyEmail" class="tag tag-blue"></span></div>
+        <div class="tw"><table id="ntTbl"></table></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="dMask" class="mask" onclick="closeDetail()"></div>
+<aside id="drawer" class="drawer">
+  <div class="d-hd">
+    <h3 id="dTitle">简历详情</h3>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-sm" id="dExport">导出 Word</button>
+      <button class="d-x" onclick="closeDetail()">×</button>
+    </div>
+  </div>
+  <div class="d-bd" id="dBody"></div>
+</aside>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let TOKEN = localStorage.getItem('resume_admin_token') || '';
+let SCHEMA = [];
+
+function toast(m, t='info'){
+  const e = $('toast'); e.textContent = m; e.className = 'toast on ' + t;
+  clearTimeout(e._t); e._t = setTimeout(()=>{ e.className = 'toast ' + t; }, 2800);
+}
+
+function api(path, opts={}){
+  opts.headers = Object.assign({'Authorization':'Bearer ' + TOKEN}, opts.headers || {});
+  return fetch(path, opts).then(async r => {
+    if(r.status === 401){ logout(); throw new Error('登录已过期'); }
+    const j = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(j.detail || ('请求失败 ' + r.status));
+    return j;
+  });
+}
+
+function fmtTime(ts){
+  if(!ts) return '—';
+  const d = new Date(ts * 1000), p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/* ═══ 登录 ═══ */
+$('loginBtn').onclick = doLogin;
+$('pwdInput').addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
+
+async function doLogin(){
+  const pwd = $('pwdInput').value;
+  const err = $('loginErr');
+  err.style.display = 'none';
+  if(!pwd){ err.textContent = '请输入管理口令'; err.style.display = 'block'; return; }
+  const btn = $('loginBtn');
+  btn.disabled = true; btn.textContent = '验证中…';
+  try{
+    const r = await fetch('/api/sume/admin/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({password: pwd})
+    });
+    const j = await r.json();
+    if(!r.ok) throw new Error(j.detail || '口令错误');
+    TOKEN = j.token;
+    localStorage.setItem('resume_admin_token', TOKEN);
+    await enterApp();
+  }catch(e){
+    err.textContent = e.message; err.style.display = 'block';
+  }finally{
+    btn.disabled = false; btn.textContent = '登录后台';
+  }
+}
+
+function logout(){
+  localStorage.removeItem('resume_admin_token');
+  TOKEN = '';
+  $('app').style.display = 'none';
+  $('login').style.display = 'flex';
+  $('pwdInput').value = '';
+}
+
+async function enterApp(){
+  $('login').style.display = 'none';
+  $('app').style.display = 'block';
+  const r = await fetch('/api/sume/schema').then(x=>x.json());
+  SCHEMA = r.modules;
+  await Promise.all([loadStats(), loadWl(), loadRv(), loadNotify()]);
+  switchTab('overview');
+}
+
+/* ═══ Tab ═══ */
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  document.querySelectorAll('.tabpane').forEach(p => p.classList.toggle('on', p.id === 'pane-' + t));
+  if(t === 'overview') loadStats();
+  if(t === 'whitelist') loadWl();
+  if(t === 'resumes') loadRv();
+  if(t === 'notify') loadNotify();
+}
+
+/* ═══ 总览 ═══ */
+async function loadStats(){
+  try{
+    const s = await api('/api/sume/admin/stats');
+    $('statsBox').innerHTML = `
+      <div class="stat"><div class="stat-v">${s.total}</div><div class="stat-l">名单学员总数</div></div>
+      <div class="stat g"><div class="stat-v">${s.submitted}</div><div class="stat-l">已提交简历</div></div>
+      <div class="stat w"><div class="stat-v">${s.drafting}</div><div class="stat-l">填写中</div></div>
+      <div class="stat n"><div class="stat-v">${s.not_started}</div><div class="stat-l">未开始</div></div>
+      <div class="stat n"><div class="stat-v">${s.banned}</div><div class="stat-l">已停用</div></div>`;
+
+    const rv = await api('/api/sume/admin/resumes?status=submitted');
+    const rows = rv.items.slice(0, 8);
+    $('recentTbl').innerHTML = !rows.length
+      ? '<tr><td class="empty">暂无已提交的简历</td></tr>'
+      : `<thead><tr><th>姓名</th><th>手机号</th><th>学校</th><th>提交时间</th><th></th></tr></thead><tbody>
+        ${rows.map(r => `<tr>
+          <td><strong>${esc(r.basic_name || r.wl_name || '—')}</strong></td>
+          <td class="mono">${esc(r.phone)}</td>
+          <td>${esc(r.school || '—')}</td>
+          <td>${fmtTime(r.submitted_at || r.updated_at)}</td>
+          <td><button class="btn btn-ghost btn-sm" onclick="openDetail(${r.id})">查看</button></td>
+        </tr>`).join('')}</tbody>`;
+  }catch(e){ toast(e.message, 'err'); }
+}
+
+/* ═══ 名单 ═══ */
+async function loadWl(){
+  try{
+    const kw = $('wlSearch').value.trim();
+    const r = await api('/api/sume/admin/whitelist?keyword=' + encodeURIComponent(kw));
+    const items = r.items;
+    $('wlTbl').innerHTML = !items.length
+      ? '<tr><td class="empty">名单为空，请添加或导入学员手机号</td></tr>'
+      : `<thead><tr><th>手机号</th><th>姓名</th><th>备注</th><th>填写状态</th><th>进度</th>
+         <th>最后填写</th><th>操作</th></tr></thead><tbody>
+      ${items.map(it => {
+        let st = '<span class="tag tag-gray">未开始</span>';
+        if(it.r_status === 'submitted') st = '<span class="tag tag-ok">已提交</span>';
+        else if(it.r_progress > 0) st = '<span class="tag tag-warn">填写中</span>';
+        const banned = it.status === 'banned';
+        return `<tr>
+          <td class="mono">${esc(it.phone)}</td>
+          <td>${esc(it.name || '—')}</td>
+          <td>${esc(it.remark || '—')}</td>
+          <td>${st}${banned ? ' <span class="tag tag-err">已停用</span>' : ''}</td>
+          <td>${it.r_progress != null
+            ? `<span class="mini"><i style="width:${it.r_progress}%"></i></span>${it.r_progress}%`
+            : '—'}</td>
+          <td>${fmtTime(it.r_updated)}</td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-ghost btn-sm" onclick="toggleBan('${esc(it.phone)}','${banned?'active':'banned'}')">
+              ${banned ? '恢复' : '停用'}</button>
+            <button class="btn btn-err btn-sm" onclick="delWl('${esc(it.phone)}')">删除</button>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>`;
+  }catch(e){ toast(e.message, 'err'); }
+}
+
+async function addWl(){
+  const phone = $('addPhone').value.trim();
+  if(!/^1\d{10}$/.test(phone)){ toast('请输入正确的 11 位手机号', 'err'); return; }
+  try{
+    await api('/api/sume/admin/whitelist/add', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({phone, name: $('addName').value.trim(), remark: $('addRemark').value.trim()})
+    });
+    toast('已添加', 'ok');
+    $('addPhone').value = ''; $('addName').value = ''; $('addRemark').value = '';
+    loadWl(); loadStats();
+  }catch(e){ toast(e.message, 'err'); }
+}
+
+async function delWl(phone){
+  if(!confirm(`确定删除 ${phone}？\n该学员将无法再登录填写简历。`)) return;
+  try{
+    await api('/api/sume/admin/whitelist/delete', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({phone})
+    });
+    toast('已删除', 'ok'); loadWl(); loadStats();
+  }catch(e){ toast(e.message, 'err'); }
+}
+
+async function toggleBan(phone, status){
+  try{
+    await api('/api/sume/admin/whitelist/status', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({phone, status})
+    });
+    toast(status === 'banned' ? '已停用' : '已恢复', 'ok');
+    loadWl(); loadStats();
+  }catch(e){ toast(e.message, 'err'); }
+}
+
+async function importWl(input){
+  const f = input.files[0];
+  if(!f) return;
+  const fd = new FormData(); fd.append('file', f);
+  toast('导入中…', 'info');
+  try{
+    const r = await api('/api/sume/admin/whitelist/import', {method:'POST', body: fd});
+    toast(`导入完成：新增 ${r.added} 条，重复 ${r.duplicated} 条，无效 ${r.invalid} 条`, 'ok');
+    loadWl(); loadStats();
+  }catch(e){ toast(e.message, 'err'); }
+  finally{ input.value = ''; }
+}
+
+/* ═══ 简历 ═══ */
+async function loadRv(){
+  try{
+    const kw = $('rvSearch').value.trim(), st = $('rvStatus').value;
+    const r = await api(`/api/sume/admin/resumes?keyword=${encodeURIComponent(kw)}&status=${st}`);
+    const items = r.items;
+    $('rvTbl').innerHTML = !items.length
+      ? '<tr><td class="empty">暂无简历记录</td></tr>'
+      : `<thead><tr><th>姓名</th><th>手机号</th><th>学校 / 专业</th><th>状态</th><th>进度</th>
+         <th>提交时间</th><th>操作</th></tr></thead><tbody>
+      ${items.map(it => `<tr>
+        <td><strong>${esc(it.basic_name || it.wl_name || '—')}</strong></td>
+        <td class="mono">${esc(it.phone)}</td>
+        <td>${esc(it.school || '—')}</td>
+        <td>${it.status === 'submitted'
+          ? '<span class="tag tag-ok">已提交</span>'
+          : '<span class="tag tag-warn">草稿</span>'}</td>
+        <td><span class="mini"><i style="width:${it.progress||0}%"></i></span>${it.progress||0}%</td>
+        <td>${fmtTime(it.submitted_at || it.updated_at)}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-ghost btn-sm" onclick="openDetail(${it.id})">查看</button>
+          <button class="btn btn-ghost btn-sm" onclick="expOne(${it.id}, '${esc(it.basic_name || it.phone)}')">导出 Word</button>
+        </td>
+      </tr>`).join('')}</tbody>`;
+  }catch(e){ toast(e.message, 'err'); }
+}
+
+/* ═══ 详情抽屉 ═══ */
+async function openDetail(id){
+  try{
+    const d = await api('/api/sume/admin/resume/' + id);
+    const data = d.data || {};
+    const b = data.basic || {};
+    $('dTitle').textContent = (b.name || d.wl_name || d.phone) + ' · 简历详情';
+    $('dExport').onclick = () => expOne(id, b.name || d.phone);
+    $('dBody').innerHTML = renderDetail(data, d.photos || {}, d);
+    $('drawer').classList.add('open');
+    $('dMask').classList.add('open');
+  }catch(e){ toast(e.message, 'err'); }
+}
+function closeDetail(){
+  $('drawer').classList.remove('open');
+  $('dMask').classList.remove('open');
+}
+
+function kv(pairs){
+  return `<dl class="kv">${pairs.map(([k,v]) =>
+    `<dt>${esc(k)}</dt><dd>${esc(v || '—')}</dd>`).join('')}</dl>`;
+}
+
+function renderDetail(data, photos, meta){
+  let h = '';
+
+  // 基本信息
+  const b = data.basic || {};
+  h += `<div class="d-sec"><h4>1.1 基本信息</h4>${kv([
+    ['姓名', b.name], ['性别', b.gender], ['出生年月', b.birth], ['民族', b.ethnic],
+    ['政治面貌', b.political], ['入党时间', b.join_party], ['籍贯', b.native_place],
+    ['手机号', b.phone || meta.phone], ['邮箱', b.email], ['身份证号', b.id_card],
+    ['户口性质', b.hukou], ['现居住地', b.residence], ['是否留学生', b.overseas],
+    ['通信地址', b.address], ['婚姻状况', b.marriage],
+    ['主修课程', b.courses], ['研究方向/导师', b.research],
+  ])}`;
+  const ph = Object.entries(photos || {});
+  if(ph.length){
+    h += `<div class="photos">${ph.map(([k, url]) =>
+      `<div class="photo"><img src="${esc(url)}" alt=""><span>${
+        k.includes('life') ? '生活照' : '证件照'}</span></div>`).join('')}</div>`;
+  }
+  h += `</div>`;
+
+  // 教育背景
+  const edu = (data.education || {}).rows || [];
+  if(edu.some(r => r.school || r.major)){
+    h += `<div class="d-sec"><h4>1.2 教育背景</h4><table class="d-tbl">
+      <tr><th>阶段</th><th>学校全称</th><th>专业</th><th>起止时间</th><th>学习形式</th>
+      <th>学号</th><th>GPA / 排名</th></tr>
+      ${['最高学历','本科/大专','高中'].map((lab, i) => {
+        const r = edu[i] || {};
+        return `<tr><td>${lab}</td><td>${esc(r.school)}</td><td>${esc(r.major)}</td>
+          <td>${esc(r.period)}</td><td>${r.fulltime ? '全日制' : '—'}</td>
+          <td>${esc(r.student_no)}</td>
+          <td>${esc([r.gpa && 'GPA:'+r.gpa, r.rank && '排名:'+r.rank].filter(Boolean).join('  '))}</td></tr>`;
+      }).join('')}</table></div>`;
+  }
+
+  // 通用重复块
+  function rep(key, title, cols, emptyLabel='（未填写）'){
+    const list = data[key] || [];
+    if(!list.length) return '';
+    return `<div class="d-sec"><h4>${esc(title)}</h4>
+      ${list.map((it, i) => {
+        const rows = cols.filter(c => it[c[1]]).map(([lab, f]) =>
+          `<dt>${esc(lab)}</dt><dd>${esc(it[f])}</dd>`).join('');
+        if(!rows) return '';
+        return `<div class="blk"><div class="blk-b">第 ${i+1} 条</div>
+          <dl class="kv">${rows}</dl></div>`;
+      }).join('') || `<div class="blk">${esc(emptyLabel)}</div>`}</div>`;
+  }
+
+  h += rep('internships', '1.3 实习 / 工作经历', [
+    ['单位全称','company'],['部门/岗位','position'],['起止时间','period'],['工作地点','location'],
+    ['主要工作','duties'],['工作成果','achievements']]);
+  h += rep('projects', '1.4 项目经历', [
+    ['项目名称','name'],['担任角色','role'],['起止时间','period'],['项目规模','scale'],
+    ['项目描述','desc'],['项目成果','result']]);
+  h += rep('student_leaders', '1.5 学生干部经历', [
+    ['职务','title'],['单位/社团','org'],['起止时间','period'],['主要工作/成果','duty']]);
+  h += rep('practices', '1.6 社会实践经历', [
+    ['实践名称','name'],['实践单位','org'],['起止时间','period'],['主要内容/成果','content']]);
+  h += rep('languages', '1.7 外语水平', [
+    ['考试名称','exam'],['成绩/等级','score'],['颁发机构','issuer'],['考试时间','date'],['备注','remark']]);
+  h += rep('computers', '1.8 计算机水平', [
+    ['考试名称','exam'],['成绩/等级','score'],['颁发机构','issuer'],['考试时间','date'],['备注','remark']]);
+  h += rep('certificates', '1.9 资格证书', [
+    ['证书名称','name'],['等级','level'],['颁发机构','issuer'],['证书编号','no'],
+    ['获得时间','date'],['备注','remark']]);
+  h += rep('awards', '1.10 获奖情况', [
+    ['奖项名称','name'],['颁奖单位','issuer'],['等级/名次','level'],['获奖时间','date'],['备注','remark']]);
+  h += rep('academics', '1.11 学术成果', [
+    ['类型','type'],['名称','name'],['发表/授权刊物','journal'],['时间','date'],['排名/角色','rank']]);
+  h += rep('teachings', '1.11b 教学经历', [
+    ['课程名称','course'],['授课对象','audience'],['起止时间','period'],['学时/任务','hours']]);
+
+  // 爱好特长
+  if(data.hobbies){
+    h += `<div class="d-sec"><h4>1.12 爱好特长</h4><div class="blk">${esc(data.hobbies)}</div></div>`;
+  }
+
+  // 家庭背景
+  const fam = (data.family || {}).rows || [];
+  const fa = data.family || {};
+  if(fam.some(r => r.name) || fa.has_relative){
+    h += `<div class="d-sec"><h4>1.13 家庭背景</h4><table class="d-tbl">
+      <tr><th>关系</th><th>姓名</th><th>工作单位</th><th>职务</th><th>政治面貌</th></tr>
+      ${['父亲','母亲','配偶'].map((lab, i) => {
+        const r = fam[i] || {};
+        return `<tr><td>${lab}</td><td>${esc(r.name)}</td><td>${esc(r.company)}</td>
+          <td>${esc(r.position)}</td><td>${esc(r.political)}</td></tr>`;
+      }).join('')}</table>
+      <div class="blk" style="margin-top:11px">
+        <div class="blk-b">亲属在电力系统 / 本企业任职情况</div>
+        ${esc(fa.has_relative === '有' ? ('有　' + (fa.relative_detail || '')) : '无')}
+      </div></div>`;
+  }
+
+  // 求职意向
+  const it = data.intention || {};
+  if(Object.values(it).some(v => v)){
+    h += `<div class="d-sec"><h4>1.14 求职意向与网申补充</h4>${kv([
+      ['应聘单位/岗位', it.target], ['期望工作地点', it.location], ['首选考试城市', it.exam_city],
+      ['是否服从调剂', it.adjust], ['是否接受基层/偏远', it.grassroots],
+      ['是否考研/考博', it.postgrad], ['近期是否出国留学', it.abroad], ['其他情况说明', it.other],
+    ])}</div>`;
+  }
+
+  // 自我评价
+  if(data.self_eval){
+    h += `<div class="d-sec"><h4>1.15 自我评价</h4><div class="blk">${esc(data.self_eval)}</div></div>`;
+  }
+
+  return h || '<div class="empty">该学员尚未填写任何内容</div>';
+}
+
+/* ═══ 导出 ═══ */
+function expOne(id, name){
+  toast('正在生成 Word…', 'info');
+  fetch('/api/sume/admin/export/' + id, {headers:{'Authorization':'Bearer ' + TOKEN}})
+    .then(r => {
+      if(!r.ok) return r.json().then(j => { throw new Error(j.detail || '导出失败'); });
+      return r.blob();
+    })
+    .then(bl => {
+      const url = URL.createObjectURL(bl);
+      const a = document.createElement('a');
+      a.href = url; a.download = (name || '简历') + '_简历.docx';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      toast('已导出 Word', 'ok');
+    })
+    .catch(e => toast(e.message, 'err'));
+}
+
+function dl(path, fallbackName){
+  toast('正在打包…', 'info');
+  fetch(path, {headers:{'Authorization':'Bearer ' + TOKEN}})
+    .then(r => {
+      if(!r.ok) return r.json().then(j => { throw new Error(j.detail || '导出失败'); });
+      const cd = r.headers.get('Content-Disposition') || '';
+      const m = cd.match(/filename\*=UTF-8''(.+)$/);
+      const name = m ? decodeURIComponent(m[1]) : fallbackName;
+      return r.blob().then(bl => ({bl, name}));
+    })
+    .then(({bl, name}) => {
+      const url = URL.createObjectURL(bl);
+      const a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      toast('导出完成', 'ok');
+    })
+    .catch(e => toast(e.message, 'err'));
+}
+
+const expAll = () => dl('/api/sume/admin/export-all', '全部简历.zip');
+const expExcel = () => dl('/api/sume/admin/export-excel', '简历汇总.xlsx');
+const expWl = () => dl('/api/sume/admin/whitelist/export', '学员名单.xlsx');
+
+/* ═══ 通知 ═══ */
+async function loadNotify(){
+  try{
+    const r = await api('/api/sume/admin/notifications');
+    $('notifyEmail').textContent = '通知邮箱：' + (r.notify_email || '未配置');
+    const items = r.items;
+    $('ntTbl').innerHTML = !items.length
+      ? '<tr><td class="empty">暂无提交通知记录</td></tr>'
+      : `<thead><tr><th>学员</th><th>手机号</th><th>学校</th><th>通知状态</th>
+         <th>提交时间</th><th>说明</th></tr></thead><tbody>
+      ${items.map(n => {
+        const p = n.payload || {};
+        return `<tr>
+          <td><strong>${esc(n.name || '—')}</strong></td>
+          <td class="mono">${esc(n.phone)}</td>
+          <td>${esc(p.school || '—')}</td>
+          <td>${n.sent ? '<span class="tag tag-ok">已发送</span>'
+                      : '<span class="tag tag-warn">待发送</span>'}</td>
+          <td>${fmtTime(n.created_at)}</td>
+          <td style="color:var(--muted);font-size:12px">${esc(n.error || '')}</td>
+        </tr>`;
+      }).join('')}</tbody>`;
+  }catch(e){ toast(e.message, 'err'); }
+}
+
+/* 启动 */
+(async function init(){
+  if(TOKEN){
+    try{ await api('/api/sume/admin/verify'); await enterApp(); }
+    catch(e){ logout(); }
+  }
+  $('pwdInput').focus();
+})();
+</script>
+</body>
+</html>

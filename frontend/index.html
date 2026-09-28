@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>电力央国企简历填写 · 思格教育</title>
+<style>
+:root{
+  --blue:#0a69cd; --blue-d:#0857a8; --blue-l:#e8f2fd;
+  --ink:#1e293b; --ink2:#475569; --muted:#94a3b8;
+  --line:#e2e8f0; --bg:#f4f7fb; --card:#fff; --ok:#12a150; --warn:#e6892e; --err:#dc3545;
+  --radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei","PingFang SC",sans-serif;
+  background:var(--bg);color:var(--ink);font-size:14px;line-height:1.6}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
+
+/* ═══ 登录页 ═══ */
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-box{background:var(--card);border-radius:16px;box-shadow:0 8px 40px rgba(10,105,205,.10);
+  width:100%;max-width:420px;padding:40px 36px;text-align:center}
+.login-logo{font-size:22px;font-weight:700;color:var(--blue);letter-spacing:.5px}
+.login-sub{color:var(--muted);font-size:13px;margin-top:6px}
+.login-title{font-size:19px;font-weight:700;margin:28px 0 6px}
+.login-desc{color:var(--ink2);font-size:13px;margin-bottom:24px}
+.login-input{width:100%;padding:14px 16px;border:1.5px solid var(--line);border-radius:var(--radius);
+  font-size:16px;letter-spacing:1px;text-align:center;transition:.15s}
+.login-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:12px 24px;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;
+  background:var(--blue);color:#fff;transition:.15s}
+.btn:hover{background:var(--blue-d)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn-block{width:100%;margin-top:14px}
+.btn-ghost{background:#fff;color:var(--ink2);border:1.5px solid var(--line)}
+.btn-ghost:hover{background:#f8fafc;color:var(--ink)}
+.login-err{margin-top:14px;padding:11px 14px;background:#fef2f2;color:var(--err);
+  border-radius:8px;font-size:13px;text-align:left;display:none}
+.login-foot{margin-top:26px;padding-top:20px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:12px;line-height:1.8}
+
+/* ═══ 主框架 ═══ */
+#app{display:none}
+.topbar{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:60px}
+.topbar-l{display:flex;align-items:center;gap:14px}
+.topbar-logo{font-weight:700;color:var(--blue);font-size:16px}
+.topbar-sep{width:1px;height:20px;background:var(--line)}
+.topbar-title{font-size:14px;color:var(--ink2)}
+.topbar-r{display:flex;align-items:center;gap:10px}
+.pill{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+.pill-blue{background:var(--blue-l);color:var(--blue)}
+.pill-ok{background:#e8f8ee;color:var(--ok)}
+.pill-warn{background:#fdf3e6;color:var(--warn)}
+.pill-gray{background:#f1f5f9;color:var(--ink2)}
+
+.wrap{max-width:1120px;margin:0 auto;padding:22px 28px 140px;display:grid;
+  grid-template-columns:200px 1fr;gap:24px;align-items:start}
+@media(max-width:900px){.wrap{grid-template-columns:1fr;padding:16px 14px 140px}}
+
+/* 侧边导航 */
+.sidenav{position:sticky;top:82px;background:#fff;border-radius:var(--radius);
+  border:1px solid var(--line);padding:10px;max-height:calc(100vh - 110px);overflow-y:auto}
+@media(max-width:900px){.sidenav{display:none}}
+.sidenav-item{display:block;width:100%;text-align:left;padding:8px 11px;border-radius:7px;
+  font-size:12.5px;color:var(--ink2);border:none;background:none;margin-bottom:2px;transition:.12s}
+.sidenav-item:hover{background:#f6f9fd;color:var(--blue)}
+.sidenav-item.on{background:var(--blue-l);color:var(--blue);font-weight:600}
+.sidenav-item.done::after{content:"✓";float:right;color:var(--ok);font-weight:700}
+.sidenav-hd{font-size:11px;color:var(--muted);padding:6px 11px 8px;font-weight:600;letter-spacing:.5px}
+
+/* 表单卡片 */
+.sec{background:var(--card);border-radius:var(--radius);border:1px solid var(--line);
+  margin-bottom:16px;overflow:hidden;scroll-margin-top:76px}
+.sec-hd{padding:15px 20px;border-bottom:1px solid var(--line);background:#fbfcfe;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.sec-hd h3{font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:9px}
+.sec-hd h3::before{content:"";width:3px;height:15px;background:var(--blue);border-radius:2px}
+.sec-sub{font-size:12px;color:var(--muted);font-weight:400}
+.sec-bd{padding:18px 20px}
+.tip{margin:0 20px 16px;padding:9px 13px;background:#fffbf0;border-left:3px solid var(--warn);
+  border-radius:0 6px 6px 0;font-size:12.5px;color:#8a6320;line-height:1.6}
+.sec-bd .tip{margin:0 0 16px}
+
+/* 栅格 */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 20px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld.full{grid-column:1/-1}
+.fld label{font-size:12.5px;font-weight:600;color:var(--ink2)}
+.fld label .req{color:var(--err);margin-left:2px}
+.fld .hint{font-size:11px;color:var(--muted);font-weight:400}
+.fld input[type=text],.fld input[type=month],.fld input[type=email],
+.fld select,.fld textarea{width:100%;padding:9px 11px;border:1.5px solid var(--line);
+  border-radius:7px;transition:.15s;background:#fff}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--blue);
+  box-shadow:0 0 0 3px var(--blue-l)}
+.fld textarea{resize:vertical;line-height:1.65}
+.fld input:disabled{background:#f8fafc;color:var(--muted)}
+.radios{display:flex;flex-wrap:wrap;gap:8px}
+.radios label{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border:1.5px solid var(--line);
+  border-radius:20px;font-size:13px;cursor:pointer;transition:.12s;font-weight:400;color:var(--ink2)}
+.radios label:hover{border-color:#b8d4f0}
+.radios input{display:none}
+.radios input:checked + span{color:var(--blue);font-weight:600}
+.radios label:has(input:checked){background:var(--blue-l);border-color:var(--blue)}
+.chk{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink2);cursor:pointer}
+.chk input{width:15px;height:15px;accent-color:var(--blue)}
+
+/* 表格型模块 */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table.ft{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+table.ft th{background:#f6f9fd;color:var(--ink2);font-weight:600;font-size:12px;
+  padding:9px 8px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+table.ft td{border-bottom:1px solid #eef2f7;padding:5px 5px;vertical-align:middle}
+table.ft tr:last-child td{border-bottom:none}
+table.ft td:first-child{background:#fafcfe;font-weight:600;font-size:12.5px;
+  color:var(--ink2);padding:9px;white-space:nowrap}
+table.ft input[type=text],table.ft select{width:100%;padding:7px 8px;border:1px solid transparent;
+  border-radius:5px;background:transparent;font-size:13px}
+table.ft input[type=text]:focus,table.ft select:focus{outline:none;background:#fff;
+  border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-l)}
+table.ft input[type=text]::placeholder{color:#c7d2e0}
+
+/* 重复块 */
+.rep-items{display:flex;flex-direction:column;gap:14px}
+.rep{position:relative;border:1.5px solid var(--line);border-radius:9px;padding:16px 16px 14px;
+  background:#fcfdff;transition:.15s}
+.rep:hover{border-color:#cfdff2}
+.rep-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.rep-idx{font-size:12px;font-weight:700;color:var(--blue);background:var(--blue-l);
+  padding:3px 10px;border-radius:14px}
+.rep-del{border:none;background:none;color:var(--muted);font-size:12px;padding:4px 8px;
+  border-radius:5px;transition:.12s}
+.rep-del:hover{background:#fef2f2;color:var(--err)}
+.add-btn{width:100%;margin-top:13px;padding:11px;border:1.5px dashed #c3d7ee;background:#fbfdff;
+  border-radius:8px;color:var(--blue);font-size:13px;font-weight:600;transition:.15s}
+.add-btn:hover{background:var(--blue-l);border-color:var(--blue)}
+.empty-note{color:var(--muted);font-size:12.5px;padding:14px;text-align:center;
+  background:#fafcfe;border:1px dashed var(--line);border-radius:8px}
+
+/* 上传 */
+.uploads{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:640px){.uploads{grid-template-columns:1fr}}
+.upl{border:1.5px dashed #c3d7ee;border-radius:9px;padding:14px;text-align:center;
+  background:#fbfdff;transition:.15s;cursor:pointer}
+.upl:hover{border-color:var(--blue);background:var(--blue-l)}
+.upl-t{font-size:13px;font-weight:600;color:var(--blue);margin-bottom:3px}
+.upl-tip{font-size:11.5px;color:var(--muted);line-height:1.55}
+.upl-prev{margin-top:10px}
+.upl-prev img{max-width:100%;max-height:150px;border-radius:6px;border:1px solid var(--line)}
+.upl-ok{font-size:11.5px;color:var(--ok);margin-top:6px;font-weight:600}
+
+/* 字符计数 */
+.count{font-size:11px;color:var(--muted);text-align:right}
+.count.over{color:var(--err);font-weight:600}
+
+/* 底部操作栏 */
+.bar{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.97);
+  backdrop-filter:blur(8px);border-top:1px solid var(--line);
+  padding:12px 28px;display:flex;align-items:center;justify-content:space-between;
+  gap:16px;z-index:90;box-shadow:0 -2px 16px rgba(0,0,0,.04)}
+.bar-l{display:flex;align-items:center;gap:16px;min-width:0}
+.prog-wrap{width:190px;flex-shrink:0}
+@media(max-width:640px){.prog-wrap{width:110px}}
+.prog-info{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink2);
+  margin-bottom:4px;font-weight:600}
+.prog-bar{height:6px;background:#e8eef6;border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,#0a69cd,#4a9eea);border-radius:3px;
+  width:0;transition:width .3s}
+.save-note{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.save-note.ok{color:var(--ok);font-weight:600}
+.bar-r{display:flex;gap:10px;flex-shrink:0}
+
+/* 指引抽屉 */
+.drawer-mask{position:fixed;inset:0;background:rgba(15,23,42,.35);z-index:200;display:none}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:min(560px,92vw);background:#fff;z-index:201;
+  transform:translateX(100%);transition:transform .26s ease;overflow-y:auto;
+  box-shadow:-6px 0 32px rgba(0,0,0,.12)}
+.drawer.open{transform:translateX(0)}
+.drawer-mask.open{display:block}
+.drawer-hd{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);
+  padding:17px 22px;display:flex;align-items:center;justify-content:space-between;z-index:2}
+.drawer-hd h3{font-size:15px;font-weight:700}
+.drawer-x{border:none;background:#f1f5f9;width:30px;height:30px;border-radius:50%;
+  color:var(--ink2);font-size:16px;line-height:1}
+.drawer-bd{padding:20px 22px 40px}
+.drawer-bd h4{font-size:13.5px;color:var(--blue);margin:22px 0 9px;font-weight:700}
+.drawer-bd h4:first-child{margin-top:0}
+.drawer-bd p{font-size:13px;color:var(--ink2);margin-bottom:8px;line-height:1.75}
+.drawer-bd table{width:100%;border-collapse:collapse;font-size:12.5px;margin:9px 0 16px}
+.drawer-bd th{background:#f6f9fd;padding:8px 10px;text-align:left;color:var(--ink2);
+  font-weight:600;border:1px solid var(--line);font-size:12px}
+.drawer-bd td{padding:8px 10px;border:1px solid var(--line);color:var(--ink2)}
+.drawer-bd .hl{background:#f0f7ff;border-left:3px solid var(--blue);padding:10px 13px;
+  border-radius:0 6px 6px 0;font-size:12.5px;color:var(--ink2);margin:10px 0}
+
+/* 提示 toast */
+.toast{position:fixed;left:50%;top:76px;transform:translate(-50%,-14px);z-index:300;
+  padding:11px 20px;border-radius:9px;font-size:13.5px;font-weight:600;color:#fff;
+  box-shadow:0 6px 24px rgba(0,0,0,.16);opacity:0;pointer-events:none;transition:.22s}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.ok{background:var(--ok)}
+.toast.err{background:var(--err)}
+.toast.info{background:var(--blue)}
+
+/* 提交确认弹窗 */
+.modal-mask{position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:400;
+  display:none;align-items:center;justify-content:center;padding:20px}
+.modal-mask.open{display:flex}
+.modal{background:#fff;border-radius:14px;max-width:460px;width:100%;padding:26px;
+  box-shadow:0 16px 50px rgba(0,0,0,.2)}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:10px}
+.modal p{font-size:13.5px;color:var(--ink2);line-height:1.75;margin-bottom:8px}
+.modal-miss{background:#fffbf0;border-left:3px solid var(--warn);padding:10px 13px;
+  border-radius:0 6px 6px 0;font-size:12.5px;color:#8a6320;margin:14px 0;max-height:180px;overflow-y:auto}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+
+/* 已提交提示条 */
+.submitted-bar{background:#e8f8ee;border:1px solid #b9e6cb;color:#0f7a3d;border-radius:9px;
+  padding:13px 17px;font-size:13px;margin-bottom:16px;display:flex;
+  align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ 登录页 ══════════════ -->
+<div id="login">
+  <div class="login-box">
+    <div class="login-logo">思格教育 · 就业研究院</div>
+    <div class="login-sub">电力央国企报考服务</div>
+    <div class="login-title">简历填写系统</div>
+    <div class="login-desc">请输入报名时预留的手机号进入填写</div>
+    <input id="phoneInput" class="login-input" type="tel" maxlength="11"
+           placeholder="请输入 11 位手机号" autocomplete="tel">
+    <button id="loginBtn" class="btn btn-block">进入填写</button>
+    <div id="loginErr" class="login-err"></div>
+    <div class="login-foot">
+      仅限思格教育已报名学员使用<br>
+      如提示「未找到报名记录」，请联系思格老师开通
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ 主应用 ══════════════ -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-l">
+      <span class="topbar-logo">思格教育</span>
+      <span class="topbar-sep"></span>
+      <span class="topbar-title">电力央国企简历填写</span>
+    </div>
+    <div class="topbar-r">
+      <span id="statusPill" class="pill pill-gray">未开始</span>
+      <button class="btn btn-ghost" style="padding:7px 14px;font-size:13px" onclick="openDrawer()">
+        填写指引
+      </button>
+      <button class="btn btn-ghost" style="padding:7px 14px;font-size:13px" onclick="logout()">
+        退出
+      </button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <nav class="sidenav"><div class="sidenav-hd">简历模块</div><div id="navList"></div></nav>
+    <main id="formArea"></main>
+  </div>
+
+  <div class="bar">
+    <div class="bar-l">
+      <div class="prog-wrap">
+        <div class="prog-info"><span>完成度</span><span id="progPct">0%</span></div>
+        <div class="prog-bar"><div id="progFill" class="prog-fill"></div></div>
+      </div>
+      <span id="saveNote" class="save-note">尚未填写</span>
+    </div>
+    <div class="bar-r">
+      <button class="btn btn-ghost" onclick="saveNow(true)">保存草稿</button>
+      <button id="submitBtn" class="btn" onclick="trySubmit()">提交简历</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ 指引抽屉 ══════════════ -->
+<div id="dMask" class="drawer-mask" onclick="closeDrawer()"></div>
+<aside id="drawer" class="drawer">
+  <div class="drawer-hd">
+    <h3>填写指引 · 网申附件与要求</h3>
+    <button class="drawer-x" onclick="closeDrawer()">×</button>
+  </div>
+  <div class="drawer-bd">
+    <div class="hl">
+      灰色提示字是给你的参考，直接替换成自己的内容即可。<strong>没有的项填「无」</strong>，条目不够可点「＋ 添加一条」。
+      <strong>姓名、身份证号必须与身份证完全一致</strong>，国家电网提交后不可修改。
+    </div>
+
+    <h4>一、网申必须准备的材料（7 项）</h4>
+    <table>
+      <tr><th style="width:40px">序</th><th>材料</th><th>格式要求</th></tr>
+      <tr><td>①</td><td>身份证正反面</td><td>JPG/PDF，清晰完整</td></tr>
+      <tr><td>②</td><td>毕业生就业推荐表</td><td>扫描件，学校盖章</td></tr>
+      <tr><td>③</td><td>成绩单</td><td>扫描件，学校盖章</td></tr>
+      <tr><td>④</td><td>学籍在线验证报告</td><td>学信网 PDF，在有效期内</td></tr>
+      <tr><td>⑤</td><td>毕业证 + 学位证</td><td>已毕业提供；未毕业提供学籍</td></tr>
+      <tr><td>⑥</td><td>外语水平证书</td><td>CET-4/6 等最高等级</td></tr>
+      <tr><td>⑦</td><td>证件照 + 生活照</td><td>证件照蓝底正装</td></tr>
+    </table>
+
+    <h4>二、可选上传材料</h4>
+    <table>
+      <tr><th>材料</th><th>说明</th></tr>
+      <tr><td>计算机等级证书</td><td>二级 / 三级</td></tr>
+      <tr><td>电力专业证书</td><td>电工证、注册电气工程师</td></tr>
+      <tr><td>获奖证书</td><td>奖学金、竞赛奖</td></tr>
+      <tr><td>专利证书</td><td>发明 / 实用新型</td></tr>
+      <tr><td>论文 / 科研成果</td><td>已发表论文</td></tr>
+      <tr><td>其他</td><td>服兵役证明、驾驶证</td></tr>
+    </table>
+
+    <h4>三、各企业照片要求</h4>
+    <table>
+      <tr><th>企业</th><th>大小限制</th><th>格式</th></tr>
+      <tr><td>国家电网</td><td>120×160 ~ 600×800px，5~200kb</td><td>JPG/PNG</td></tr>
+      <tr><td>南方电网</td><td>10~100kb</td><td>JPG/PNG</td></tr>
+      <tr><td>华能</td><td>≤1M</td><td>JPG/JPEG/PNG/GIF</td></tr>
+      <tr><td>华电</td><td>证件照≤1M；附件≤5M</td><td>JPG/JPEG/PNG/PDF</td></tr>
+      <tr><td>国家电投</td><td>证件照≤1M；生活照≤1M</td><td>JPG/JPEG/GIF/BMP/PNG</td></tr>
+      <tr><td>国家能源</td><td>≤200K</td><td>JPG/JPEG/PNG/GIF</td></tr>
+    </table>
+
+    <h4>四、附件命名与扫描</h4>
+    <div class="hl">
+      国家电投：以「姓名+文件内容」命名，压缩包上传<br>
+      华电：多个证明可拼图上传<br>
+      扫描件建议 300dpi
+    </div>
+
+    <h4>五、各模块怎么写</h4>
+    <p><strong>教育背景</strong>：华能/华电从高中开始填；排名格式写「15/120」；GPA 低于 3.0 可不填。</p>
+    <p><strong>实习经历（STAR 法则）</strong>：写「做了什么 + 结果」，务必用数据。✗「负责巡检」 ✓「参与 8 个间隔巡检，整理检修记录 30 余份」。</p>
+    <p><strong>项目经历</strong>：没有真实项目就写课程设计、竞赛、大创，重点写你个人负责的部分。</p>
+    <p><strong>外语与计算机</strong>：这是两个独立模块，国家电网/南方电网分开填，成绩要写具体分数。</p>
+    <p><strong>资格证书</strong>：专业证书 ≠ 荣誉证书。电工证填「资格证书」，奖学金填「获奖情况」。</p>
+    <p><strong>获奖情况</strong>：南方电网最多填 3 项、倒序排列；写清颁奖单位和等级。</p>
+    <p><strong>家庭背景</strong>：华能填「四类关系」；国家电投须填亲属在电力系统任职情况；没有填「无」。</p>
+    <p><strong>求职意向</strong>：接受基层岗位能显著增加录取机会；挂科、处分等情况务必如实填写，不要隐瞒。</p>
+    <p><strong>自我评价</strong>：三段式 —— ①专业能力 ②性格特质 ③职业意愿。不要写「性格开朗积极向上」这类空话，技术岗突出严谨细致。</p>
+  </div>
+</aside>
+
+<!-- ══════════════ 提交弹窗 ══════════════ -->
+<div id="subMask" class="modal-mask">
+  <div class="modal">
+    <h3>确认提交简历？</h3>
+    <p>提交后老师即可在后台看到你的完整简历，并为你导出正式 Word 版本。</p>
+    <p>提交后你仍可继续登录修改，修改后再次提交即可。</p>
+    <div id="subMiss"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeSubmitModal()">再检查一下</button>
+      <button class="btn" onclick="doSubmit()">确认提交</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   状态
+   ═══════════════════════════════════════════════ */
+const S = {
+  phone: '', name: '', data: {}, photos: {}, status: 'none',
+  progress: 0, schema: [], dirty: false, saving: false,
+  lastSaved: null, timer: null
+};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function toast(msg, type='info'){
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast on ' + type;
+  clearTimeout(t._tm);
+  t._tm = setTimeout(()=>{ t.className = 'toast ' + type; }, 2600);
+}
+
+/* ═══════════════════════════════════════════════
+   登录
+   ═══════════════════════════════════════════════ */
+$('phoneInput').addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
+$('loginBtn').addEventListener('click', doLogin);
+$('phoneInput').addEventListener('input', e => {
+  e.target.value = e.target.value.replace(/\D/g,'').slice(0,11);
+});
+
+async function doLogin(){
+  const phone = $('phoneInput').value.trim();
+  const err = $('loginErr');
+  err.style.display = 'none';
+  if(!/^1\d{10}$/.test(phone)){
+    err.textContent = '请输入正确的 11 位手机号';
+    err.style.display = 'block';
+    return;
+  }
+  const btn = $('loginBtn');
+  btn.disabled = true; btn.textContent = '验证中…';
+  try{
+    const r = await fetch('/api/sume/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({phone})
+    });
+    const j = await r.json();
+    if(!r.ok) throw new Error(j.detail || '验证失败');
+    S.phone = j.phone; S.name = j.name || '';
+    await enterApp();
+  }catch(e){
+    err.textContent = e.message;
+    err.style.display = 'block';
+  }finally{
+    btn.disabled = false; btn.textContent = '进入填写';
+  }
+}
+
+async function enterApp(){
+  $('login').style.display = 'none';
+  $('app').style.display = 'block';
+  await loadSchema();
+  await loadResume();
+  renderAll();
+  startAutosave();
+  if(S.status === 'submitted') setStatus('submitted');
+}
+
+function logout(){
+  if(S.dirty && !confirm('有未保存的修改，确定退出吗？')) return;
+  location.reload();
+}
+
+/* ═══════════════════════════════════════════════
+   数据加载
+   ═══════════════════════════════════════════════ */
+async function loadSchema(){
+  const r = await fetch('/api/sume/schema');
+  const j = await r.json();
+  S.schema = j.modules;
+}
+
+async function loadResume(){
+  const r = await fetch('/api/sume/load?phone=' + encodeURIComponent(S.phone));
+  const j = await r.json();
+  S.data = j.data || {};
+  S.photos = j.photos || {};
+  S.status = j.status || 'none';
+  S.progress = j.progress || 0;
+}
+
+/* ═══════════════════════════════════════════════
+   渲染
+   ═══════════════════════════════════════════════ */
+function renderAll(){
+  // 导航
+  $('navList').innerHTML = S.schema.map(m =>
+    `<button class="sidenav-item" data-nav="${m.key}" onclick="scrollTo('${m.key}')">${esc(m.title)}</button>`
+  ).join('');
+
+  // 表单
+  const area = $('formArea');
+  let html = '';
+  if(S.status === 'submitted'){
+    html += `<div class="submitted-bar">
+      <span>✓ 你已于 ${fmtTime(S.lastSaved || Date.now()/1000)} 提交过简历，老师已可查看。如需修改，继续编辑后再次提交即可。</span>
+    </div>`;
+  }
+  html += S.schema.map(m => renderModule(m)).join('');
+  area.innerHTML = html;
+
+  // 事件绑定
+  bindInputs();
+  updateProgress();
+  observeSections();
+}
+
+function fmtTime(ts){
+  if(!ts) return '';
+  const d = new Date(ts * 1000);
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function renderModule(m){
+  const d = S.data;
+  const tipHtml = m.tip ? `<div class="tip">💡 ${esc(m.tip)}</div>` : '';
+  let body = '';
+
+  if(m.type === 'group'){
+    body = `<div class="grid">${m.fields.map(f => renderField(f, d[m.key] || {}, `${m.key}.${f.key}`)).join('')}</div>`;
+    if(m.uploads){
+      body += `<div style="margin-top:18px">
+        <div style="font-size:12.5px;font-weight:600;color:var(--ink2);margin-bottom:10px">照片上传</div>
+        <div class="uploads">${m.uploads.map(u =>
+          renderUpload(u, `${m.key}.${u.key}`)).join('')}</div>
+      </div>`;
+    }
+  }
+  else if(m.type === 'table'){
+    const rows = (d[m.key] || {}).rows || [];
+    body = `<div class="tbl-wrap"><table class="ft"><thead><tr>
+      <th style="width:92px">阶段</th>
+      ${m.columns.map(c => `<th>${esc(c.label)}</th>`).join('')}
+    </tr></thead><tbody>
+    ${m.rows.map((r, ri) => {
+      const src = rows[ri] || {};
+      return `<tr><td>${esc(r.fixed || r.label)}</td>${m.columns.map(c =>
+        `<td>${cellInput(c, src[c.key] ?? '', `${m.key}.rows.${ri}.${c.key}`)}</td>`
+      ).join('')}</tr>`;
+    }).join('')}
+    </tbody></table></div>`;
+  }
+  else if(m.type === 'repeater'){
+    body = `<div class="rep-items" id="rep-${m.key}"></div>
+      <button class="add-btn" onclick="addItem('${m.key}')">＋ 添加一条${esc(m.title.replace(/^[\d.\s ab]+/,''))}</button>`;
+  }
+  else if(m.type === 'single_textarea'){
+    const v = d[m.key] || '';
+    const maxAttr = m.max_len ? `maxlength="${m.max_len}"` : '';
+    body = `<div class="fld full">
+      <textarea id="ta-${m.key}" rows="5" placeholder="${esc(m.placeholder||'')}" ${maxAttr}
+        data-path="${m.key}">${esc(v)}</textarea>
+      ${m.max_len ? `<div class="count" id="cnt-${m.key}">${String(v).length} / ${m.max_len}</div>` : ''}
+    </div>`;
+  }
+  else if(m.type === 'family'){
+    const rows = (d[m.key] || {}).rows || [];
+    const fam = d[m.key] || {};
+    body = `<div class="tbl-wrap"><table class="ft"><thead><tr>
+      <th style="width:80px">关系</th>
+      ${m.columns.map(c => `<th>${esc(c.label)}</th>`).join('')}
+    </tr></thead><tbody>
+    ${m.rows.map((r, ri) => {
+      const src = rows[ri] || {};
+      return `<tr><td>${esc(r.label)}</td>${m.columns.map(c =>
+        `<td><input type="text" value="${esc(src[c.key] ?? '')}" data-path="${m.key}.rows.${ri}.${c.key}"></td>`
+      ).join('')}</tr>`;
+    }).join('')}
+    </tbody></table></div>
+    <div style="margin-top:16px">
+      <div style="font-size:12.5px;font-weight:600;color:var(--ink2);margin-bottom:8px">
+        亲属在电力系统 / 本企业任职情况
+      </div>
+      <div class="radios">
+        <label><input type="radio" name="hasRel" value="无" data-path="${m.key}.has_relative"
+          ${(fam.has_relative||'无')==='无'?'checked':''}><span>无</span></label>
+        <label><input type="radio" name="hasRel" value="有" data-path="${m.key}.has_relative"
+          ${fam.has_relative==='有'?'checked':''}><span>有</span></label>
+      </div>
+      <div style="margin-top:10px" id="relDetailWrap" style="display:${fam.has_relative==='有'?'block':'none'}">
+        <input type="text" id="relDetail" placeholder="关系 / 姓名 / 单位（父母、配偶、兄弟姐妹、配偶父母）"
+          value="${esc(fam.relative_detail||'')}" data-path="${m.key}.relative_detail"
+          style="width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:7px">
+      </div>
+    </div>`;
+  }
+
+  const sub = m.subtitle ? `<span class="sec-sub">${esc(m.subtitle)}</span>` : '';
+  return `<section class="sec" id="sec-${m.key}" data-sec="${m.key}">
+    <div class="sec-hd"><h3>${esc(m.title)} ${sub}</h3></div>
+    <div class="sec-bd">${tipHtml}${body}</div>
+  </section>`;
+}
+
+function renderField(f, obj, path){
+  const v = obj[f.key] ?? '';
+  const req = f.required ? '<span class="req">*</span>' : '';
+  const hint = f.tip ? `<span class="hint">（${esc(f.tip)}）</span>` : '';
+  const full = f.full ? ' full' : '';
+  let ctrl = '';
+
+  if(f.type === 'radio'){
+    ctrl = `<div class="radios">${f.options.map(o =>
+      `<label><input type="radio" name="${path}" value="${esc(o)}" data-path="${path}"
+        ${v===o?'checked':''}><span>${esc(o)}</span></label>`).join('')}</div>`;
+  } else if(f.type === 'select'){
+    ctrl = `<select data-path="${path}">
+      <option value="">请选择</option>
+      ${f.options.map(o => `<option value="${esc(o)}" ${v===o?'selected':''}>${esc(o)}</option>`).join('')}
+    </select>`;
+  } else if(f.type === 'textarea'){
+    ctrl = `<textarea rows="${f.rows||3}" data-path="${path}"
+      placeholder="${esc(f.placeholder||'')}">${esc(v)}</textarea>`;
+  } else {
+    const t = f.type === 'month' ? 'month' : 'text';
+    const ro = f.readonly ? 'disabled' : '';
+    const val = f.readonly && !v ? S.phone : v;
+    ctrl = `<input type="${t}" value="${esc(val)}" data-path="${path}" ${ro}
+      placeholder="${esc(f.placeholder||(f.type==='month'?'选择年月':''))}">`;
+  }
+  return `<div class="fld${full}"><label>${esc(f.label)}${req}${hint}</label>${ctrl}</div>`;
+}
+
+function cellInput(c, v, path){
+  if(c.type === 'checkbox'){
+    return `<label class="chk"><input type="checkbox" data-path="${path}"
+      ${v?'checked':''}>${esc(c.checkbox_label||'是')}</label>`;
+  }
+  return `<input type="text" value="${esc(v)}" data-path="${path}">`;
+}
+
+function renderUpload(u, path){
+  const cur = S.photos[path];
+  return `<div class="upl" onclick="pickFile('${path}')">
+    <div class="upl-t">${esc(u.label)}</div>
+    <div class="upl-tip">${esc(u.tip||'点击上传')}</div>
+    <div class="upl-prev" id="upl-${path}">
+      ${cur ? `<img src="${esc(cur)}"><div class="upl-ok">✓ 已上传</div>` : ''}
+    </div>
+    <input type="file" accept="image/*" style="display:none" id="fi-${path}"
+      onchange="uploadFile('${path}', this)">
+  </div>`;
+}
+
+/* 重复块 */
+function repFieldsOf(key){
+  const m = S.schema.find(x => x.key === key);
+  return m ? m.fields : [];
+}
+function repMax(key){
+  const m = S.schema.find(x => x.key === key);
+  return m ? (m.max || 6) : 6;
+}
+
+function renderRepeater(key){
+  const list = S.data[key] || [];
+  const box = $('rep-' + key);
+  if(!box) return;
+  const fields = repFieldsOf(key);
+  if(!list.length){
+    box.innerHTML = '<div class="empty-note">还没有填写，点击下方按钮添加</div>';
+  } else {
+    box.innerHTML = list.map((item, i) => `
+      <div class="rep">
+        <div class="rep-hd">
+          <span class="rep-idx">第 ${i+1} 条</span>
+          <button class="rep-del" onclick="delItem('${key}',${i})">删除</button>
+        </div>
+        <div class="grid">${fields.map(f => renderField(f, item, `${key}.${i}.${f.key}`)).join('')}</div>
+      </div>`).join('');
+  }
+  // 添加按钮上限提示
+  const btn = box.parentElement.querySelector('.add-btn');
+  if(btn) btn.style.display = list.length >= repMax(key) ? 'none' : 'block';
+}
+
+function addItem(key){
+  if(!S.data[key]) S.data[key] = [];
+  if(S.data[key].length >= repMax(key)){
+    toast(`最多添加 ${repMax(key)} 条`, 'err'); return;
+  }
+  S.data[key].push({});
+  renderRepeater(key);
+  markDirty();
+  updateNavDone();
+}
+function delItem(key, i){
+  S.data[key].splice(i, 1);
+  renderRepeater(key);
+  markDirty();
+  updateNavDone();
+}
+
+/* ═══════════════════════════════════════════════
+   输入绑定
+   ═══════════════════════════════════════════════ */
+function setPath(obj, path, val){
+  const parts = path.split('.');
+  let cur = obj;
+  for(let i = 0; i < parts.length - 1; i++){
+    const p = parts[i];
+    if(/^\d+$/.test(parts[i+1])){
+      if(!Array.isArray(cur[p])) cur[p] = [];
+    } else {
+      if(typeof cur[p] !== 'object' || cur[p] === null) cur[p] = {};
+    }
+    cur = cur[p];
+  }
+  const last = parts[parts.length-1];
+  cur[/^\d+$/.test(last) ? +last : last] = val;
+}
+
+function bindInputs(){
+  // 事件委托：监听挂容器上，repeater 等 DOM 动态重建后依然有效。
+  // （修复：原实现逐元素绑定，bindInputs 末尾 renderRepeater 重建 DOM 后，
+  //  新输入框没有任何事件 —— 用户输入不写回 S.data，保存的是空对象）
+  const area = $('formArea');
+  if(area && !area.dataset.delegated){
+    area.dataset.delegated = '1';
+    const handler = (e) => {
+      const el = e.target.closest ? e.target.closest('[data-path]') : null;
+      if(!el || !area.contains(el)) return;
+      const want = (el.type === 'radio' || el.type === 'checkbox' || el.tagName === 'SELECT')
+        ? 'change' : 'input';
+      if(e.type !== want) return;
+      const path = el.dataset.path;
+      let v = el.type === 'checkbox' ? el.checked : el.value;
+      if(el.type === 'radio' && !el.checked) return;
+      const rootKey = path.split('.')[0];
+      if(S.data[rootKey] === undefined) S.data[rootKey] = {};
+      setPath(S.data, path, v);
+      // 入党时间等联动
+      if(path === 'basic.political') togglePartyField(v);
+      if(path === 'family.has_relative') toggleRelDetail(v);
+      markDirty();
+      updateProgress();
+      updateNavDone();
+    };
+    area.addEventListener('input', handler);
+    area.addEventListener('change', handler);
+  }
+
+  // 自我评价字数
+  const ta = $('ta-self_eval');
+  if(ta){
+    ta.addEventListener('input', () => {
+      const c = $('cnt-self_eval');
+      if(c){
+        const n = ta.value.length;
+        c.textContent = `${n} / 200`;
+        c.className = 'count' + (n > 200 ? ' over' : '');
+      }
+    });
+  }
+
+  // 重放已有 repeater（纯渲染，不再涉及绑定）
+  S.schema.filter(m => m.type === 'repeater').forEach(m => renderRepeater(m.key));
+}
+
+function togglePartyField(v){
+  // 群众/团员时不强制清空，仅作视觉提示
+}
+function toggleRelDetail(v){
+  const w = $('relDetailWrap');
+  if(w) w.style.display = v === '有' ? 'block' : 'none';
+}
+
+/* ═══════════════════════════════════════════════
+   文件上传
+   ═══════════════════════════════════════════════ */
+function pickFile(path){ $('fi-' + path).click(); }
+
+async function uploadFile(path, input){
+  const f = input.files[0];
+  if(!f) return;
+  if(f.size > 12 * 1024 * 1024){ toast('图片不能超过 12MB', 'err'); return; }
+  const kind = path.split('.').pop();
+  const fd = new FormData();
+  fd.append('phone', S.phone);
+  fd.append('kind', kind);
+  fd.append('file', f);
+  toast('上传中…', 'info');
+  try{
+    const r = await fetch('/api/sume/upload', {method:'POST', body: fd});
+    const j = await r.json();
+    if(!r.ok) throw new Error(j.detail || '上传失败');
+    S.photos[path] = j.url;
+    const box = $('upl-' + path);
+    if(box) box.innerHTML = `<img src="${esc(j.url)}"><div class="upl-ok">✓ 已上传</div>`;
+    toast('上传成功', 'ok');
+  }catch(e){
+    toast(e.message, 'err');
+  }finally{
+    input.value = '';
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   保存 / 进度
+   ═══════════════════════════════════════════════ */
+function markDirty(){
+  S.dirty = true;
+  $('saveNote').textContent = '有未保存的修改…';
+  $('saveNote').className = 'save-note';
+}
+
+function startAutosave(){
+  setInterval(() => { if(S.dirty && !S.saving) saveNow(false); }, 20000);
+  window.addEventListener('beforeunload', e => {
+    if(S.dirty){ e.preventDefault(); e.returnValue = ''; }
+  });
+}
+
+/* 保存前清洗：剔除 repeater 中所有字段都为空的行，避免空对象入库 */
+function cleanDataForSave(){
+  const repKeys = (S.schema || []).filter(m => m.type === 'repeater').map(m => m.key);
+  const out = JSON.parse(JSON.stringify(S.data));
+  repKeys.forEach(k => {
+    if(Array.isArray(out[k])){
+      out[k] = out[k].filter(it => it && Object.values(it).some(v => {
+        if(typeof v === 'boolean') return v === true;
+        return String(v ?? '').trim() !== '';
+      }));
+    }
+  });
+  return out;
+}
+
+async function saveNow(manual){
+  if(S.saving) return;
+  S.saving = true;
+  if(manual) toast('保存中…', 'info');
+  try{
+    const r = await fetch('/api/sume/save', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({phone:S.phone, data:cleanDataForSave(), photos:S.photos, status:'draft'})
+    });
+    const j = await r.json();
+    if(!r.ok) throw new Error(j.detail || '保存失败');
+    S.dirty = false;
+    S.progress = j.progress;
+    S.lastSaved = Date.now()/1000;
+    $('saveNote').textContent = '✓ 已自动保存 ' + fmtTime(S.lastSaved);
+    $('saveNote').className = 'save-note ok';
+    updateProgress();
+    if(manual) toast('草稿已保存', 'ok');
+  }catch(e){
+    if(manual) toast(e.message, 'err');
+    $('saveNote').textContent = '保存失败，请检查网络';
+  }finally{
+    S.saving = false;
+  }
+}
+
+const CORE = [
+  ['basic','name'],['basic','phone'],['basic','id_card'],['basic','email'],
+  ['basic','gender'],['basic','political'],['basic','ethnic'],['basic','birth'],
+  ['basic','courses'],['basic','residence'],['basic','hukou'],['basic','marriage'],
+];
+function updateProgress(){
+  let hit = 0;
+  CORE.forEach(([k,f]) => { if((S.data[k]||{})[f]) hit++; });
+  const edu = (S.data.education || {}).rows || [];
+  const e0 = edu[0] || {};
+  ['school','major','period','gpa'].forEach(f => { if(e0[f]) hit++; });
+  const it = S.data.intention || {};
+  ['target','exam_city','adjust','grassroots'].forEach(f => { if(it[f]) hit++; });
+  if((S.data.self_eval||'').trim()) hit++;
+  if((S.data.internships||[]).length) hit++;
+  if((S.data.projects||[]).length) hit++;
+  if(S.photos['basic.id_photo']) hit++;
+
+  const pct = Math.round(hit / 21 * 100);
+  S.progress = pct;
+  $('progPct').textContent = pct + '%';
+  $('progFill').style.width = pct + '%';
+}
+
+function updateNavDone(){
+  S.schema.forEach(m => {
+    const el = document.querySelector(`[data-nav="${m.key}"]`);
+    if(!el) return;
+    const done = isModuleDone(m);
+    el.classList.toggle('done', done);
+  });
+}
+function isModuleDone(m){
+  const d = S.data[m.key];
+  if(!d) return false;
+  if(m.type === 'group') return m.fields.filter(f=>f.required).every(f => d[f.key]);
+  if(m.type === 'table') return ((d.rows||[])[0]||{}).school;
+  if(m.type === 'repeater') return (d||[]).length > 0;
+  if(m.type === 'single_textarea') return String(d||'').trim().length > 0;
+  if(m.type === 'family') return ((d.rows||[])[0]||{}).name;
+  return false;
+}
+
+/* 滚动高亮 */
+let secObserver = null;
+function observeSections(){
+  if(secObserver) secObserver.disconnect();
+  const items = document.querySelectorAll('.sidenav-item');
+  secObserver = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if(en.isIntersecting){
+        items.forEach(i => i.classList.remove('on'));
+        const nav = document.querySelector(`[data-nav="${en.target.dataset.sec}"]`);
+        if(nav) nav.classList.add('on');
+      }
+    });
+  }, {rootMargin:'-70px 0px -70% 0px'});
+  document.querySelectorAll('section.sec').forEach(s => secObserver.observe(s));
+}
+
+function scrollTo(key){
+  const el = $('sec-' + key);
+  if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ═══════════════════════════════════════════════
+   提交
+   ═══════════════════════════════════════════════ */
+function setStatus(st){
+  const p = $('statusPill');
+  if(st === 'submitted'){
+    p.textContent = '已提交'; p.className = 'pill pill-ok';
+    $('submitBtn').textContent = '重新提交';
+  } else if(S.progress > 0){
+    p.textContent = '填写中'; p.className = 'pill pill-warn';
+  } else {
+    p.textContent = '未开始'; p.className = 'pill pill-gray';
+  }
+}
+
+function trySubmit(){
+  const miss = [];
+  // 必填校验
+  const b = S.data.basic || {};
+  if(!b.name) miss.push('基本信息 · 姓名');
+  if(!b.id_card) miss.push('基本信息 · 身份证号');
+  else if(!/^\d{17}[\dXx]$/.test(b.id_card)) miss.push('基本信息 · 身份证号格式不正确（应为18位）');
+  if(!b.gender) miss.push('基本信息 · 性别');
+  if(!b.political) miss.push('基本信息 · 政治面貌');
+  if(!b.ethnic) miss.push('基本信息 · 民族');
+  if(!b.birth) miss.push('基本信息 · 出生年月');
+  if(!b.email) miss.push('基本信息 · 邮箱');
+  if(!b.hukou) miss.push('基本信息 · 户口性质');
+
+  const e0 = ((S.data.education||{}).rows||[])[0] || {};
+  if(!e0.school) miss.push('教育背景 · 最高学历学校全称');
+  if(!e0.major) miss.push('教育背景 · 最高学历专业');
+  if(!e0.period) miss.push('教育背景 · 最高学历起止时间');
+
+  const it = S.data.intention || {};
+  if(!it.target) miss.push('求职意向 · 应聘单位/岗位');
+  if(!it.exam_city) miss.push('求职意向 · 首选考试城市');
+  if(!it.adjust) miss.push('求职意向 · 是否服从调剂');
+  if(!it.grassroots) miss.push('求职意向 · 是否接受基层/偏远地区');
+
+  if(!(S.data.self_eval||'').trim()) miss.push('自我评价（200字以内）');
+  if(!S.photos['basic.id_photo']) miss.push('证件照上传');
+
+  const box = $('subMiss');
+  if(miss.length){
+    box.style.display = 'block';
+    box.innerHTML = `<strong>以下 ${miss.length} 项还建议补充：</strong><br>`
+      + miss.map(m => '· ' + esc(m)).join('<br>');
+  } else {
+    box.style.display = 'none';
+    box.innerHTML = '<div style="background:#e8f8ee;border-left:3px solid #12a150;padding:10px 13px;border-radius:0 6px 6px 0;font-size:12.5px;color:#0f7a3d">✓ 关键信息已填写完整</div>';
+  }
+  $('subMask').classList.add('open');
+}
+
+function closeSubmitModal(){ $('subMask').classList.remove('open'); }
+
+async function doSubmit(){
+  closeSubmitModal();
+  const btn = $('submitBtn');
+  btn.disabled = true; btn.textContent = '提交中…';
+  try{
+    const r = await fetch('/api/sume/save', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({phone:S.phone, data:cleanDataForSave(), photos:S.photos, status:'submitted'})
+    });
+    const j = await r.json();
+    if(!r.ok) throw new Error(j.detail || '提交失败');
+    S.dirty = false; S.status = 'submitted'; S.progress = j.progress;
+    toast(j.notified ? '提交成功，已通知老师' : '提交成功，老师已可查看', 'ok');
+    setStatus('submitted');
+    $('saveNote').textContent = '✓ 已于 ' + fmtTime(Date.now()/1000) + ' 提交';
+    $('saveNote').className = 'save-note ok';
+  }catch(e){
+    toast(e.message, 'err');
+  }finally{
+    btn.disabled = false;
+    btn.textContent = S.status === 'submitted' ? '重新提交' : '提交简历';
+  }
+}
+
+/* 抽屉 */
+function openDrawer(){ $('drawer').classList.add('open'); $('dMask').classList.add('open'); }
+function closeDrawer(){ $('drawer').classList.remove('open'); $('dMask').classList.remove('open'); }
+document.addEventListener('keydown', e => { if(e.key === 'Escape'){ closeDrawer(); closeSubmitModal(); } });
+
+/* 手机号回填 */
+document.addEventListener('DOMContentLoaded', () => {
+  $('phoneInput').focus();
+});
+</script>
+</body>
+</html>

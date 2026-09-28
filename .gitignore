@@ -1,0 +1,7 @@
+.deploy/
+data/
+storage/
+preview/
+__pycache__/
+*.pyc
+启动.bat
