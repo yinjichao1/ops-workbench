@@ -926,27 +926,8 @@ function showForm() {
   collapsed['other'] = true;
   render();
   bindEvents();
-  initHeader();
   if (has) toast('已恢复上次填写的草稿', 'ok');
 })();
-
-/* 国网风格头部：访问次数 / 刷新时间 / 预览 */
-function initHeader() {
-  try {
-    let n = parseInt(localStorage.getItem('sg_ws_visit') || '103', 10) + 1;
-    localStorage.setItem('sg_ws_visit', String(n));
-    const vc = document.getElementById('visitCount');
-    if (vc) vc.textContent = n;
-    const rt = document.getElementById('refreshTime');
-    if (rt) {
-      const d = new Date();
-      const p = x => String(x).padStart(2, '0');
-      rt.textContent = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
-    }
-    const pv = document.getElementById('btnPreview');
-    if (pv) pv.onclick = () => toast('简历预览将在下一期上线，可先「提交并生成体检报告」查看诊断');
-  } catch (e) {}
-}
 
 /* ---------------- 调试 / 自动化钩子 ---------------- */
 window.SG = {
