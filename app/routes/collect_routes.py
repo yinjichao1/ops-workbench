@@ -43,9 +43,11 @@ from pydantic import BaseModel
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session as SqlSession
 
-from ..models import get_db, ExamSignup, FormSubmission, Lead, MatchLead
+from ..models import get_db, ExamSignup, FormSubmission, Lead, MatchLead, WsArchive, WsArchiveItem
 # 投放渠道的中文名与规范化只维护一份（在 match_routes 里），此处直接复用
 from .match_routes import platform_label, platform_options, norm_platform
+# 网申摘要在 leads 表里的来源标记（与 ws_apply 路由保持同一份）
+from .ws_apply import SOURCE_LEADS
 
 router = APIRouter()
 
@@ -54,6 +56,8 @@ MATCH_CHANNEL = "match"
 MATCH_LABEL = "匹配工具线索收集"
 EXAM_CHANNEL = "exam"
 EXAM_LABEL = "模考线索收集"
+APPLY_CHANNEL = "apply"
+APPLY_LABEL = "网申模拟线索收集"
 
 # 小程序线索（2026-09-17 新增）—— 它与上面三类**不同**：
 # 不写独立收集表，而是由小程序云函数 getPhone 换号后直接 POST /api/leads/bulk
@@ -211,8 +215,26 @@ def collect_overview(db: SqlSession = Depends(get_db)):
         }
     )
 
-    grand_total = int(form_total) + int(match_total) + int(exam_total) + int(miniapp_total)
-    grand_today = int(form_today) + int(match_today) + int(exam_today) + int(miniapp_today)
+    # ── 网申模拟（ws_archives，含体检评分） ──
+    apply_total = db.query(func.count(WsArchive.id)).scalar() or 0
+    apply_today = (
+        db.query(func.count(WsArchive.id))
+        .filter(func.date(WsArchive.created_at) == func.current_date())
+        .scalar()
+        or 0
+    )
+    channels.append(
+        {
+            "channel": APPLY_CHANNEL,
+            "kind": "apply",
+            "label": APPLY_LABEL,
+            "total": int(apply_total),
+            "today": int(apply_today),
+        }
+    )
+
+    grand_total = int(form_total) + int(match_total) + int(exam_total) + int(miniapp_total) + int(apply_total)
+    grand_today = int(form_today) + int(match_today) + int(exam_today) + int(miniapp_today) + int(apply_today)
 
     return {
         "ok": True,
@@ -224,6 +246,8 @@ def collect_overview(db: SqlSession = Depends(get_db)):
         "exam_today": int(exam_today),
         "miniapp_total": int(miniapp_total),
         "miniapp_today": int(miniapp_today),
+        "apply_total": int(apply_total),
+        "apply_today": int(apply_today),
         "total": grand_total,
         "today": grand_today,
         "channels": channels,
@@ -345,6 +369,51 @@ def _exam_rows(db):
     return out
 
 
+def _apply_rows(db, keyword=""):
+    """网申模拟渠道明细（ws_archives）。score 列放体检评分，另带完整度/硬伤/风险专有列。"""
+    q = db.query(WsArchive)
+    kw = (keyword or "").strip()
+    if kw:
+        like = f"%{kw}%"
+        q = q.filter(
+            WsArchive.name.like(like) | WsArchive.phone.like(like)
+            | WsArchive.school.like(like) | WsArchive.major.like(like)
+        )
+    out = []
+    for r in q.order_by(WsArchive.id.desc()).limit(2000).all():
+        out.append(
+            {
+                "id": r.id,
+                "source": "apply",
+                "channel": APPLY_CHANNEL,
+                "channel_label": APPLY_LABEL,
+                "platform": r.platform or "",
+                "platform_label": platform_label(r.platform),
+                "name": r.name or "",
+                "phone": r.phone or "",
+                "school": r.school or "",
+                "major": r.major or "",
+                "degree": r.level or "",
+                "year": "",
+                "province": "",
+                "grade": "",
+                "score": r.score,
+                "duration": 0,
+                "match_total": None,
+                "match_exact": None,
+                "match_family": None,
+                "match_review": None,
+                # 网申专有列
+                "complete": r.complete_pct,
+                "hard": r.hard_count,
+                "risk": r.risk_count,
+                "grad_date": r.grad_date or "",
+                "created_at": r.created_at.strftime("%Y-%m-%d %H:%M") if r.created_at else "",
+            }
+        )
+    return out
+
+
 def _miniapp_detail(source):
     """取 source 后缀作「来源细分」：小程序-公众号菜单 → 公众号菜单。"""
     s = str(source or "")
@@ -429,11 +498,13 @@ def collect_list(
         rows = _exam_rows(db)
     elif channel == MINIAPP_CHANNEL:
         rows = _miniapp_rows(db, keyword)
+    elif channel == APPLY_CHANNEL:
+        rows = _apply_rows(db, keyword)
     elif channel and channel != "all":
         rows = _form_rows(db, channel)
     else:
         rows = (_form_rows(db, "all") + _match_rows(db, keyword, platform)
-                + _exam_rows(db) + _miniapp_rows(db, keyword))
+                + _exam_rows(db) + _miniapp_rows(db, keyword) + _apply_rows(db, keyword))
         if (platform or "").strip():
             # 同导出：投放渠道只存在于匹配工具，按它筛选时只保留匹配工具行
             rows = [r for r in rows if r.get("source") == "match"]
@@ -490,6 +561,16 @@ def collect_export(
                  r["campus"], r["validity"], r["status"]]
             )
         fname = "collect_miniapp.csv"
+    elif channel == APPLY_CHANNEL:
+        w.writerow(["ID", "提交时间", "姓名", "手机", "学校", "专业", "学历",
+                    "毕业时间", "体检评分", "完整度%", "硬伤", "风险", "投放渠道"])
+        for r in _apply_rows(db, ""):
+            w.writerow(
+                [r["id"], r["created_at"], r["name"], r["phone"], r["school"], r["major"],
+                 r["degree"], r["grad_date"], r["score"], r["complete"], r["hard"],
+                 r["risk"], r["platform_label"]]
+            )
+        fname = "collect_apply.csv"
     elif channel and channel != "all":
         w.writerow(["ID", "提交时间", "姓名", "手机", "学校", "专业", "来源项目"])
         for r in _form_rows(db, channel):
@@ -499,9 +580,9 @@ def collect_export(
             )
         fname = f"collect_{channel}.csv"
     else:
-        # 全部：合并四类来源，用统一列（来源渠道 + 投放渠道 区分来源）
+        # 全部：合并五类来源，用统一列（来源渠道 + 投放渠道 区分来源）
         rows = (_form_rows(db, "all") + _match_rows(db, "", plat)
-                + _exam_rows(db) + _miniapp_rows(db))
+                + _exam_rows(db) + _miniapp_rows(db) + _apply_rows(db))
         if plat:
             # 投放渠道这一维只存在于匹配工具 —— 按它筛选时其余入口没有可比维度，
             # 全留着会得到"筛了抖音却混进表单线索"的假结果，故只保留匹配工具行。
@@ -541,6 +622,14 @@ def collect_delete(body: DeleteIn, db: SqlSession = Depends(get_db)):
             .filter(Lead.id == body.id, Lead.source.like(MINIAPP_SOURCE_PREFIX + "%"))
             .first()
         )
+    elif body.source == "apply":
+        # 网申档案：连带清明细子表 + leads 里的摘要行（与 /api/apply/{id} 删除口径一致）
+        rec = db.query(WsArchive).filter(WsArchive.id == body.id).first()
+        if rec:
+            db.query(WsArchiveItem).filter(WsArchiveItem.archive_id == rec.id).delete()
+            db.query(Lead).filter(
+                Lead.source == SOURCE_LEADS, Lead.phone == rec.phone, Lead.name == rec.name
+            ).delete()
     else:
         rec = db.query(FormSubmission).filter(FormSubmission.id == body.id).first()
     if not rec:

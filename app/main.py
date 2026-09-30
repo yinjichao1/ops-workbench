@@ -234,3 +234,17 @@ async def team_projects():
             "Expires": "0",
         },
     )
+
+
+@app.get("/ws-admin")
+async def ws_admin():
+    """网申模拟档案管理页（Basic Auth 之后，供团队项目页 iframe 内嵌）。"""
+    templates_dir = os.path.join(os.path.dirname(__file__), "..", "templates")
+    return FileResponse(
+        os.path.join(templates_dir, "ws_admin.html"),
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )

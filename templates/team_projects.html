@@ -53,7 +53,7 @@
     <div class="t">
       <a class="back" href="/">← 返回运营工作台</a>
       <h1>团队项目</h1>
-      <div class="sub">集中承接面向学员 / 员工的线上项目入口与数据管理。当前已接入：<b>919 模考排位赛</b>报名数据管理、<b>思格模考</b>系统入口、<b>央国企匹配工具</b>、<b>央国企备考列车时间线</b>。数据管理类项目点击卡片在本页查看；学员入口类项目点击卡片新标签打开。</div>
+      <div class="sub">集中承接面向学员 / 员工的线上项目入口与数据管理。当前已接入：<b>919 模考排位赛</b>报名数据管理、<b>思格模考</b>系统入口、<b>央国企匹配工具</b>、<b>国网网申模拟系统</b>（档案管理 + 学员入口）、<b>央国企备考列车时间线</b>。数据管理类项目点击卡片在本页查看；学员入口类项目点击卡片新标签打开。</div>
       <div class="meta">
         <span class="chip">认证范围：<b>工作台账号（Basic Auth）</b></span>
         <span class="chip">接入项目：<b id="cnt">0</b></span>
@@ -107,6 +107,27 @@ var PROJECTS = [
     code: 'match',
     desc: '央国企岗位匹配工具：学员填写信息后匹配适合的央国企报考方向，可作为引流与线索收集触点。',
     href: '/match/',
+    blank: true,
+    status: '运行中',
+    statusOff: false,
+    meta: '学员入口 · 新标签打开'
+  },
+  {
+    id: 'wanshen',
+    name: '网申模拟 · 档案管理',
+    code: 'wanshen-admin',
+    desc: '国网网申模拟系统（引流留资钩子）的完整档案管理：姓名/联系方式/教育经历/家庭成员等全字段 + 体检报告评分与硬伤/风险数。支持搜索、详情查看、删除与一键导出 CSV。线索摘要另见「线索收集 → 网申模拟」。',
+    href: '/ws-admin',
+    status: '运行中',
+    statusOff: false,
+    meta: '数据实时 · 同机代理'
+  },
+  {
+    id: 'wanshen-site',
+    name: '国网网申模拟系统',
+    code: 'wanshen',
+    desc: '学员端入口：1:1 仿国网招聘平台的网申填报模拟，实时校验 + 提交生成《网申体检报告》，是「网申诊断」咨询的引流触点。可带投放渠道参数分享，如 /ws/?ch=douyin。',
+    href: '/ws/',
     blank: true,
     status: '运行中',
     statusOff: false,

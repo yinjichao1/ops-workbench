@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>网申模拟 · 档案管理</title>
+<style>
+  :root{
+    --ink:#1c2b3a; --ink-soft:#46586b; --ink-faint:#5f6f7e; --line:#e5e8ee;
+    --primary:#0a69cd; --danger:#d93025; --ok:#1d8a4e; --warn:#f77f00; --bg:#f5f7fa; --card:#fff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);padding:22px 14px 70px}
+  .wrap{max-width:1240px;margin:0 auto}
+  .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+  h1{font-size:20px;font-weight:700}
+  .sub{font-size:12px;color:var(--ink-soft);margin-top:4px;max-width:680px;line-height:1.6}
+  .stats{display:flex;gap:10px;margin-left:auto}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 16px;text-align:center;min-width:92px}
+  .stat b{display:block;font-size:22px;color:var(--primary)}
+  .stat span{font-size:12px;color:var(--ink-soft)}
+  .actions{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap}
+  input[type=search]{flex:1;min-width:220px;border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;outline:0;background:#fff}
+  input[type=search]:focus{border-color:var(--primary)}
+  button,.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;text-decoration:none;display:inline-block}
+  button.primary,.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  button:hover{opacity:.85}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
+  th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}
+  th{background:#fafbfd;color:var(--ink-soft);font-weight:600;position:sticky;top:0}
+  td.phone{font-variant-numeric:tabular-nums}
+  tr:last-child td{border-bottom:0}
+  tr:hover td{background:#f7fafd}
+  .empty{padding:40px;text-align:center;color:var(--ink-soft);font-size:13px}
+  .del{color:var(--danger);border-color:#f3d4d2}
+  .tag{display:inline-block;background:#eef4fd;color:var(--primary);border-radius:6px;padding:1px 7px;font-size:12px}
+  .tag.none{background:#f1f2f5;color:var(--ink-faint)}
+  .badge{display:inline-block;border-radius:6px;padding:1px 8px;font-size:12px;font-weight:600}
+  .b-hi{background:#e7f7ee;color:var(--ok)}
+  .b-mid{background:#eef4fd;color:var(--primary)}
+  .b-low{background:#fff2e2;color:var(--warn)}
+  .b-bad{background:#fdecec;color:var(--danger)}
+  .pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin:10px 0 0;font-size:12px;color:var(--ink-soft)}
+  .pager button{padding:5px 12px}
+  .pager button:disabled{opacity:.4;cursor:not-allowed}
+  /* 详情弹窗 */
+  .mask{position:fixed;inset:0;background:rgba(28,43,58,.45);display:none;z-index:20;padding:24px 12px;overflow:auto}
+  .mask.show{display:block}
+  .dlg{max-width:860px;margin:0 auto;background:var(--card);border-radius:14px;overflow:hidden}
+  .dlg-h{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);background:#fafbfd;position:sticky;top:0}
+  .dlg-h h2{font-size:15px}
+  .dlg-h .x{margin-left:auto;cursor:pointer;font-size:18px;color:var(--ink-soft);border:0;background:none}
+  .dlg-b{padding:14px 16px}
+  .kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;margin-bottom:14px}
+  .kv .it{background:#f7fafd;border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+  .kv .it span{display:block;font-size:11px;color:var(--ink-faint)}
+  .kv .it b{font-size:13px;word-break:break-all;white-space:normal}
+  .sec{margin-bottom:14px}
+  .sec h3{font-size:13px;color:var(--ink-soft);margin-bottom:6px;padding-left:8px;border-left:3px solid var(--primary)}
+  .sec table{font-size:12px}
+  .sec th,.sec td{padding:6px 9px}
+  .photo{width:88px;height:117px;object-fit:cover;border:1px solid var(--line);border-radius:8px}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:rgba(28,43,58,.92);color:#fff;padding:9px 18px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:30}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <a class="sub" href="/team-projects">← 返回团队项目</a>
+      <h1>网申模拟 · 档案管理</h1>
+      <div class="sub">学员在国网网申模拟系统（<b>sigedianwang.cn/ws/</b>）提交的完整档案：姓名/联系方式/教育经历/家庭成员等全字段 + 体检报告评分。<b>评分 = 完整度加权 − 硬伤×12 − 风险×4</b>，分低 = 缺项多 = 跟进切入点。线索摘要同步在「线索收集 → 网申模拟」与「线索分析」可查。</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="stTotal">-</b><span>累计档案</span></div>
+      <div class="stat"><b id="stToday">-</b><span>今日提交</span></div>
+      <div class="stat"><b id="stScore">-</b><span>平均评分</span></div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <input type="search" id="kw" placeholder="搜索 姓名 / 手机 / 学校 / 专业…（回车搜索）">
+    <button class="primary" onclick="load(1)">搜索</button>
+    <button onclick="load(page)">↻ 刷新</button>
+    <a class="btn primary" id="btnExport" href="/api/apply/export" target="_blank">导出 CSV</a>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead><tr>
+        <th>ID</th><th>提交时间</th><th>姓名</th><th>手机</th><th>学校</th><th>专业</th>
+        <th>学历</th><th>体检评分</th><th>完整度</th><th>渠道</th><th>操作</th>
+      </tr></thead>
+      <tbody id="tb"><tr><td colspan="11" class="empty">加载中…</td></tr></tbody>
+    </table>
+    <div class="empty" id="empty" style="display:none">当前筛选下暂无档案</div>
+  </div>
+  <div class="pager">
+    <span id="pgInfo"></span>
+    <button id="pgPrev" onclick="load(page-1)">‹ 上一页</button>
+    <button id="pgNext" onclick="load(page+1)">下一页 ›</button>
+  </div>
+</div>
+
+<!-- 详情弹窗 -->
+<div class="mask" id="mask">
+  <div class="dlg">
+    <div class="dlg-h"><h2 id="dlgTitle">档案详情</h2><button class="x" onclick="closeDlg()">✕</button></div>
+    <div class="dlg-b" id="dlgBody">加载中…</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var PAGE_SIZE = 50, page = 1, total = 0;
+function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},1800); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function dash(v){ return (v==null||v==='')?'—':esc(v); }
+function scoreBadge(n){
+  if(n==null) return '';
+  var cls = n>=90?'b-hi':(n>=75?'b-mid':(n>=60?'b-low':'b-bad'));
+  return '<span class="badge '+cls+'">'+n+'</span>';
+}
+function platTag(v){
+  return '<span class="tag'+(v?'':' none')+'">'+esc(v||'未标注')+'</span>';
+}
+
+function load(p){
+  p = p || 1;
+  if(p < 1) p = 1;
+  page = p;
+  var kw = (document.getElementById('kw').value||'').trim();
+  var url = '/api/apply/list?page='+p+'&size='+PAGE_SIZE + (kw ? '&keyword='+encodeURIComponent(kw) : '');
+  fetch(url).then(function(r){ return r.json(); }).then(function(j){
+    if(!j.ok) throw new Error(j.error||'加载失败');
+    total = j.total || 0;
+    document.getElementById('stTotal').textContent = total;
+    var rows = j.items || [];
+    var todayN = 0, sum = 0, sn = 0;
+    var today = new Date(), pad = function(x){return String(x).padStart(2,'0');};
+    var tStr = today.getFullYear()+'-'+pad(today.getMonth()+1)+'-'+pad(today.getDate());
+    rows.forEach(function(r){
+      if((r.time||'').indexOf(tStr)===0) todayN++;
+      if(r.score>0){ sum+=r.score; sn++; }
+    });
+    // 第一页按全量算今日/均分不精确，够用即可（管理页快照口径）
+    document.getElementById('stToday').textContent = (p===1) ? todayN : '-';
+    document.getElementById('stScore').textContent = sn ? Math.round(sum/sn) : '-';
+    document.getElementById('empty').style.display = rows.length?'none':'block';
+    document.getElementById('tb').innerHTML = rows.map(function(r){
+      return '<tr>'+
+        '<td>'+r.id+'</td><td>'+dash(r.time)+'</td>'+
+        '<td><b>'+dash(r.name)+'</b></td><td class="phone">'+dash(r.phone)+'</td>'+
+        '<td>'+dash(r.school)+'</td><td>'+dash(r.major)+'</td><td>'+dash(r.level)+'</td>'+
+        '<td>'+scoreBadge(r.score)+'</td><td>'+(r.complete==null?'—':r.complete+'%')+'</td>'+
+        '<td>'+platTag(r.platform_label || r.platform)+'</td>'+
+        '<td><button onclick="openDlg('+r.id+')">详情</button> '+
+        '<button class="del" onclick="del('+r.id+',\''+esc(r.name)+'\')">删除</button></td>'+
+      '</tr>';
+    }).join('');
+    var pmax = Math.max(1, Math.ceil(total/PAGE_SIZE));
+    document.getElementById('pgInfo').textContent = '第 '+p+' / '+pmax+' 页 · 共 '+total+' 条';
+    document.getElementById('pgPrev').disabled = p<=1;
+    document.getElementById('pgNext').disabled = p>=pmax;
+    var ex = '/api/apply/export' + (kw ? '?keyword='+encodeURIComponent(kw) : '');
+    document.getElementById('btnExport').setAttribute('href', ex);
+  }).catch(function(e){ toast('加载失败：'+e.message); });
+}
+
+/* ---------- 详情弹窗 ---------- */
+var KV_LABELS = {
+  name:'姓名', gender:'性别', idcard:'身份证号', birthday:'出生日期', gradDate:'预计毕业时间',
+  nation:'民族', nativeProv:'籍贯', nativeCity:'籍贯市', nativeDist:'籍贯区',
+  birthProv:'生源地', birthCity:'生源地市', birthDist:'生源区', height:'身高cm', weight:'体重kg',
+  gradType:'毕业生类型', marital:'婚姻状况', healthy:'身体健康', political:'政治面貌', veteran:'退役军人',
+  xjCode:'学籍验证码', phone:'手机', tel:'座机', email:'邮箱', addr:'通信地址', zip:'邮编',
+  wechat:'微信', qq:'QQ'
+};
+function openDlg(id){
+  document.getElementById('mask').classList.add('show');
+  document.getElementById('dlgTitle').textContent = '档案详情 #'+id;
+  document.getElementById('dlgBody').innerHTML = '加载中…';
+  fetch('/api/apply/detail/'+id).then(function(r){ return r.json(); }).then(function(j){
+    if(!j.ok) throw new Error(j.error||'加载失败');
+    var a = j.archive || {}, b = a.basic||{}, c = a.contact||{}, h = '';
+    // 摘要 + 证件照
+    h += '<div style="display:flex;gap:14px;align-items:flex-start">';
+    if(b.photo) h += '<img class="photo" src="'+b.photo+'" alt="证件照">';
+    h += '<div class="kv" style="flex:1;margin-bottom:0">';
+    ['name','gender','idcard','birthday','gradDate','nation','birthProv','birthCity','birthDist',
+     'height','weight','gradType','marital','political','healthy','veteran','xjCode'].forEach(function(k){
+      h += '<div class="it"><span>'+KV_LABELS[k]+'</span><b>'+dash(b[k])+'</b></div>';
+    });
+    h += '</div></div>';
+    // 求职意向
+    if((b.intention||[]).length)
+      h += '<div class="sec" style="margin-top:12px"><h3>求职意向</h3>'+ (b.intention||[]).map(function(x){return '<span class="tag">'+esc(x)+'</span>';}).join(' ') +'</div>';
+    // 联系方式
+    h += '<div class="sec" style="margin-top:12px"><h3>联系方式</h3><div class="kv">';
+    ['phone','tel','email','addr','zip','wechat','qq'].forEach(function(k){
+      h += '<div class="it"><span>'+KV_LABELS[k]+'</span><b>'+dash(c[k])+'</b></div>';
+    });
+    h += '</div></div>';
+    // 多行模块（表格式渲染，字段键 → 中文列名按需映射）
+    var SECS = [
+      ['education','教育经历',{entrance:'入学',graduate:'毕业',level:'学历',school:'学校',major:'专业',
+        studyForm:'学习形式',batch:'招生批次',highest:'最高学历',degree:'学位',rankN:'排名',rankTotal:'同排',
+        gpa:'绩点',gaokaoScore:'高考分',gaokaoPlace:'高考地',trainMode:'培养方式',researchDir:'研究方向',thesisTitle:'论文题目'}],
+      ['family','主要家庭成员',{title:'称谓',name:'姓名',birth:'出生日期',unit:'工作单位',position:'职务',phone:'手机',addr:'住址'}],
+      ['language','外语能力',{type:'语种',level:'级别',score:'成绩',certNo:'证书编号',certDate:'获得时间',proficiency:'熟练程度',certOrg:'认证机构'}],
+      ['computer','计算机能力',{certName:'证书名称',level:'级别',score:'成绩',certNo:'证书编号',certDate:'获得时间',org:'发证单位'}],
+      ['certificate','资格证书',{name:'证书名称',type:'类型',no:'编号',date:'获得时间',org:'发证单位'}],
+      ['practice','社会实践',{from:'开始',to:'结束',unit:'单位',dept:'部门',position:'职务',workForm:'工作形式',witness:'证明人',detail:'工作要点'}],
+      ['paper','学术论文',{title:'题目',level:'级别',journal:'期刊',date:'发表时间',authors:'作者',rank:'排序'}],
+      ['research','科研项目',{name:'项目名称',role:'角色',org:'所属单位',from:'开始',to:'结束',desc:'要点'}],
+      ['award','获奖情况',{name:'奖项',level:'级别',type:'类型',date:'时间',org:'发证单位',certNo:'证书编号'}],
+      ['attachment','电子附件',{name:'文件名',type:'类型',size:'大小'}]
+    ];
+    var items = j.items || {};
+    SECS.forEach(function(sc){
+      var key = sc[0], title = sc[1], cols = sc[2];
+      var rows = items[key] || [];
+      if(!rows.length) return;
+      h += '<div class="sec"><h3>'+title+'（'+rows.length+'）</h3><div class="card"><table><thead><tr>'+
+        Object.keys(cols).map(function(k){ return '<th>'+cols[k]+'</th>'; }).join('') +
+        '</tr></thead><tbody>'+
+        rows.map(function(row){
+          return '<tr>'+Object.keys(cols).map(function(k){ return '<td>'+dash(row[k])+'</td>'; }).join('')+'</tr>';
+        }).join('')+'</tbody></table></div></div>';
+    });
+    // 其他说明
+    if(a.other) h += '<div class="sec"><h3>其他情况说明</h3><p style="font-size:13px;line-height:1.8">'+esc(a.other)+'</p></div>';
+    document.getElementById('dlgBody').innerHTML = h;
+  }).catch(function(e){ document.getElementById('dlgBody').innerHTML = '加载失败：'+e.message; });
+}
+function closeDlg(){ document.getElementById('mask').classList.remove('show'); }
+document.getElementById('mask').addEventListener('click', function(e){ if(e.target===this) closeDlg(); });
+
+function del(id, name){
+  if(!confirm('确认删除 '+name+' 的网申档案 #'+id+'？将同时删除明细与线索摘要行，不可恢复。')) return;
+  fetch('/api/apply/'+id, { method:'DELETE' })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if(j.ok){ toast('已删除'); load(page); } else { toast(j.error||'删除失败'); }
+    })
+    .catch(function(){ toast('删除失败，请重试'); });
+}
+
+document.getElementById('kw').addEventListener('keydown', function(e){ if(e.key==='Enter') load(1); });
+load(1);
+</script>
+</body>
+</html>
