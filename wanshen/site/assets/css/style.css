@@ -823,23 +823,56 @@ table.dtbl .row-del {
   .rp-head h2 { font-size: 18px; }
 }
 
-/* ============ 引导留资页 ============ */
+/* ============ 引导留资页（开屏优化版） ============ */
 .lead-page {
   min-height: calc(100vh - 56px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 16px 48px;
+  padding: 48px 16px 56px;
+  position: relative;
+  background:
+    radial-gradient(640px 320px at 12% -4%, rgba(10,105,205,.10), transparent 62%),
+    radial-gradient(560px 300px at 88% 104%, rgba(252,191,73,.13), transparent 62%),
+    linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
+}
+/* 品牌网格纹理（低调装饰） */
+.lead-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(10,105,205,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(10,105,205,.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(70% 60% at 50% 38%, #000 0%, transparent 100%);
+  mask-image: radial-gradient(70% 60% at 50% 38%, #000 0%, transparent 100%);
+  pointer-events: none;
 }
 .lead-card {
   background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(13,43,89,.08);
-  padding: 34px 36px 26px;
-  max-width: 560px;
+  border: 1px solid rgba(10,105,205,.10);
+  border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(13,43,89,.10), 0 2px 8px rgba(13,43,89,.04);
+  padding: 38px 40px 28px;
+  max-width: 600px;
   width: 100%;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+  animation: leadUp .55s cubic-bezier(.22,.8,.36,1) both;
+}
+/* 卡片顶部品牌色带 */
+.lead-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--brand-blue) 0%, #4a90e2 55%, var(--brand-gold) 100%);
+}
+@keyframes leadUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: none; }
 }
 .lead-badge {
   display: inline-block;
@@ -847,73 +880,93 @@ table.dtbl .row-del {
   color: var(--brand-blue);
   font-size: 12px;
   font-weight: 600;
-  padding: 5px 14px;
+  padding: 5px 15px;
   border-radius: 999px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
+  letter-spacing: .5px;
 }
-.lead-title { margin: 0 0 8px; font-size: 24px; color: var(--text); letter-spacing: 1px; }
-.lead-sub { margin: 0 auto 18px; color: var(--text-sub); font-size: 13px; max-width: 460px; }
-.lead-points { display: flex; justify-content: center; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+.lead-title { margin: 0 0 10px; font-size: 27px; color: #14263f; letter-spacing: 1.5px; line-height: 1.35; }
+.lead-sub { margin: 0 auto 20px; color: var(--text-sub); font-size: 13.5px; max-width: 470px; line-height: 1.75; }
+.lead-points { display: flex; justify-content: center; gap: 10px; margin-bottom: 26px; flex-wrap: wrap; }
 .lead-points .lp {
   background: #f6f9fd;
-  border: 1px solid var(--border-light);
+  border: 1px solid #dfe9f5;
   color: var(--text-sub);
-  font-size: 12px;
-  padding: 7px 12px;
-  border-radius: 8px;
+  font-size: 12.5px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(13,43,89,.04);
 }
-.lead-points .lp b { color: var(--brand-blue); margin-right: 4px; }
-.lead-form { text-align: left; margin: 0 auto; max-width: 380px; }
-.lf-field { margin-bottom: 14px; }
+.lead-points .lp b { color: var(--brand-blue); margin-right: 5px; font-weight: 700; }
+.lead-form { text-align: left; margin: 0 auto; max-width: 390px; }
+.lf-field { margin-bottom: 15px; }
 .lf-field label { display: block; font-size: 13px; color: var(--text); margin-bottom: 6px; font-weight: 600; }
 .lf-field label i { color: var(--danger); font-style: normal; }
 .lf-field label span { color: var(--text-light); font-weight: 400; font-size: 12px; }
 .lf-field input {
   width: 100%;
-  height: 42px;
+  height: 44px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0 12px;
+  border-radius: 9px;
+  padding: 0 14px;
   font-size: 15px;
   outline: none;
   font-family: inherit;
-  transition: border-color .15s, box-shadow .15s;
+  background: #fcfdff;
+  transition: border-color .15s, box-shadow .15s, background .15s;
 }
-.lf-field input:focus { border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(10,105,205,.12); }
+.lf-field input:focus { border-color: var(--brand-blue); background: #fff; box-shadow: 0 0 0 4px rgba(10,105,205,.10); }
 .lf-grades { display: flex; gap: 8px; flex-wrap: wrap; }
 .lf-grades button {
   border: 1px solid var(--border);
   background: #fff;
   color: var(--text-sub);
   font-size: 13px;
-  padding: 7px 16px;
+  padding: 7px 17px;
   border-radius: 999px;
   cursor: pointer;
   font-family: inherit;
   transition: all .15s;
 }
-.lf-grades button:hover { border-color: var(--brand-blue); color: var(--brand-blue); }
-.lf-grades button.on { background: var(--brand-blue); border-color: var(--brand-blue); color: #fff; font-weight: 600; }
+.lf-grades button:hover { border-color: var(--brand-blue); color: var(--brand-blue); transform: translateY(-1px); }
+.lf-grades button.on {
+  background: var(--brand-blue);
+  border-color: var(--brand-blue);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 3px 10px rgba(10,105,205,.28);
+}
 .lf-err { display: none; color: var(--danger); font-size: 12px; margin: -2px 0 10px; }
 .btn.lead-btn {
   width: 100%;
-  height: 46px;
+  height: 48px;
   font-size: 16px;
-  border-radius: 10px;
-  letter-spacing: 2px;
-  margin-top: 6px;
+  border-radius: 11px;
+  letter-spacing: 3px;
+  margin-top: 8px;
+  background: linear-gradient(180deg, #00a84b 0%, var(--sg-green) 100%);
+  box-shadow: 0 6px 16px rgba(0,153,68,.28);
+  transition: transform .15s, box-shadow .15s, filter .15s;
 }
+.btn.lead-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(0,153,68,.34); filter: brightness(1.03); }
+.btn.lead-btn:active { transform: none; }
 .lead-privacy {
-  margin-top: 18px;
-  padding-top: 14px;
+  margin-top: 20px;
+  padding-top: 15px;
   border-top: 1px dashed var(--border-light);
   font-size: 12px;
   color: var(--text-light);
-  line-height: 1.7;
+  line-height: 1.75;
   text-align: left;
 }
 .lead-privacy b { color: var(--text-sub); }
-.lead-pc-tip { margin-top: 18px; font-size: 12px; color: var(--text-light); text-align: center; }
+.lead-pc-tip {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--text-light);
+  text-align: center;
+  position: relative;
+}
 .lead-pc-tip b { color: var(--text-sub); }
 
 /* ============ 移动端增强 ============ */

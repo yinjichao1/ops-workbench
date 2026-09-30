@@ -922,7 +922,8 @@ function showForm() {
 const LEAD_KEY = 'SG_LEAD_V1';
 
 function showLeadPage() {
-  $('#leadPage').style.display = 'block';
+  // 注意：lead-page 是 flex 容器（卡片居中+背景纹理），内联值必须是 flex 而非 block
+  $('#leadPage').style.display = 'flex';
   $('#formPage').style.display = 'none';
   $('#actionBar').style.display = 'none';
   $('#sgWelcome').style.display = 'none';
