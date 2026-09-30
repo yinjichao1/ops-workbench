@@ -13,7 +13,7 @@ window.SCHEMA = [
       { p: 'basic.name', label: '姓名', type: 'text' },
       { p: 'basic.gender', label: '性别', type: 'select', src: 'gender', auto: 'gender' },
 
-      { p: 'basic.idcard', label: '身份证号', type: 'text', max: 18, auto: 'idcard' },
+      { p: 'basic.idcard', label: '身份证号', type: 'text', max: 18, auto: 'idcard', noReq: 1 },
       { p: 'basic.birthday', label: '出生日期', type: 'date', auto: 'birthday' },
 
       { p: 'basic.gradDate', label: '预计毕业时间', type: 'date' },

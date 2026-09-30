@@ -33,10 +33,10 @@ window.EMPTY_DATA = {
 const V = {
   notEmpty: v => !!String(v == null ? '' : v).trim(),
 
-  /* 身份证：18位，校验码算法 */
+  /* 身份证：18位，校验码算法（选填：留空不校验，填了才校验格式） */
   idcard(v) {
     const s = String(v || '').trim().toUpperCase();
-    if (!s) return '请填写身份证号';
+    if (!s) return '';
     if (!/^\d{17}[\dX]$/.test(s)) return '身份证号应为18位，最后一位为数字或X';
     const w = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
     const chk = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'];
@@ -159,7 +159,7 @@ window.RULES = [
   { path: 'basic.name', label: '姓名', req: 1,
     fn: v => !V.notEmpty(v) ? '请填写姓名' : (!/^[\u4e00-\u9fa5·]{2,15}$/.test(v.trim()) ? '姓名应为2~15个汉字' : '') },
   { path: 'basic.gender', label: '性别', req: 1, fn: v => V.pick(v, '性别') },
-  { path: 'basic.idcard', label: '身份证号', req: 1, fn: (v, d) => V.idcard(v) },
+  { path: 'basic.idcard', label: '身份证号', req: 0, fn: (v, d) => V.idcard(v) },
   { path: 'basic.birthday', label: '出生日期', req: 1,
     fn: (v, d) => {
       const e = V.date(v, '出生日期');

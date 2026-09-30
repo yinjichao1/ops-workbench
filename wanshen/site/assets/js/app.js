@@ -770,29 +770,29 @@ function commitRow(sec, idx, modal) {
 function fillDemo() {
   const d = JSON.parse(JSON.stringify(window.EMPTY_DATA));
   d.basic = {
-    name: '尹继超', gender: '男', idcard: '220681199310051333', birthday: '1993-10-05',
-    gradDate: '2024-06-30', nation: '汉族',
-    nativeProv: '吉林省', nativeCity: '白山市', nativeDist: '临江市',
-    birthProv: '吉林省', birthCity: '白山市', birthDist: '临江市',
-    height: '185', gradType: '国内毕业生', marital: '未婚', weight: '80',
-    healthy: '是', political: '中共预备党员', veteran: '否', xjCode: 'XJ2024063012358',
+    name: '张明宇', gender: '男', idcard: '220102200306152214', birthday: '2003-06-15',
+    gradDate: '2025-06-30', nation: '汉族',
+    nativeProv: '吉林省', nativeCity: '长春市', nativeDist: '南关区',
+    birthProv: '吉林省', birthCity: '长春市', birthDist: '南关区',
+    height: '176', gradType: '国内毕业生', marital: '未婚', weight: '68',
+    healthy: '是', political: '中共预备党员', veteran: '否', xjCode: 'XJ2025063012358',
     intention: ['国家电网', '电气工程', '变电运维'], photo: ''
   };
   d.contact = {
-    phone: '17649997204', tel: '', email: 'yinjichao1234@163.com',
-    addr: '吉林省长春市工大家属楼', zip: '130000', wechat: '', qq: '1027543959'
+    phone: '13800001234', tel: '', email: 'zhangmingyu@example.com',
+    addr: '吉林省长春市朝阳区示范路 88 号', zip: '130000', wechat: '', qq: '301250615'
   };
   d.education = [{
-    entrance: '2021-09-01', graduate: '2024-06-30', studyForm: '普通全日制',
-    level: '大学本科毕业', school: '清华大学', diplomaNo: '',
+    entrance: '2021-09-01', graduate: '2025-06-30', studyForm: '普通全日制',
+    level: '大学本科毕业', school: '东北电力大学', diplomaNo: '',
     batch: '本科一批', highest: '是', degree: '学士', degreeNo: '',
-    subjectLevel: '', major: '电气工程及其自动化', rankN: '15', rankTotal: '180',
+    subjectLevel: '', major: '电气工程及其自动化', rankN: '25', rankTotal: '210',
     researchDir: '电力系统自动化', thesisTitle: '基于深度学习的配电网故障诊断方法研究',
-    gpa: '3.6', gaokao: '是', gaokaoScore: '652', trainMode: '统招统分', gaokaoPlace: '吉林省'
+    gpa: '3.4', gaokao: '是', gaokaoScore: '528', trainMode: '统招统分', gaokaoPlace: '吉林省'
   }];
   d.family = [{
-    title: '父亲', name: '尹伟', birth: '1968-05-12', position: '农民',
-    unit: '无', phone: '18401794504', addr: '吉林省白山市临江市'
+    title: '父亲', name: '张建国', birth: '1972-05-12', position: '企业职工',
+    unit: '某某制造有限公司', phone: '13800005678', addr: '吉林省长春市南关区'
   }];
   d.language = [{
     type: '英语', level: '大学英语六级', proficiency: '熟练',
@@ -804,7 +804,7 @@ function fillDemo() {
     org: '教育部教育考试院', level: '二级', score: '85', certNo: '2023092012345',
     certFile: '', remark: ''
   }];
-  d.award = [{ name: '校级优秀学生干部', level: '校级', date: '2023-12-01', org: '清华大学', certNo: '', certFile: '', remark: '' }];
+  d.award = [{ name: '校级优秀学生干部', level: '校级', date: '2024-12-01', org: '东北电力大学', certNo: '', certFile: '', remark: '' }];
   d.practice = [{
     from: '2023-07-01', to: '2023-08-31', unit: '国网吉林供电公司',
     position: '变电运维实习生', workForm: '实习', witness: '王老师',
