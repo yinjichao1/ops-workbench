@@ -791,36 +791,6 @@ table.dtbl .row-del {
 }
 .file-row .file-btn:hover { background: var(--sg-green-dark); }
 
-/* ============ 国网风格导航条（模拟还原） ============ */
-.sg-header {
-  background: var(--sg-green);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  padding: 0 24px;
-  height: 52px;
-  gap: 22px;
-}
-.sg-header .sg-logo { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
-.sg-header .sg-badge {
-  width: 34px; height: 34px; border-radius: 50%;
-  border: 2px solid rgba(255,255,255,.9);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 13px; letter-spacing: .5px;
-}
-.sg-header .sg-logo-txt b { display: block; font-size: 14px; line-height: 1.25; }
-.sg-header .sg-logo-txt i { display: block; font-style: normal; font-size: 10px; opacity: .85; letter-spacing: 1px; }
-.sg-header .sg-logo-div { font-size: 13px; opacity: .92; border-left: 1px solid rgba(255,255,255,.4); padding-left: 14px; }
-.sg-header nav { display: flex; align-items: center; gap: 4px; flex: 1; }
-.sg-header nav a {
-  color: #fff; text-decoration: none; font-size: 14px;
-  padding: 15px 14px; line-height: 22px;
-  opacity: .92;
-}
-.sg-header nav a:hover { background: rgba(255,255,255,.12); }
-.sg-header nav a.on { background: rgba(255,255,255,.18); font-weight: 700; opacity: 1; }
-.sg-header .sg-user { font-size: 12px; opacity: .9; flex-shrink: 0; cursor: pointer; }
-
 /* 欢迎条（简历中心） */
 .sg-welcome { background: #fff; border-bottom: 1px solid var(--border-light); padding: 12px 24px; }
 .sg-welcome .sw-line2 { font-size: 12px; color: var(--danger); }
@@ -833,7 +803,6 @@ table.dtbl .row-del {
   .photo-col { grid-column: 1 / -1; grid-row: auto; flex-direction: row; gap: 20px; align-items: flex-start; padding-left: 0; margin-top: 8px; }
   .photo-spec { text-align: left; }
   .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .sg-header nav { display: none; }
 }
 @media (max-width: 820px) {
   .grid { grid-template-columns: 1fr; gap: 10px 0; }
