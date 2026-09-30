@@ -261,9 +261,33 @@ function renderReport() {
   $('#reportWrap').innerHTML = h;
 
   const cta = document.getElementById('btnCta');
-  if (cta) cta.onclick = () => {
-    toast('请添加思格老师微信预约诊断（此处接入真实咨询入口）', 'ok');
+  if (cta) cta.onclick = async () => {
+    const wx = 'sigedu001';
+    const ok = await copyText(wx);
+    toast(ok
+      ? `微信号 ${wx} 已复制，请打开微信 → 添加朋友 → 粘贴搜索，预约思格老师 1v1 网申诊断`
+      : `请手动添加思格老师微信：${wx}`, 'ok');
   };
+}
+
+/* 复制文本到剪贴板：HTTPS 下走 Clipboard API，降级 execCommand */
+async function copyText(txt) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(txt);
+      return true;
+    }
+  } catch (e) { /* 降级 */ }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = txt;
+    ta.style.cssText = 'position:fixed;opacity:0;left:-999px';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) { return false; }
 }
 
 function rpCard(type, title, arr, emptyTxt) {
