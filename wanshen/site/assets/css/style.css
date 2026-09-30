@@ -833,7 +833,6 @@ table.dtbl .row-del {
 /* 欢迎条（简历中心） */
 .sg-welcome { background: #fff; border-bottom: 1px solid var(--border-light); padding: 11px 24px; }
 .sg-welcome .sw-line2 { font-size: 12px; color: var(--text-sub); line-height: 1.75; }
-.sg-welcome .sw-line2 .sw-strong { color: var(--danger); font-weight: 600; }
 .sg-welcome .sw-line2 .sim-note { color: var(--text-light); margin-left: 10px; }
 
 /* ============ 响应式 ============ */
