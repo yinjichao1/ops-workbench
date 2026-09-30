@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>国家电网网申模拟填报系统 · 思格就业研究院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=9">
+<link rel="stylesheet" href="assets/css/style.css?v=10">
 </head>
 <body>
 
@@ -22,129 +22,74 @@
   <div class="sw-line2">温馨提示：简历预览确认后，除姓名、学籍验证码、联系方式和电子附件外<b class="sw-strong">不可再更改</b>。<span class="sim-note">本页为思格就业研究院「网申模拟系统」，非国网官方入口；你填写的信息仅用于模拟填报指导与 1v1 诊断服务，不作其他用途。</span></div>
 </div>
 
-<!-- ============ 引导留资页 ============ -->
+<!-- ============ 引导留资页（v3 蓝白明亮 · 双栏信任式） ============ -->
 <div id="leadPage" class="lead-page">
-  <!-- 开屏场景：深蓝夜空 · 发光电网 · 输电塔剪影（纯 SVG，无外部依赖） -->
-  <svg class="lead-scene" viewBox="0 0 1440 640" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-    <defs>
-      <radialGradient id="lgHalo" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#4a90e2" stop-opacity=".55"/>
-        <stop offset="100%" stop-color="#4a90e2" stop-opacity="0"/>
-      </radialGradient>
-      <linearGradient id="lgTower" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#0d3a75"/>
-        <stop offset="100%" stop-color="#051a38"/>
-      </linearGradient>
-    </defs>
+  <!-- 背景装饰：右下角抽象电路线（浅色科技风） -->
+  <div class="lead-deco" aria-hidden="true">
+    <svg class="ld-circuit" viewBox="0 0 560 420" fill="none">
+      <g stroke="#0a69cd" stroke-width="1.5" opacity=".15">
+        <path d="M20,90 H210 L262,140 H470"/>
+        <path d="M60,200 H240 L296,258 H520"/>
+        <path d="M110,320 H300 L350,272 H540"/>
+      </g>
+      <g fill="#0a69cd" opacity=".18">
+        <circle cx="210" cy="90" r="4"/><circle cx="240" cy="200" r="4"/><circle cx="300" cy="320" r="4"/>
+      </g>
+      <g fill="#0a69cd" opacity=".55">
+        <circle cx="470" cy="140" r="3.5"><animate attributeName="opacity" values=".9;.2;.9" dur="3.4s" repeatCount="indefinite"/></circle>
+        <circle cx="520" cy="258" r="3.5"><animate attributeName="opacity" values=".25;.9;.25" dur="4.2s" repeatCount="indefinite"/></circle>
+        <circle cx="540" cy="272" r="3"><animate attributeName="opacity" values=".8;.2;.8" dur="3.8s" begin="1.1s" repeatCount="indefinite"/></circle>
+      </g>
+    </svg>
+  </div>
 
-    <!-- 电网节点光网：节点 + 连线 -->
-    <g stroke="#7fb2ec" stroke-width="1" opacity=".22">
-      <path d="M110,150 L360,90 M360,90 L610,150 M610,150 L860,84 M860,84 L1120,146 M1120,146 L1345,96"/>
-      <path d="M110,150 L235,236 M360,90 L235,236 M360,90 L610,150 M610,150 L480,250 M610,150 L860,84 M860,84 L990,242 M1120,146 L990,242 M1120,146 L1345,96 M480,250 L235,236 M990,242 L1345,96"/>
-      <path d="M235,236 L480,250 M480,250 L990,242" opacity=".5"/>
-    </g>
-    <g fill="#8fc0f2">
-      <circle cx="110" cy="150" r="3"/><circle cx="360" cy="90" r="4"/><circle cx="610" cy="150" r="3"/>
-      <circle cx="860" cy="84" r="4"/><circle cx="1120" cy="146" r="3"/><circle cx="1345" cy="96" r="3.5"/>
-      <circle cx="235" cy="236" r="2.5"/><circle cx="480" cy="250" r="2.5"/><circle cx="990" cy="242" r="2.5"/>
-    </g>
-    <g fill="url(#lgHalo)">
-      <circle cx="360" cy="90" r="26"/><circle cx="860" cy="84" r="30"/><circle cx="1345" cy="96" r="24"/>
-    </g>
-    <g fill="#bfe0ff">
-      <circle cx="360" cy="90" r="6"><animate attributeName="opacity" values="1;.25;1" dur="3.2s" repeatCount="indefinite"/></circle>
-      <circle cx="860" cy="84" r="7"><animate attributeName="opacity" values=".3;1;.3" dur="4.1s" repeatCount="indefinite"/></circle>
-      <circle cx="1345" cy="96" r="5.5"><animate attributeName="opacity" values="1;.3;1" dur="3.7s" begin="1s" repeatCount="indefinite"/></circle>
-    </g>
-
-    <!-- 电流光点沿主干线流动 -->
-    <circle class="spark" r="4" fill="#fcbf49">
-      <animateMotion dur="7s" repeatCount="indefinite" path="M110,150 L360,90 L610,150 L860,84 L1120,146 L1345,96"/>
-    </circle>
-    <circle class="spark" r="3" fill="#bfe0ff" opacity=".9">
-      <animateMotion dur="9s" begin="2.5s" repeatCount="indefinite" path="M235,236 L480,250 L990,242 L1345,96"/>
-    </circle>
-
-    <!-- 输电塔剪影（左 · 右，粗剪影 + 塔顶航空灯） -->
-    <g fill="url(#lgTower)">
-      <path d="M150,250 L128,640 L172,640 Z" opacity=".92"/>
-      <rect x="106" y="292" width="88" height="7" rx="3"/>
-      <rect x="94" y="352" width="112" height="7" rx="3"/>
-      <rect x="82" y="424" width="136" height="8" rx="3"/>
-      <rect x="70" y="512" width="160" height="8" rx="3"/>
-    </g>
-    <g stroke="#0d3a75" stroke-width="2" opacity=".85">
-      <path d="M118,296 L182,352 M182,296 L118,424 M106,296 L160,512 M194,296 L140,512" fill="none"/>
-    </g>
-    <circle cx="150" cy="244" r="5" fill="#ff5a5a">
-      <animate attributeName="opacity" values="1;.15;1" dur="2.4s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="150" cy="244" r="14" fill="#ff5a5a" opacity=".18">
-      <animate attributeName="r" values="8;18;8" dur="2.4s" repeatCount="indefinite"/>
-    </circle>
-
-    <g fill="url(#lgTower)">
-      <path d="M1298,270 L1278,640 L1318,640 Z" opacity=".92"/>
-      <rect x="1258" y="308" width="80" height="7" rx="3"/>
-      <rect x="1246" y="366" width="104" height="7" rx="3"/>
-      <rect x="1234" y="436" width="128" height="8" rx="3"/>
-      <rect x="1222" y="520" width="152" height="8" rx="3"/>
-    </g>
-    <g stroke="#0d3a75" stroke-width="2" opacity=".85">
-      <path d="M1268,312 L1328,366 M1328,312 L1268,436 M1258,312 L1310,520 M1338,312 L1286,520" fill="none"/>
-    </g>
-    <circle cx="1298" cy="264" r="5" fill="#ff5a5a">
-      <animate attributeName="opacity" values="1;.15;1" dur="2.8s" begin=".8s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="1298" cy="264" r="14" fill="#ff5a5a" opacity=".18">
-      <animate attributeName="r" values="8;18;8" dur="2.8s" begin=".8s" repeatCount="indefinite"/>
-    </circle>
-
-    <!-- 塔间悬垂导线 -->
-    <g stroke="#0d3a75" stroke-width="2" fill="none" opacity=".7">
-      <path d="M96,298 Q720,520 1342,312"/>
-      <path d="M92,360 Q720,560 1344,372"/>
-    </g>
-
-    <!-- 地平光带 -->
-    <rect x="0" y="596" width="1440" height="44" fill="#04152e" opacity=".8"/>
-  </svg>
-  <div class="lead-card">
-    <div class="lead-badge">模拟环境 · 非国网官方入口</div>
-    <h1 class="lead-title">国家电网网申模拟填报系统</h1>
-    <p class="lead-sub">1:1 还原国家电网官方网申填报界面，边填边校验，交完直接生成专属「网申体检报告」</p>
-    <div class="lead-points">
-      <div class="lp"><b>①</b>全流程仿真演练</div>
-      <div class="lp"><b>②</b>实时校验防打回</div>
-      <div class="lp"><b>③</b>体检报告 + 1v1 诊断</div>
+  <div class="lead-inner">
+    <!-- 左栏：品牌信任文案 -->
+    <div class="lead-left">
+      <div class="lead-kicker"><span class="lk-sig">SIG</span>思格就业研究院 · 专注电力电网央国企招聘培训 13 年</div>
+      <h1 class="lead-title">国家电网网申<br><em>模拟填报 · 免费体验</em></h1>
+      <p class="lead-sub">1:1 还原国家电网官方网申填报界面，边填边校验防打回，交完直接生成你的专属「网申体检报告」。</p>
+      <div class="lead-points">
+        <div class="lp"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M2.5 8.5 L6.5 12 L13.5 4.5" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>全流程仿真演练</div>
+        <div class="lp"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M2.5 8.5 L6.5 12 L13.5 4.5" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>实时校验防打回</div>
+        <div class="lp"><svg viewBox="0 0 16 16" width="16" height="16"><path d="M2.5 8.5 L6.5 12 L13.5 4.5" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>网申体检报告 + 1v1 诊断</div>
+      </div>
+      <div class="lead-privacy">
+        隐私声明：你填写的信息<b>仅用于本次网申模拟指导与 1v1 诊断服务</b>，不作其他任何用途，也不会向第三方提供。
+      </div>
     </div>
-    <div class="lead-form">
-      <div class="lf-field">
-        <label for="leadName">姓名 <i>*</i></label>
-        <input type="text" id="leadName" maxlength="20" placeholder="请填写真实姓名" autocomplete="name">
-      </div>
-      <div class="lf-field">
-        <label for="leadPhone">手机号 <i>*</i></label>
-        <input type="tel" id="leadPhone" maxlength="11" placeholder="用于接收诊断服务通知" autocomplete="tel">
-      </div>
-      <div class="lf-field">
-        <label>当前年级 <span>选填</span></label>
-        <div class="lf-grades" id="leadGrades">
-          <button type="button" data-g="大一">大一</button>
-          <button type="button" data-g="大二">大二</button>
-          <button type="button" data-g="大三">大三</button>
-          <button type="button" data-g="大四">大四</button>
-          <button type="button" data-g="研究生">研究生</button>
+
+    <!-- 右栏：留资表单卡 -->
+    <div class="lead-right">
+      <div class="lead-card">
+        <div class="lead-badge">模拟环境 · 非国网官方入口</div>
+        <div class="lf-cap">留下联系方式，30 秒开始填报</div>
+        <div class="lead-form">
+          <div class="lf-field">
+            <label for="leadName">姓名 <i>*</i></label>
+            <input type="text" id="leadName" maxlength="20" placeholder="请填写真实姓名" autocomplete="name">
+          </div>
+          <div class="lf-field">
+            <label for="leadPhone">手机号 <i>*</i></label>
+            <input type="tel" id="leadPhone" maxlength="11" placeholder="用于接收诊断服务通知" autocomplete="tel">
+          </div>
+          <div class="lf-field">
+            <label>当前年级 <span>选填</span></label>
+            <div class="lf-grades" id="leadGrades">
+              <button type="button" data-g="大一">大一</button>
+              <button type="button" data-g="大二">大二</button>
+              <button type="button" data-g="大三">大三</button>
+              <button type="button" data-g="大四">大四</button>
+              <button type="button" data-g="研究生">研究生</button>
+            </div>
+          </div>
+          <div class="lf-err" id="leadErr"></div>
+          <button class="btn btn-solid lead-btn" id="btnLeadStart">开始模拟填报</button>
         </div>
+        <div class="lead-pc-tip">建议使用<b>电脑端</b>填写，键盘输入效率更高、预览更完整；手机端也可完成全部流程</div>
       </div>
-      <div class="lf-err" id="leadErr"></div>
-      <button class="btn btn-solid lead-btn" id="btnLeadStart">开始模拟填报</button>
-    </div>
-    <div class="lead-privacy">
-      隐私声明：你填写的信息<b>仅用于本次网申模拟指导与 1v1 诊断服务</b>，不作其他任何用途，也不会向第三方提供。
     </div>
   </div>
-  <div class="lead-pc-tip">💡 建议使用<b>电脑端</b>填写，键盘输入效率更高、预览更完整；手机端也可完成全部流程</div>
 </div>
 
 <!-- ============ 表单页 ============ -->
@@ -191,11 +136,11 @@
   window.SG_LEAD_ENDPOINT = API_BASE + '/api/public/apply/lead';
 })();
 </script>
-<script src="assets/js/region-data.js?v=9"></script>
-<script src="assets/js/dict-data.js?v=9"></script>
-<script src="assets/js/model.js?v=9"></script>
-<script src="assets/js/schema.js?v=9"></script>
-<script src="assets/js/report.js?v=9"></script>
-<script src="assets/js/app.js?v=9"></script>
+<script src="assets/js/region-data.js?v=10"></script>
+<script src="assets/js/dict-data.js?v=10"></script>
+<script src="assets/js/model.js?v=10"></script>
+<script src="assets/js/schema.js?v=10"></script>
+<script src="assets/js/report.js?v=10"></script>
+<script src="assets/js/app.js?v=10"></script>
 </body>
 </html>
