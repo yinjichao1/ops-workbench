@@ -232,12 +232,16 @@ function photoHtml() {
   const ph = DATA.basic.photo;
   return `<div class="photo-col" data-field="basic.photo">
     <div class="photo-box" id="photoBox">
-      ${ph ? `<img src="${ph}" alt="证件照">` : '<div class="ph-text">点击上传<br>证件照</div>'}
+      ${ph ? `<img src="${ph}" alt="证件照">` : '<div class="ph-text">点击上传<br>证件照<span class="ph-optional">选填</span></div>'}
     </div>
     <input type="file" id="photoFile" accept="image/jpeg,image/png" style="display:none">
     <div class="photo-modify" id="photoModify">修改</div>
     <div class="photo-spec">
-      尺寸<br>120*160px~600*800px<br>JPG、PNG文件<br>5~200kb<br>清晰的人脸头像
+      <b>建议上传</b>（正式网申必传）<br>
+      尺寸 120*160 ~ 600*800px<br>
+      宽高比 3:4 · JPG/PNG · 5~200kb<br>
+      清晰的人脸头像<br>
+      <span class="ph-warn">⚠ 不符合以上规格将无法上传成功</span>
     </div>
     <div class="err-msg" style="text-align:center"></div>
   </div>`;

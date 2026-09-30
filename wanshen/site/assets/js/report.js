@@ -129,6 +129,8 @@ function buildReport() {
   const atts = DATA.attachment || [];
   if (!atts.length)
     tip.push({ t: '未上传电子附件', d: '建议提前准备并上传：学籍认证（学籍在线验证报告）、成绩单扫描件、就业推荐表、各类等级证书扫描件。' });
+  if (!V.notEmpty(b.photo))
+    tip.push({ t: '未上传证件照', d: '正式网申中证件照为必传项，且规格卡得严（3:4 比例、JPG/PNG、5~200kb），建议现在按规格传一张练手，正式填报时一次通过。' });
   else {
     if (!atts.some(r => r.type === '学籍认证'))
       tip.push({ t: '附件缺少「学籍认证」', d: '学籍在线验证报告是网申审核的重要材料，建议登录学信网申请后上传。' });

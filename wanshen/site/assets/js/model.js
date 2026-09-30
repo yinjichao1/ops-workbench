@@ -180,7 +180,9 @@ window.RULES = [
   { path: 'basic.political', label: '政治面貌', req: 1, fn: v => V.pick(v, '政治面貌') },
   { path: 'basic.veteran', label: '是否退役军人', req: 1, fn: v => V.pick(v, '是否退役军人') },
   { path: 'basic.xjCode', label: '学籍验证码', req: 1, fn: v => V.xjCode(v) },
-  { path: 'basic.photo', label: '证件照', req: 1, fn: v => !V.notEmpty(v) ? '请上传证件照' : '' },
+  { path: 'basic.photo', label: '证件照', req: 0,
+    // 选填：留空不报错；规格合规性在 handlePhoto 上传时已拦截，能存进 DATA 的都是合规的
+    fn: () => '' },
 
   /* ---- 联系方式 ---- */
   { path: 'contact.phone', label: '手机号码', req: 1, fn: v => V.phone(v) },
