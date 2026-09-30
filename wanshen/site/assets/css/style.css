@@ -842,30 +842,32 @@ table.dtbl .row-del {
   align-items: center;
   padding: 48px 16px 56px;
   position: relative;
+  overflow: hidden;
   background:
-    radial-gradient(640px 320px at 12% -4%, rgba(10,105,205,.10), transparent 62%),
-    radial-gradient(560px 300px at 88% 104%, rgba(252,191,73,.13), transparent 62%),
-    linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
+    radial-gradient(980px 500px at 82% -8%, rgba(252,191,73,.12), transparent 62%),
+    radial-gradient(1200px 620px at 10% 112%, rgba(10,105,205,.30), transparent 62%),
+    linear-gradient(180deg, #05234a 0%, #0a4a99 54%, #0a69cd 100%);
 }
-/* 品牌网格纹理（低调装饰） */
+/* 星点网格纹理（低调装饰） */
 .lead-page::before {
   content: '';
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(10,105,205,.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(10,105,205,.05) 1px, transparent 1px);
-  background-size: 28px 28px;
-  -webkit-mask-image: radial-gradient(70% 60% at 50% 38%, #000 0%, transparent 100%);
-  mask-image: radial-gradient(70% 60% at 50% 38%, #000 0%, transparent 100%);
+    radial-gradient(rgba(255,255,255,.14) 1px, transparent 1.5px),
+    linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+  background-size: 260px 240px, 34px 34px, 34px 34px;
+  -webkit-mask-image: radial-gradient(75% 62% at 50% 40%, #000 0%, transparent 100%);
+  mask-image: radial-gradient(75% 62% at 50% 40%, #000 0%, transparent 100%);
   pointer-events: none;
 }
-/* 开屏场景：输电塔剪影，垫在卡片之下 */
+/* 开屏场景：光网 + 输电塔，垫在卡片之下 */
 .lead-scene {
   position: absolute;
   left: 0; right: 0; bottom: 0;
   width: 100%;
-  height: 300px;
+  height: 640px;
   pointer-events: none;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -873,9 +875,9 @@ table.dtbl .row-del {
 }
 .lead-card {
   background: var(--bg-card);
-  border: 1px solid rgba(10,105,205,.10);
-  border-radius: 18px;
-  box-shadow: 0 12px 40px rgba(13,43,89,.10), 0 2px 8px rgba(13,43,89,.04);
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 20px;
+  box-shadow: 0 30px 70px rgba(2,18,40,.42), 0 4px 14px rgba(2,18,40,.22);
   padding: 38px 40px 28px;
   max-width: 600px;
   width: 100%;
@@ -985,18 +987,18 @@ table.dtbl .row-del {
 .lead-pc-tip {
   margin-top: 20px;
   font-size: 12px;
-  color: var(--text-light);
+  color: rgba(255,255,255,.72);
   text-align: center;
   position: relative;
 }
-.lead-pc-tip b { color: var(--text-sub); }
+.lead-pc-tip b { color: #fff; }
 
 /* ============ 移动端增强 ============ */
 @media (max-width: 600px) {
   /* 引导页 */
   .lead-page { padding: 22px 12px 30px; }
-  .lead-scene { display: none; }   /* 移动端收掉装饰场景，保持精简轻盈 */
-  .lead-card { padding: 24px 18px 20px; border-radius: 12px; }
+  .lead-scene { height: 420px; }   /* 场景保留，压缩高度聚焦光网 */
+  .lead-card { padding: 24px 18px 20px; border-radius: 14px; }
   .lead-title { font-size: 19px; }
   .lead-sub { font-size: 12px; margin-bottom: 14px; }
   .lead-points { gap: 6px; margin-bottom: 18px; }

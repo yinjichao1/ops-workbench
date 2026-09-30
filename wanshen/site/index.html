@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>国家电网网申模拟填报系统 · 思格就业研究院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=7">
+<link rel="stylesheet" href="assets/css/style.css?v=8">
 </head>
 <body>
 
@@ -24,37 +24,90 @@
 
 <!-- ============ 引导留资页 ============ -->
 <div id="leadPage" class="lead-page">
-  <!-- 开屏场景：输电塔 · 高压线 · 远山（品牌蓝剪影，纯 SVG 无版权依赖） -->
-  <svg class="lead-scene" viewBox="0 0 1440 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-    <path d="M0,240 Q180,202 360,232 T720,226 T1080,236 T1440,218 L1440,300 L0,300 Z" fill="#0a69cd" opacity="0.05"/>
-    <path d="M0,262 Q240,234 480,256 T960,250 T1440,246 L1440,300 L0,300 Z" fill="#0a69cd" opacity="0.07"/>
-    <g stroke="#0a69cd" stroke-width="1.5" fill="none" opacity="0.26">
-      <path d="M118,122 Q460,208 776,126"/>
-      <path d="M130,134 Q466,220 776,140"/>
-      <path d="M788,126 Q1070,206 1322,120"/>
-      <path d="M800,140 Q1074,218 1332,134"/>
+  <!-- 开屏场景：深蓝夜空 · 发光电网 · 输电塔剪影（纯 SVG，无外部依赖） -->
+  <svg class="lead-scene" viewBox="0 0 1440 640" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <defs>
+      <radialGradient id="lgHalo" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#4a90e2" stop-opacity=".55"/>
+        <stop offset="100%" stop-color="#4a90e2" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="lgTower" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#0d3a75"/>
+        <stop offset="100%" stop-color="#051a38"/>
+      </linearGradient>
+    </defs>
+
+    <!-- 电网节点光网：节点 + 连线 -->
+    <g stroke="#7fb2ec" stroke-width="1" opacity=".22">
+      <path d="M110,150 L360,90 M360,90 L610,150 M610,150 L860,84 M860,84 L1120,146 M1120,146 L1345,96"/>
+      <path d="M110,150 L235,236 M360,90 L235,236 M360,90 L610,150 M610,150 L480,250 M610,150 L860,84 M860,84 L990,242 M1120,146 L990,242 M1120,146 L1345,96 M480,250 L235,236 M990,242 L1345,96"/>
+      <path d="M235,236 L480,250 M480,250 L990,242" opacity=".5"/>
     </g>
-    <g stroke="#0a69cd" stroke-width="2" fill="none" opacity="0.34" stroke-linecap="round">
-      <path d="M122,118 L102,300 M122,118 L142,300"/>
-      <path d="M98,164 L146,164 M92,196 L152,196 M104,252 L140,252"/>
-      <path d="M98,164 L98,176 M146,164 L146,176 M92,196 L92,208 M152,196 L152,208"/>
-      <path d="M108,128 L136,128 M110,240 L134,240"/>
-      <path d="M782,122 L766,300 M782,122 L798,300"/>
-      <path d="M760,166 L804,166 M756,196 L808,196 M766,248 L798,248"/>
-      <path d="M760,166 L760,178 L804,166 M804,166 L804,178"/>
-      <path d="M756,196 L756,208 M808,196 L808,208"/>
-      <path d="M770,132 L794,132"/>
-      <path d="M1326,116 L1312,300 M1326,116 L1340,300"/>
-      <path d="M1306,158 L1346,158 M1302,186 L1350,186"/>
-      <path d="M1306,158 L1306,170 L1346,158 M1346,158 L1346,170"/>
-      <path d="M1302,186 L1302,198 M1350,186 L1350,198"/>
+    <g fill="#8fc0f2">
+      <circle cx="110" cy="150" r="3"/><circle cx="360" cy="90" r="4"/><circle cx="610" cy="150" r="3"/>
+      <circle cx="860" cy="84" r="4"/><circle cx="1120" cy="146" r="3"/><circle cx="1345" cy="96" r="3.5"/>
+      <circle cx="235" cy="236" r="2.5"/><circle cx="480" cy="250" r="2.5"/><circle cx="990" cy="242" r="2.5"/>
     </g>
-    <circle class="spark" r="3.5" fill="#0a69cd" opacity="0.85">
-      <animateMotion dur="9s" repeatCount="indefinite" path="M118,122 Q460,208 776,126"/>
+    <g fill="url(#lgHalo)">
+      <circle cx="360" cy="90" r="26"/><circle cx="860" cy="84" r="30"/><circle cx="1345" cy="96" r="24"/>
+    </g>
+    <g fill="#bfe0ff">
+      <circle cx="360" cy="90" r="6"><animate attributeName="opacity" values="1;.25;1" dur="3.2s" repeatCount="indefinite"/></circle>
+      <circle cx="860" cy="84" r="7"><animate attributeName="opacity" values=".3;1;.3" dur="4.1s" repeatCount="indefinite"/></circle>
+      <circle cx="1345" cy="96" r="5.5"><animate attributeName="opacity" values="1;.3;1" dur="3.7s" begin="1s" repeatCount="indefinite"/></circle>
+    </g>
+
+    <!-- 电流光点沿主干线流动 -->
+    <circle class="spark" r="4" fill="#fcbf49">
+      <animateMotion dur="7s" repeatCount="indefinite" path="M110,150 L360,90 L610,150 L860,84 L1120,146 L1345,96"/>
     </circle>
-    <circle class="spark" r="2.5" fill="#f77f00" opacity="0.8">
-      <animateMotion dur="11s" begin="3s" repeatCount="indefinite" path="M788,126 Q1070,206 1322,120"/>
+    <circle class="spark" r="3" fill="#bfe0ff" opacity=".9">
+      <animateMotion dur="9s" begin="2.5s" repeatCount="indefinite" path="M235,236 L480,250 L990,242 L1345,96"/>
     </circle>
+
+    <!-- 输电塔剪影（左 · 右，粗剪影 + 塔顶航空灯） -->
+    <g fill="url(#lgTower)">
+      <path d="M150,250 L128,640 L172,640 Z" opacity=".92"/>
+      <rect x="106" y="292" width="88" height="7" rx="3"/>
+      <rect x="94" y="352" width="112" height="7" rx="3"/>
+      <rect x="82" y="424" width="136" height="8" rx="3"/>
+      <rect x="70" y="512" width="160" height="8" rx="3"/>
+    </g>
+    <g stroke="#0d3a75" stroke-width="2" opacity=".85">
+      <path d="M118,296 L182,352 M182,296 L118,424 M106,296 L160,512 M194,296 L140,512" fill="none"/>
+    </g>
+    <circle cx="150" cy="244" r="5" fill="#ff5a5a">
+      <animate attributeName="opacity" values="1;.15;1" dur="2.4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="150" cy="244" r="14" fill="#ff5a5a" opacity=".18">
+      <animate attributeName="r" values="8;18;8" dur="2.4s" repeatCount="indefinite"/>
+    </circle>
+
+    <g fill="url(#lgTower)">
+      <path d="M1298,270 L1278,640 L1318,640 Z" opacity=".92"/>
+      <rect x="1258" y="308" width="80" height="7" rx="3"/>
+      <rect x="1246" y="366" width="104" height="7" rx="3"/>
+      <rect x="1234" y="436" width="128" height="8" rx="3"/>
+      <rect x="1222" y="520" width="152" height="8" rx="3"/>
+    </g>
+    <g stroke="#0d3a75" stroke-width="2" opacity=".85">
+      <path d="M1268,312 L1328,366 M1328,312 L1268,436 M1258,312 L1310,520 M1338,312 L1286,520" fill="none"/>
+    </g>
+    <circle cx="1298" cy="264" r="5" fill="#ff5a5a">
+      <animate attributeName="opacity" values="1;.15;1" dur="2.8s" begin=".8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="1298" cy="264" r="14" fill="#ff5a5a" opacity=".18">
+      <animate attributeName="r" values="8;18;8" dur="2.8s" begin=".8s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- 塔间悬垂导线 -->
+    <g stroke="#0d3a75" stroke-width="2" fill="none" opacity=".7">
+      <path d="M96,298 Q720,520 1342,312"/>
+      <path d="M92,360 Q720,560 1344,372"/>
+    </g>
+
+    <!-- 地平光带 -->
+    <rect x="0" y="596" width="1440" height="44" fill="#04152e" opacity=".8"/>
   </svg>
   <div class="lead-card">
     <div class="lead-badge">模拟环境 · 非国网官方入口</div>
@@ -138,11 +191,11 @@
   window.SG_LEAD_ENDPOINT = API_BASE + '/api/public/apply/lead';
 })();
 </script>
-<script src="assets/js/region-data.js?v=7"></script>
-<script src="assets/js/dict-data.js?v=7"></script>
-<script src="assets/js/model.js?v=7"></script>
-<script src="assets/js/schema.js?v=7"></script>
-<script src="assets/js/report.js?v=7"></script>
-<script src="assets/js/app.js?v=7"></script>
+<script src="assets/js/region-data.js?v=8"></script>
+<script src="assets/js/dict-data.js?v=8"></script>
+<script src="assets/js/model.js?v=8"></script>
+<script src="assets/js/schema.js?v=8"></script>
+<script src="assets/js/report.js?v=8"></script>
+<script src="assets/js/app.js?v=8"></script>
 </body>
 </html>
