@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>国家电网网申模拟填报系统 · 思格就业研究院</title>
-<link rel="stylesheet" href="assets/css/style.css?v=6">
+<link rel="stylesheet" href="assets/css/style.css?v=7">
 </head>
 <body>
 
@@ -24,10 +24,42 @@
 
 <!-- ============ 引导留资页 ============ -->
 <div id="leadPage" class="lead-page">
+  <!-- 开屏场景：输电塔 · 高压线 · 远山（品牌蓝剪影，纯 SVG 无版权依赖） -->
+  <svg class="lead-scene" viewBox="0 0 1440 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <path d="M0,240 Q180,202 360,232 T720,226 T1080,236 T1440,218 L1440,300 L0,300 Z" fill="#0a69cd" opacity="0.05"/>
+    <path d="M0,262 Q240,234 480,256 T960,250 T1440,246 L1440,300 L0,300 Z" fill="#0a69cd" opacity="0.07"/>
+    <g stroke="#0a69cd" stroke-width="1.5" fill="none" opacity="0.26">
+      <path d="M118,122 Q460,208 776,126"/>
+      <path d="M130,134 Q466,220 776,140"/>
+      <path d="M788,126 Q1070,206 1322,120"/>
+      <path d="M800,140 Q1074,218 1332,134"/>
+    </g>
+    <g stroke="#0a69cd" stroke-width="2" fill="none" opacity="0.34" stroke-linecap="round">
+      <path d="M122,118 L102,300 M122,118 L142,300"/>
+      <path d="M98,164 L146,164 M92,196 L152,196 M104,252 L140,252"/>
+      <path d="M98,164 L98,176 M146,164 L146,176 M92,196 L92,208 M152,196 L152,208"/>
+      <path d="M108,128 L136,128 M110,240 L134,240"/>
+      <path d="M782,122 L766,300 M782,122 L798,300"/>
+      <path d="M760,166 L804,166 M756,196 L808,196 M766,248 L798,248"/>
+      <path d="M760,166 L760,178 L804,166 M804,166 L804,178"/>
+      <path d="M756,196 L756,208 M808,196 L808,208"/>
+      <path d="M770,132 L794,132"/>
+      <path d="M1326,116 L1312,300 M1326,116 L1340,300"/>
+      <path d="M1306,158 L1346,158 M1302,186 L1350,186"/>
+      <path d="M1306,158 L1306,170 L1346,158 M1346,158 L1346,170"/>
+      <path d="M1302,186 L1302,198 M1350,186 L1350,198"/>
+    </g>
+    <circle class="spark" r="3.5" fill="#0a69cd" opacity="0.85">
+      <animateMotion dur="9s" repeatCount="indefinite" path="M118,122 Q460,208 776,126"/>
+    </circle>
+    <circle class="spark" r="2.5" fill="#f77f00" opacity="0.8">
+      <animateMotion dur="11s" begin="3s" repeatCount="indefinite" path="M788,126 Q1070,206 1322,120"/>
+    </circle>
+  </svg>
   <div class="lead-card">
     <div class="lead-badge">模拟环境 · 非国网官方入口</div>
     <h1 class="lead-title">国家电网网申模拟填报系统</h1>
-    <p class="lead-sub">1:1 还原国网官方填报纸质表单，边填边校验，交完直接生成专属「网申体检报告」</p>
+    <p class="lead-sub">1:1 还原国家电网官方网申填报界面，边填边校验，交完直接生成专属「网申体检报告」</p>
     <div class="lead-points">
       <div class="lp"><b>①</b>全流程仿真演练</div>
       <div class="lp"><b>②</b>实时校验防打回</div>
@@ -106,11 +138,11 @@
   window.SG_LEAD_ENDPOINT = API_BASE + '/api/public/apply/lead';
 })();
 </script>
-<script src="assets/js/region-data.js?v=6"></script>
-<script src="assets/js/dict-data.js?v=6"></script>
-<script src="assets/js/model.js?v=6"></script>
-<script src="assets/js/schema.js?v=6"></script>
-<script src="assets/js/report.js?v=6"></script>
-<script src="assets/js/app.js?v=6"></script>
+<script src="assets/js/region-data.js?v=7"></script>
+<script src="assets/js/dict-data.js?v=7"></script>
+<script src="assets/js/model.js?v=7"></script>
+<script src="assets/js/schema.js?v=7"></script>
+<script src="assets/js/report.js?v=7"></script>
+<script src="assets/js/app.js?v=7"></script>
 </body>
 </html>
