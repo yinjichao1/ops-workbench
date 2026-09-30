@@ -918,6 +918,72 @@ function showForm() {
   window.scrollTo({ top: 0 });
 }
 
+/* ---------------- 引导留资页：先留姓名+手机，再进表单 ---------------- */
+const LEAD_KEY = 'SG_LEAD_V1';
+
+function showLeadPage() {
+  $('#leadPage').style.display = 'block';
+  $('#formPage').style.display = 'none';
+  $('#actionBar').style.display = 'none';
+  $('#sgWelcome').style.display = 'none';
+  $('#reportBar').style.display = 'none';
+  $('#reportPage').classList.remove('show');
+  bindLead();
+}
+
+function enterForm() {
+  $('#leadPage').style.display = 'none';
+  $('#sgWelcome').style.display = 'block';
+  $('#formPage').style.display = 'block';
+  $('#actionBar').style.display = 'flex';
+}
+
+function bindLead() {
+  if (bindLead._done) return;
+  bindLead._done = true;
+  let grade = '';
+  $('#leadGrades').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    grade = b.dataset.g;
+    $$('#leadGrades button').forEach(x => x.classList.toggle('on', x === b));
+  });
+  $('#leadPhone').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btnLeadStart').click(); });
+  $('#btnLeadStart').onclick = () => {
+    const name = $('#leadName').value.trim();
+    const phone = $('#leadPhone').value.trim();
+    const err = $('#leadErr');
+    const fail = msg => { err.textContent = msg; err.style.display = 'block'; };
+    if (!name) { fail('请填写姓名'); $('#leadName').focus(); return; }
+    if (!/^1[3-9]\d{9}$/.test(phone)) { fail('请填写正确的 11 位手机号'); $('#leadPhone').focus(); return; }
+    err.style.display = 'none';
+
+    // 姓名手机号自动预填进表单，少填两项
+    DATA.basic.name = name;
+    DATA.contact.phone = phone;
+    save(false);
+    render();
+    updateProgress();
+    try { localStorage.setItem(LEAD_KEY, JSON.stringify({ name, phone, grade, ts: Date.now() })); } catch (e) {}
+    enterForm();
+    window.scrollTo({ top: 0 });
+    toast('欢迎，' + name + '！已为你预填姓名和手机号', 'ok');
+
+    // 留资上报：失败静默降级，绝不阻断填写
+    const EP = window.SG_LEAD_ENDPOINT || '';
+    if (!EP) { console.log('[模拟] 未配置留资接口'); return; }
+    let ch = '';
+    try { ch = new URLSearchParams(location.search).get('ch') || ''; } catch (e) {}
+    fetch(EP, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, phone: phone, grade: grade, platform: ch })
+    }).then(r => r.json()).then(res => {
+      if (res && res.ok) console.log('[模拟] 留资已记录');
+    }).catch(e => console.warn('[模拟] 留资上报失败（不影响填写）', e));
+  };
+}
+
 /* ---------------- 启动 ---------------- */
 (function init() {
   const has = load();
@@ -926,7 +992,18 @@ function showForm() {
   collapsed['other'] = true;
   render();
   bindEvents();
-  if (has) toast('已恢复上次填写的草稿', 'ok');
+  // 引导页流转：本机已留资 → 直接进表单（顺带补预填）；首次 → 先留资
+  let lead = null;
+  try { lead = JSON.parse(localStorage.getItem(LEAD_KEY) || 'null'); } catch (e) {}
+  if (lead && lead.phone) {
+    if (!DATA.basic.name) DATA.basic.name = lead.name || '';
+    if (!DATA.contact.phone) DATA.contact.phone = lead.phone || '';
+    render();
+    enterForm();
+    if (has) toast('已恢复上次填写的草稿', 'ok');
+  } else {
+    showLeadPage();
+  }
 })();
 
 /* ---------------- 调试 / 自动化钩子 ---------------- */

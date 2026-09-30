@@ -1,6 +1,7 @@
 """网申模拟系统 API —— 网申模拟工具的公开提交通道 + 管理端查询。
 
 - POST /api/public/apply/submit   考生网申档案提交（公开、免认证，复用 nginx /api/public/ 白名单）
+- POST /api/public/apply/lead     引导页留资（姓名+手机号+年级，公开、免认证）
 - GET  /api/apply/list            档案列表，分页+搜索（需认证，Basic Auth 之后）
 - GET  /api/apply/detail/{id}     完整档案 + 多行明细（需认证）
 - GET  /api/apply/export          导出 CSV（需认证）
@@ -111,6 +112,14 @@ class ApplySubmitIn(BaseModel):
     platform: str = ""
 
 
+class LeadIn(BaseModel):
+    """引导页留资：进入正式表单前先收集姓名+手机号（低门槛引流）。"""
+    name: str = ""
+    phone: str = ""
+    grade: str = ""       # 当前年级（大二/大三/…，选填）
+    platform: str = ""    # 渠道代号（?ch=，选填）
+
+
 def _int0(v) -> int:
     """容错取整：None/脏值一律 0，超范围截断。"""
     try:
@@ -187,6 +196,60 @@ def submit_apply(body: ApplySubmitIn, request: Request,
     _save_items(db, rec.id, archive)
     _upsert_lead_summary(db, s)
     return {"ok": True, "id": rec.id}
+
+
+@router.post("/public/apply/lead")
+def submit_lead(body: LeadIn, request: Request, db: SqlSession = Depends(get_db)):
+    """引导页留资（公开免认证）。只收姓名+手机号+年级，写 leads 摘要行。
+
+    设计取舍：
+    - 与完整提交共用 source="网申模拟"，运营在同一个线索流里看，note 区分来源
+    - 同手机号当日去重更新（重复进入不刷量）
+    - 失败不影响学员继续填写（前端拿不到 ok 也放行）
+    """
+    ip = _client_ip(request)
+    if not _rate_ok(ip):
+        return {"ok": False, "error": "提交过于频繁，请稍后再试"}
+
+    name = (body.name or "").strip()[:50]
+    phone = (body.phone or "").strip()[:20]
+    if not name:
+        return {"ok": False, "error": "请填写姓名"}
+    if not PHONE_RE.match(phone):
+        return {"ok": False, "error": "手机号格式不正确"}
+    grade = (body.grade or "").strip()[:20]
+    plat = (body.platform or "").strip().lower()[:20]
+
+    note_bits = ["网申模拟·引导页留资"]
+    if grade:
+        note_bits.append("年级:" + grade)
+    if plat:
+        note_bits.append("渠道:" + plat)
+    note = " ".join(note_bits)
+
+    try:
+        exist = (
+            db.query(Lead)
+            .filter(Lead.phone == phone, Lead.source == SOURCE_LEADS,
+                    Lead.date == date.today())
+            .first()
+        )
+        if exist:
+            exist.name = name
+            if grade and not exist.grade:
+                exist.grade = grade
+            db.commit()
+            return {"ok": True, "dup": True}
+        db.add(Lead(
+            name=name, phone=phone, grade=grade,
+            date=date.today(), source=SOURCE_LEADS, status="未跟进",
+            note=note,
+        ))
+        db.commit()
+        return {"ok": True}
+    except Exception:
+        db.rollback()
+        return {"ok": False, "error": "保存失败，请稍后再试"}
 
 
 def _save_items(db: SqlSession, archive_id: int, archive: dict):

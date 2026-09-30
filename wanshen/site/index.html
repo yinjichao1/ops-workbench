@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>国家电网网申模拟填报系统 · 思格电网教研院</title>
+<title>国家电网网申模拟填报系统 · 思格就业研究院</title>
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -11,19 +11,59 @@
 <!-- ============ 思格品牌条 ============ -->
 <div class="brand-bar">
   <div class="bb-left">
-    <div class="bb-logo">思格电网教研院<span>28届</span></div>
+    <div class="bb-logo">思格就业研究院</div>
     <div class="bb-sub">国家电网网申模拟填报系统 · 全流程仿真演练</div>
   </div>
   <div class="bb-right">填写进度 <b id="bbProgress">0%</b> · 本系统为<b>模拟环境</b>，与国网官方系统无关</div>
 </div>
 
-<!-- ============ 温馨提示条 ============ -->
-<div class="sg-welcome">
-  <div class="sw-line2">温馨提示：简历预览确认后，除姓名、学籍验证码、联系方式和电子附件外不可再更改。<span class="sim-note">本页为思格教研院「网申模拟系统」，非国网官方入口，数据仅存本机浏览器。</span></div>
+<!-- ============ 温馨提示条（表单/报告页顶部） ============ -->
+<div class="sg-welcome" id="sgWelcome">
+  <div class="sw-line2">温馨提示：简历预览确认后，除姓名、学籍验证码、联系方式和电子附件外不可再更改。<span class="sim-note">本页为思格就业研究院「网申模拟系统」，非国网官方入口；你填写的信息仅用于模拟填报指导与 1v1 诊断服务，不作其他用途。</span></div>
+</div>
+
+<!-- ============ 引导留资页 ============ -->
+<div id="leadPage" class="lead-page">
+  <div class="lead-card">
+    <div class="lead-badge">模拟环境 · 非国网官方入口</div>
+    <h1 class="lead-title">国家电网网申模拟填报系统</h1>
+    <p class="lead-sub">1:1 还原国网官方填报纸质表单，边填边校验，交完直接生成专属「网申体检报告」</p>
+    <div class="lead-points">
+      <div class="lp"><b>①</b>全流程仿真演练</div>
+      <div class="lp"><b>②</b>实时校验防打回</div>
+      <div class="lp"><b>③</b>体检报告 + 1v1 诊断</div>
+    </div>
+    <div class="lead-form">
+      <div class="lf-field">
+        <label for="leadName">姓名 <i>*</i></label>
+        <input type="text" id="leadName" maxlength="20" placeholder="请填写真实姓名" autocomplete="name">
+      </div>
+      <div class="lf-field">
+        <label for="leadPhone">手机号 <i>*</i></label>
+        <input type="tel" id="leadPhone" maxlength="11" placeholder="用于接收诊断服务通知" autocomplete="tel">
+      </div>
+      <div class="lf-field">
+        <label>当前年级 <span>选填</span></label>
+        <div class="lf-grades" id="leadGrades">
+          <button type="button" data-g="大一">大一</button>
+          <button type="button" data-g="大二">大二</button>
+          <button type="button" data-g="大三">大三</button>
+          <button type="button" data-g="大四">大四</button>
+          <button type="button" data-g="研究生">研究生</button>
+        </div>
+      </div>
+      <div class="lf-err" id="leadErr"></div>
+      <button class="btn btn-solid lead-btn" id="btnLeadStart">开始模拟填报</button>
+    </div>
+    <div class="lead-privacy">
+      隐私声明：你填写的信息<b>仅用于本次网申模拟指导与 1v1 诊断服务</b>，不作其他任何用途，也不会向第三方提供。
+    </div>
+  </div>
+  <div class="lead-pc-tip">💡 建议使用<b>电脑端</b>填写，键盘输入效率更高、预览更完整；手机端也可完成全部流程</div>
 </div>
 
 <!-- ============ 表单页 ============ -->
-<div id="formPage">
+<div id="formPage" style="display:none;">
   <div class="progress-strip"><i id="progBar"></i></div>
 
   <div class="wrap" id="formWrap">
@@ -63,13 +103,14 @@
 (function () {
   var API_BASE = /(^|\.)sigedianwang\.cn$/.test(location.hostname) ? '' : 'https://sigedianwang.cn';
   window.SG_SUBMIT_ENDPOINT = API_BASE + '/api/public/apply/submit';
+  window.SG_LEAD_ENDPOINT = API_BASE + '/api/public/apply/lead';
 })();
 </script>
-<script src="assets/js/region-data.js?v=4"></script>
-<script src="assets/js/dict-data.js?v=4"></script>
-<script src="assets/js/model.js?v=4"></script>
-<script src="assets/js/schema.js?v=4"></script>
-<script src="assets/js/report.js?v=4"></script>
-<script src="assets/js/app.js?v=4"></script>
+<script src="assets/js/region-data.js?v=5"></script>
+<script src="assets/js/dict-data.js?v=5"></script>
+<script src="assets/js/model.js?v=5"></script>
+<script src="assets/js/schema.js?v=5"></script>
+<script src="assets/js/report.js?v=5"></script>
+<script src="assets/js/app.js?v=5"></script>
 </body>
 </html>

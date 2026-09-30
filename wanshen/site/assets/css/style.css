@@ -822,3 +822,124 @@ table.dtbl .row-del {
   .rp-head { padding: 20px; }
   .rp-head h2 { font-size: 18px; }
 }
+
+/* ============ 引导留资页 ============ */
+.lead-page {
+  min-height: calc(100vh - 56px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 16px 48px;
+}
+.lead-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(13,43,89,.08);
+  padding: 34px 36px 26px;
+  max-width: 560px;
+  width: 100%;
+  text-align: center;
+}
+.lead-badge {
+  display: inline-block;
+  background: var(--brand-blue-light);
+  color: var(--brand-blue);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+}
+.lead-title { margin: 0 0 8px; font-size: 24px; color: var(--text); letter-spacing: 1px; }
+.lead-sub { margin: 0 auto 18px; color: var(--text-sub); font-size: 13px; max-width: 460px; }
+.lead-points { display: flex; justify-content: center; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+.lead-points .lp {
+  background: #f6f9fd;
+  border: 1px solid var(--border-light);
+  color: var(--text-sub);
+  font-size: 12px;
+  padding: 7px 12px;
+  border-radius: 8px;
+}
+.lead-points .lp b { color: var(--brand-blue); margin-right: 4px; }
+.lead-form { text-align: left; margin: 0 auto; max-width: 380px; }
+.lf-field { margin-bottom: 14px; }
+.lf-field label { display: block; font-size: 13px; color: var(--text); margin-bottom: 6px; font-weight: 600; }
+.lf-field label i { color: var(--danger); font-style: normal; }
+.lf-field label span { color: var(--text-light); font-weight: 400; font-size: 12px; }
+.lf-field input {
+  width: 100%;
+  height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 15px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color .15s, box-shadow .15s;
+}
+.lf-field input:focus { border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(10,105,205,.12); }
+.lf-grades { display: flex; gap: 8px; flex-wrap: wrap; }
+.lf-grades button {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text-sub);
+  font-size: 13px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+}
+.lf-grades button:hover { border-color: var(--brand-blue); color: var(--brand-blue); }
+.lf-grades button.on { background: var(--brand-blue); border-color: var(--brand-blue); color: #fff; font-weight: 600; }
+.lf-err { display: none; color: var(--danger); font-size: 12px; margin: -2px 0 10px; }
+.btn.lead-btn {
+  width: 100%;
+  height: 46px;
+  font-size: 16px;
+  border-radius: 10px;
+  letter-spacing: 2px;
+  margin-top: 6px;
+}
+.lead-privacy {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border-light);
+  font-size: 12px;
+  color: var(--text-light);
+  line-height: 1.7;
+  text-align: left;
+}
+.lead-privacy b { color: var(--text-sub); }
+.lead-pc-tip { margin-top: 18px; font-size: 12px; color: var(--text-light); text-align: center; }
+.lead-pc-tip b { color: var(--text-sub); }
+
+/* ============ 移动端增强 ============ */
+@media (max-width: 600px) {
+  /* 引导页 */
+  .lead-page { padding: 22px 12px 30px; }
+  .lead-card { padding: 24px 18px 20px; border-radius: 12px; }
+  .lead-title { font-size: 19px; }
+  .lead-sub { font-size: 12px; margin-bottom: 14px; }
+  .lead-points { gap: 6px; margin-bottom: 18px; }
+  .lead-points .lp { font-size: 11px; padding: 6px 9px; }
+  /* 温馨提示条 */
+  .sg-welcome { padding: 10px 14px; }
+  .sg-welcome .sw-line2 { font-size: 11px; }
+  .sg-welcome .sw-line2 .sim-note { display: block; margin: 4px 0 0; }
+  /* 底部操作栏：按钮紧凑不挤爆 */
+  .action-bar .btn { padding: 8px 10px; font-size: 12px; }
+  .action-bar .ab-left .link-btn { font-size: 11px; }
+  /* 报告页统计 */
+  .rp-stats { gap: 8px; }
+  .rp-stat { min-width: calc(50% - 8px); }
+  .rp-cta { padding: 16px; }
+  .rp-cta .cta-txt { min-width: 100%; }
+  /* 弹窗贴边 */
+  .modal-mask { padding: 10px; }
+  .modal-body { padding: 14px 12px; }
+  /* 浮动按钮避开底部操作栏 */
+  .float-btn { right: 12px; bottom: 96px; width: 34px; height: 34px; }
+}
