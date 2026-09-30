@@ -235,13 +235,13 @@ function renderReport() {
   </div>`;
 
   /* 硬伤 */
-  h += rpCard('hard', '🔴 必须修改（否则正式网申会被打回）', r.hard,
+  h += rpCard('hard', '必须修改（否则正式网申会被打回）', r.hard,
     '太棒了！未发现硬性问题，必填项与格式校验全部通过。');
   /* 风险 */
-  h += rpCard('risk', '🟡 建议核实（易被审核质疑）', r.risk,
+  h += rpCard('risk', '建议核实（易被审核质疑）', r.risk,
     '未发现明显风险项，填报逻辑自洽。');
   /* 提示 */
-  h += rpCard('tip', '🔵 优化提示（提升竞争力）', r.tip, '各项加分项均已覆盖，简历完整度很高。');
+  h += rpCard('tip', '优化提示（提升竞争力）', r.tip, '各项加分项均已覆盖，简历完整度很高。');
 
   /* CTA */
   h += `<div class="rp-cta">

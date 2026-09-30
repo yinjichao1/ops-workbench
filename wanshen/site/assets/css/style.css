@@ -500,13 +500,13 @@ table.dtbl .row-del {
   border-color: var(--sg-green);
   color: #fff;
 }
-.btn-solid:hover { background: var(--sg-green-dark); border-color: var(--sg-green-dark); }
+.btn-solid:hover { background: var(--sg-green-dark); border-color: var(--sg-green-dark); box-shadow: 0 4px 14px rgba(0,102,51,.24); }
 .btn-brand {
   background: var(--brand-blue);
   border-color: var(--brand-blue);
   color: #fff;
 }
-.btn-brand:hover { background: var(--brand-blue-dark); border-color: var(--brand-blue-dark); }
+.btn-brand:hover { background: var(--brand-blue-dark); border-color: var(--brand-blue-dark); box-shadow: 0 4px 14px rgba(10,105,205,.24); }
 .btn-sm { padding: 5px 14px; font-size: 12px; }
 
 /* 底部操作栏 */
@@ -517,6 +517,7 @@ table.dtbl .row-del {
   right: 0;
   background: #fff;
   border-top: 1px solid #e5e5e5;
+  box-shadow: 0 -4px 16px rgba(15,23,42,.06);
   padding: 12px 24px 12px 240px;
   display: flex;
   justify-content: center;
@@ -704,7 +705,18 @@ table.dtbl .row-del {
   color: var(--text-light);
   font-size: 13px;
 }
-.rp-empty .ico { font-size: 32px; color: var(--ok); display: block; margin-bottom: 8px; }
+.rp-empty .ico {
+  display: block;
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+  border-radius: 50%;
+  background: #e8f7ee;
+  color: var(--ok);
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 auto 10px;
+}
 
 .rp-cta {
   background: linear-gradient(135deg, #fff 0%, var(--brand-blue-light) 100%);
@@ -743,30 +755,46 @@ table.dtbl .row-del {
   cursor: pointer;
   color: var(--text-sub);
   font-size: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  box-shadow: 0 4px 14px rgba(15,23,42,.14);
   z-index: 400;
+  transition: all .2s;
 }
-.float-btn:hover { color: var(--sg-green); border-color: var(--sg-green); }
+.float-btn:hover { color: var(--sg-green); border-color: var(--sg-green); transform: translateY(-2px); }
 
-/* 提示条 */
+/* 提示条（白底卡片风：语义色点 + 轻阴影） */
 .toast {
   position: fixed;
-  top: 20px;
+  top: 18px;
   left: 50%;
-  transform: translateX(-50%) translateY(-80px);
-  background: rgba(0,0,0,.82);
-  color: #fff;
-  padding: 10px 22px;
-  border-radius: 4px;
+  transform: translateX(-50%) translateY(-90px);
+  background: #fff;
+  color: var(--text);
+  padding: 11px 22px 11px 34px;
+  border-radius: 10px;
   font-size: 13px;
   z-index: 1200;
   opacity: 0;
-  transition: all .28s;
+  transition: all .3s cubic-bezier(.34,1.3,.64,1);
   pointer-events: none;
+  max-width: min(560px, 86vw);
+  line-height: 1.55;
+  box-shadow: 0 10px 36px rgba(15,23,42,.16), 0 0 0 1px rgba(15,23,42,.04);
+}
+.toast::before {
+  content: '';
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--info);
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.toast.err { background: rgba(214,45,60,.92); }
-.toast.ok { background: rgba(0,153,68,.92); }
+.toast.err { color: var(--danger); font-weight: 500; }
+.toast.err::before { background: var(--danger); }
+.toast.ok::before { background: var(--ok); }
 
 /* ============ 3列网格（子表单弹窗） ============ */
 .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -803,8 +831,9 @@ table.dtbl .row-del {
 .file-row .file-btn:hover { background: var(--sg-green-dark); }
 
 /* 欢迎条（简历中心） */
-.sg-welcome { background: #fff; border-bottom: 1px solid var(--border-light); padding: 12px 24px; }
-.sg-welcome .sw-line2 { font-size: 12px; color: var(--danger); }
+.sg-welcome { background: #fff; border-bottom: 1px solid var(--border-light); padding: 11px 24px; }
+.sg-welcome .sw-line2 { font-size: 12px; color: var(--text-sub); line-height: 1.75; }
+.sg-welcome .sw-line2 .sw-strong { color: var(--danger); font-weight: 600; }
 .sg-welcome .sw-line2 .sim-note { color: var(--text-light); margin-left: 10px; }
 
 /* ============ 响应式 ============ */
