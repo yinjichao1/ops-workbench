@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>国家电网网申模拟填报系统 · 思格电网教研院</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<!-- ============ 思格品牌条 ============ -->
+<div class="brand-bar">
+  <div class="bb-left">
+    <div class="bb-logo">思格电网教研院<span>28届</span></div>
+    <div class="bb-sub">国家电网网申模拟填报系统 · 全流程仿真演练</div>
+  </div>
+  <div class="bb-right">填写进度 <b id="bbProgress">0%</b> · 本系统为<b>模拟环境</b>，与国网官方系统无关</div>
+</div>
+
+<!-- ============ 国网风格导航（模拟还原） ============ -->
+<header class="sg-header">
+  <div class="sg-logo">
+    <span class="sg-badge">SG</span>
+    <div class="sg-logo-txt"><b>国家电网有限公司</b><i>STATE GRID</i></div>
+    <div class="sg-logo-div">人力资源招聘平台<br>（模拟）</div>
+  </div>
+  <nav>
+    <a href="javascript:;">首页</a>
+    <a href="javascript:;">单位一览</a>
+    <a href="javascript:;">我的求职</a>
+    <a href="javascript:;" class="on">个人中心</a>
+    <a href="javascript:;">待办事项</a>
+    <a href="javascript:;">应聘指南</a>
+    <a href="javascript:;">帮助中心</a>
+  </nav>
+  <div class="sg-user">👤 退出</div>
+</header>
+
+<!-- ============ 简历中心欢迎条 ============ -->
+<div class="sg-welcome">
+  <div class="sw-line1">
+    欢迎您第 <b id="visitCount">104</b> 次来到您的简历中心，简历最新刷新时间 <b id="refreshTime">--</b>
+    <span class="sw-preview" id="btnPreview">预览</span>
+  </div>
+  <div class="sw-line2">温馨提示：简历预览确认后，除姓名、学籍验证码、联系方式和电子附件外不可再更改。<span class="sim-note">本页为思格教研院「网申模拟系统」，非国网官方入口，数据仅存本机浏览器。</span></div>
+</div>
+
+<!-- ============ 表单页 ============ -->
+<div id="formPage">
+  <div class="progress-strip"><i id="progBar"></i></div>
+
+  <div class="wrap" id="formWrap">
+    <!-- 各模块由 JS 渲染 -->
+  </div>
+</div>
+
+<!-- ============ 体检报告页 ============ -->
+<div id="reportPage" class="report-page">
+  <div class="report-wrap" id="reportWrap"></div>
+</div>
+
+<!-- ============ 底部操作栏 ============ -->
+<div class="action-bar" id="actionBar">
+  <div class="ab-left">
+    <span id="saveHint">草稿自动保存到本机浏览器</span>
+    <button class="link-btn" id="btnClear">清空重填</button>
+    <button class="link-btn" id="btnDemo">一键填入示例数据</button>
+  </div>
+  <button class="btn" id="btnCancelForm">取消</button>
+  <button class="btn btn-primary" id="btnSaveForm">保存</button>
+  <button class="btn btn-solid" id="btnSubmit">提交并生成体检报告</button>
+</div>
+
+<!-- 报告页底部 -->
+<div class="action-bar" id="reportBar" style="display:none;">
+  <div class="ab-left"><span>可截图分享 / 打印留档</span></div>
+  <button class="btn" id="btnBackEdit">返回修改</button>
+  <button class="btn btn-brand" id="btnPrint">打印 / 导出PDF</button>
+</div>
+
+<button class="float-btn" id="btnTop" title="回到顶部">↑</button>
+<div class="toast" id="toast"></div>
+
+<script>
+/* 后端提交端点：线上同源直连，本地/其他环境回退主域（与匹配工具同款约定） */
+(function () {
+  var API_BASE = /(^|\.)sigedianwang\.cn$/.test(location.hostname) ? '' : 'https://sigedianwang.cn';
+  window.SG_SUBMIT_ENDPOINT = API_BASE + '/api/public/apply/submit';
+})();
+</script>
+<script src="assets/js/region-data.js"></script>
+<script src="assets/js/dict-data.js"></script>
+<script src="assets/js/model.js"></script>
+<script src="assets/js/schema.js"></script>
+<script src="assets/js/report.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

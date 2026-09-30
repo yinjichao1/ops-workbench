@@ -8,3 +8,4 @@ from .live_stream import LiveStream
 from .match_lead import MatchLead
 from .exam_signup import ExamSignup
 from .report_draft import ReportDraft
+from .ws_apply import WsArchive, WsArchiveItem
