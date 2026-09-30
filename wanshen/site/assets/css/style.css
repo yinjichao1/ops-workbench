@@ -717,6 +717,19 @@ table.dtbl .row-del {
   font-weight: 700;
   margin: 0 auto 10px;
 }
+/* 报告免责声明（评分卡下方） */
+.rp-disclaimer {
+  background: #f7f9fc;
+  border: 1px solid #e8eef6;
+  border-radius: 8px;
+  padding: 11px 16px;
+  margin: 14px 0 4px;
+  font-size: 11.5px;
+  color: var(--text-light);
+  line-height: 1.8;
+}
+.rp-disclaimer b { color: var(--text-sub); font-weight: 600; }
+.rp-disclaimer b:first-child { color: var(--text-sub); }
 
 .rp-cta {
   background: linear-gradient(135deg, #fff 0%, var(--brand-blue-light) 100%);
