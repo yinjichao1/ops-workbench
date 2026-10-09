@@ -3,10 +3,12 @@
 from datetime import date, timedelta
 from collections import defaultdict
 from fastapi import APIRouter, Depends, Query, UploadFile, File
+from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy.orm import Session as SqlSession
 from ..models import get_db, Lead, LeadDeal
 from io import BytesIO
+import csv
 import re
 
 router = APIRouter()
@@ -152,6 +154,49 @@ def leads_recent(
             for r in rows
         ]
     }
+
+
+@router.get("/leads/export")
+def leads_export(
+    source: str = Query("", description="按来源精确过滤，如「网申模拟」；空=不限"),
+    note_prefix: str = Query("", description="按备注前缀过滤，如「网申模拟·引导页留资」"),
+    date_from: str = Query("", description="起始日期 YYYY-MM-DD，空=不限"),
+    date_to: str = Query("", description="结束日期 YYYY-MM-DD，空=不限"),
+    db: SqlSession = Depends(get_db),
+):
+    """线索导出 CSV（管理端，位于 Basic Auth 之后）。
+
+    支持按来源 / 备注前缀 / 日期区间组合过滤，供运营导出特定渠道线索。
+    """
+    q = db.query(Lead)
+    if source.strip():
+        q = q.filter(Lead.source == source.strip())
+    if note_prefix.strip():
+        q = q.filter(Lead.note.like(note_prefix.strip() + "%"))
+    try:
+        if date_from.strip():
+            q = q.filter(Lead.date >= date.fromisoformat(date_from.strip()))
+        if date_to.strip():
+            q = q.filter(Lead.date <= date.fromisoformat(date_to.strip()))
+    except ValueError:
+        pass  # 日期格式错误时忽略该过滤条件
+    rows = q.order_by(Lead.date.desc(), Lead.id.desc()).all()
+
+    import io as _io
+    buf = _io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["ID", "日期", "提交时间", "姓名", "电话", "年级", "来源", "状态", "有效性", "校区", "备注"])
+    for r in rows:
+        ts = r.created_at.strftime("%Y-%m-%d %H:%M") if r.created_at else ""
+        w.writerow([
+            r.id, r.date or "", ts, r.name or "", r.phone or "", r.grade or "",
+            r.source or "", r.status or "", r.validity or "", r.campus or "", r.note or "",
+        ])
+    return Response(
+        content=buf.getvalue().encode("utf-8-sig"),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="leads_export.csv"'},
+    )
 
 
 @router.get("/leads/summary")
