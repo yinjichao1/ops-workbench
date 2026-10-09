@@ -71,7 +71,7 @@
   <div class="top">
     <div>
       <h1>线索收集 · 按项目分类</h1>
-      <div class="sub">各落地页 / 活动 / 工具共用统一线索视图，按 <b>收集入口</b> 分 Tab 查看与导出，互不混淆。当前入口：表单落地页项目、<b>匹配工具线索收集</b>、<b>模考线索收集</b>、<b>小程序线索收集</b>、<b>网申模拟线索收集</b>。<br>匹配工具还多一维 <b>投放渠道</b>（哪个平台 / 哪个校区 / 哪场活动来的）：发一条专属链接（<code>?ch=代号</code>）即自动打标，切到该 Tab 后用下方渠道条筛选。已配置但暂无数据的渠道会以<span style="opacity:.6">浅灰虚线</span>显示，点开可确认「确实还没起量」。</div>
+      <div class="sub">各落地页 / 活动 / 工具共用统一线索视图，按 <b>收集入口</b> 分 Tab 查看与导出，互不混淆。当前入口：表单落地页项目、<b>匹配工具线索收集</b>、<b>模考线索收集</b>、<b>小程序线索收集</b>、<b>网申模拟线索收集</b>、<b>引导页留资线索收集</b>。<br>匹配工具还多一维 <b>投放渠道</b>（哪个平台 / 哪个校区 / 哪场活动来的）：发一条专属链接（<code>?ch=代号</code>）即自动打标，切到该 Tab 后用下方渠道条筛选。已配置但暂无数据的渠道会以<span style="opacity:.6">浅灰虚线</span>显示，点开可确认「确实还没起量」。</div>
     </div>
     <div class="stats">
       <div class="stat"><b id="stToday">-</b><span>今日全部</span></div>
@@ -119,7 +119,7 @@ var PAGE_LABELS = {
   'apply': '网申模拟线索收集'
 };
 // 删除确认文案里的来源名（表口径，与上面"收集入口"名分开写，避免读起来别扭）
-var SRC_NAME = { form:'表单', match:'匹配工具', exam:'模考', miniapp:'小程序', apply:'网申模拟' };
+var SRC_NAME = { form:'表单', match:'匹配工具', exam:'模考', miniapp:'小程序', apply:'网申模拟', wslead:'引导页留资' };
 // 各渠道明细列配置（kind：form / match / exam / miniapp / apply；all 用统一简版列）
 var COLS = {
   form: [
@@ -154,6 +154,12 @@ var COLS = {
     {k:'degree', t:'学历'}, {k:'grad_date', t:'毕业时间'}, {k:'score', t:'体检评分'},
     {k:'complete', t:'完整度%'}, {k:'hard', t:'硬伤'}, {k:'risk', t:'风险'},
     {k:'platform_label', t:'投放渠道', tag:true}
+  ],
+  // 引导页留资：数据源是主线索表（网申系统进入表单前的低门槛留资），渠道码即投放渠道
+  wslead: [
+    {k:'id', t:'ID'}, {k:'created_at', t:'提交时间'}, {k:'name', t:'姓名'},
+    {k:'phone', t:'手机', cls:'phone'}, {k:'grade', t:'年级'},
+    {k:'platform_label', t:'投放渠道', tag:true}, {k:'note', t:'备注'}
   ],
   all: [
     {k:'id', t:'ID'}, {k:'created_at', t:'提交时间'}, {k:'name', t:'姓名'},

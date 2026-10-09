@@ -36,6 +36,7 @@
 
 import csv
 import io
+import re
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
@@ -58,6 +59,11 @@ EXAM_CHANNEL = "exam"
 EXAM_LABEL = "模考线索收集"
 APPLY_CHANNEL = "apply"
 APPLY_LABEL = "网申模拟线索收集"
+WSLEAD_CHANNEL = "wslead"
+WSLEAD_LABEL = "引导页留资线索收集"
+WSLEAD_NOTE_PREFIX = "网申模拟·引导页留资"
+# 引导页渠道码 → 中文名（与网申系统二维码 ?ch= 打标对齐）
+WSLEAD_CH_LABELS = {"douyin": "抖音", "shipinhao": "视频号", "xhs": "小红书", "gzh": "公众号"}
 
 # 小程序线索（2026-09-17 新增）—— 它与上面三类**不同**：
 # 不写独立收集表，而是由小程序云函数 getPhone 换号后直接 POST /api/leads/bulk
@@ -215,6 +221,23 @@ def collect_overview(db: SqlSession = Depends(get_db)):
         }
     )
 
+    # ── 网申引导页留资（数据源：主线索表 leads，note 前缀「网申模拟·引导页留资」） ──
+    wslead_total = _wslead_query(db).count()
+    wslead_today = (
+        _wslead_query(db)
+        .filter(func.date(Lead.created_at) == func.current_date())
+        .count()
+    )
+    channels.append(
+        {
+            "channel": WSLEAD_CHANNEL,
+            "kind": "wslead",
+            "label": WSLEAD_LABEL,
+            "total": int(wslead_total),
+            "today": int(wslead_today),
+        }
+    )
+
     # ── 网申模拟（ws_archives，含体检评分） ──
     apply_total = db.query(func.count(WsArchive.id)).scalar() or 0
     apply_today = (
@@ -233,8 +256,8 @@ def collect_overview(db: SqlSession = Depends(get_db)):
         }
     )
 
-    grand_total = int(form_total) + int(match_total) + int(exam_total) + int(miniapp_total) + int(apply_total)
-    grand_today = int(form_today) + int(match_today) + int(exam_today) + int(miniapp_today) + int(apply_today)
+    grand_total = int(form_total) + int(match_total) + int(exam_total) + int(miniapp_total) + int(apply_total) + int(wslead_total)
+    grand_today = int(form_today) + int(match_today) + int(exam_today) + int(miniapp_today) + int(apply_today) + int(wslead_today)
 
     return {
         "ok": True,
@@ -248,6 +271,8 @@ def collect_overview(db: SqlSession = Depends(get_db)):
         "miniapp_today": int(miniapp_today),
         "apply_total": int(apply_total),
         "apply_today": int(apply_today),
+        "wslead_total": int(wslead_total),
+        "wslead_today": int(wslead_today),
         "total": grand_total,
         "today": grand_today,
         "channels": channels,
@@ -481,6 +506,66 @@ def _miniapp_rows(db, keyword=""):
     return out
 
 
+def _wslead_query(db):
+    """网申引导页留资：主线索表 leads 中 note 以「网申模拟·引导页留资」开头的行。"""
+    return db.query(Lead).filter(Lead.note.like(WSLEAD_NOTE_PREFIX + "%"))
+
+
+def _wslead_rows(db, keyword=""):
+    """引导页留资明细（源：主线索表 leads）。
+
+    与 miniapp 同为 leads 表数据，字段统一结构对齐；专有列：
+    - grade：学员年级（留资时选填）
+    - platform_label / source_detail：渠道码中文名（note 里的 渠道:gzh → 公众号）
+    """
+    q = _wslead_query(db)
+    kw = (keyword or "").strip()
+    if kw:
+        like = f"%{kw}%"
+        q = q.filter(Lead.name.like(like) | Lead.phone.like(like))
+    out = []
+    for r in q.order_by(Lead.id.desc()).limit(2000).all():
+        if r.created_at:
+            ts = r.created_at.strftime("%Y-%m-%d %H:%M")
+        else:
+            ts = str(r.date or "")
+        m = re.search(r"渠道:([a-z]+)", r.note or "")
+        ch = m.group(1) if m else ""
+        ch_label = WSLEAD_CH_LABELS.get(ch, "") if ch else ""
+        out.append(
+            {
+                "id": r.id,
+                "source": "wslead",
+                "channel": WSLEAD_CHANNEL,
+                "channel_label": WSLEAD_LABEL,
+                "platform": ch,
+                "platform_label": ch_label or "未标注",
+                "name": r.name or "",
+                "phone": r.phone or "",
+                "school": "",
+                "major": "",
+                "degree": "",
+                "year": "",
+                "province": "",
+                "grade": r.grade or "",
+                "score": None,
+                "duration": 0,
+                "match_total": None,
+                "match_exact": None,
+                "match_family": None,
+                "match_review": None,
+                # 引导留资专有列
+                "source_detail": ch_label,
+                "campus": r.campus or "",
+                "validity": r.validity or "",
+                "status": r.status or "",
+                "note": r.note or "",
+                "created_at": ts,
+            }
+        )
+    return out
+
+
 @router.get("/collect/list")
 def collect_list(
     channel: str = Query("all", description="渠道：all / 表单项目代号 / match / exam / miniapp"),
@@ -504,7 +589,8 @@ def collect_list(
         rows = _form_rows(db, channel)
     else:
         rows = (_form_rows(db, "all") + _match_rows(db, keyword, platform)
-                + _exam_rows(db) + _miniapp_rows(db, keyword) + _apply_rows(db, keyword))
+                + _exam_rows(db) + _miniapp_rows(db, keyword) + _apply_rows(db, keyword)
+                + _wslead_rows(db, keyword))
         if (platform or "").strip():
             # 同导出：投放渠道只存在于匹配工具，按它筛选时只保留匹配工具行
             rows = [r for r in rows if r.get("source") == "match"]
@@ -571,6 +657,14 @@ def collect_export(
                  r["risk"], r["platform_label"]]
             )
         fname = "collect_apply.csv"
+    elif channel == WSLEAD_CHANNEL:
+        w.writerow(["ID", "提交时间", "姓名", "手机", "年级", "投放渠道", "状态", "备注"])
+        for r in _wslead_rows(db):
+            w.writerow(
+                [r["id"], r["created_at"], r["name"], r["phone"], r["grade"],
+                 r["platform_label"], r["status"], r["note"]]
+            )
+        fname = "collect_wslead.csv"
     elif channel and channel != "all":
         w.writerow(["ID", "提交时间", "姓名", "手机", "学校", "专业", "来源项目"])
         for r in _form_rows(db, channel):
@@ -622,13 +716,22 @@ def collect_delete(body: DeleteIn, db: SqlSession = Depends(get_db)):
             .filter(Lead.id == body.id, Lead.source.like(MINIAPP_SOURCE_PREFIX + "%"))
             .first()
         )
+    elif body.source == "wslead":
+        # 引导留资也是 leads 表数据，删除范围严格限定 note 前缀匹配的行
+        rec = (
+            db.query(Lead)
+            .filter(Lead.id == body.id, Lead.note.like(WSLEAD_NOTE_PREFIX + "%"))
+            .first()
+        )
     elif body.source == "apply":
         # 网申档案：连带清明细子表 + leads 里的摘要行（与 /api/apply/{id} 删除口径一致）
         rec = db.query(WsArchive).filter(WsArchive.id == body.id).first()
         if rec:
             db.query(WsArchiveItem).filter(WsArchiveItem.archive_id == rec.id).delete()
             db.query(Lead).filter(
-                Lead.source == SOURCE_LEADS, Lead.phone == rec.phone, Lead.name == rec.name
+                Lead.source.in_([SOURCE_LEADS, "网申模拟"]),
+                Lead.phone == rec.phone,
+                Lead.name == rec.name,
             ).delete()
     else:
         rec = db.query(FormSubmission).filter(FormSubmission.id == body.id).first()
