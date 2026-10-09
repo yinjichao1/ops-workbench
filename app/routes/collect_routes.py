@@ -87,6 +87,9 @@ def channel_label(code):
     """渠道代号转中文名，未登记的原样返回。"""
     if not code:
         return "未标注"
+    if code.startswith("school26-"):
+        # 录用查询工具的投放渠道打标（页面 ?ch= 体系，与匹配工具同一套代号，复用一份中文名）
+        return "录用查询-" + platform_label(code[len("school26-"):])
     return PAGE_LABELS.get(code, code)
 
 
@@ -282,7 +285,11 @@ def collect_overview(db: SqlSession = Depends(get_db)):
 def _form_rows(db, channel):
     q = db.query(FormSubmission)
     if channel and channel != "all":
-        q = q.filter(FormSubmission.page == channel[:30])
+        if channel == "school26":
+            # 录用查询工具：channel=school26 聚合全部（含 school26-<投放渠道> 打标线索）
+            q = q.filter(FormSubmission.page.like("school26%"))
+        else:
+            q = q.filter(FormSubmission.page == channel[:30])
     out = []
     for r in q.order_by(FormSubmission.id.desc()).limit(2000).all():
         out.append(

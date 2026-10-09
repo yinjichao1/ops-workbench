@@ -621,6 +621,18 @@ function rerender(){
 
 /* ---------- 表单提交 ---------- */
 var API_BASE = /sigedianwang\.cn$/.test(location.hostname) ? "" : "https://sigedianwang.cn";
+/* 渠道打标（与 /match/ 的 ?ch= 体系对齐）：入口链接带 ?ch=代号 时，
+   page 记为 school26-<代号>，工作台即按投放渠道分开统计；
+   未带 ?ch= 的历史物料/直接访问仍记 school26（未标注）。
+   中文别名兜底 —— 运营手打中文链接也能认（与 match_routes.PLATFORM_ALIAS 同一语义）。 */
+var SCH26_ALIAS = {"抖音":"douyin","视频号":"shipinhao","微信视频号":"shipinhao","公众号":"gzh","微信公众号":"gzh","小红书":"xhs","朋友圈":"pengyouquan","社群":"qun","微信群":"qun","地推":"ditui","线下地推":"ditui","转介绍":"zhuanjie","老带新":"zhuanjie","自然流量":"ziran","辽宁":"liaoning","辽宁校区":"liaoning","吉林省":"jilin","吉林":"jilin","吉林校区":"jilin","黑龙江":"heilongjiang","黑龙江省":"heilongjiang","黑龙江校区":"heilongjiang"};
+function sch26Channel(){
+  var ch = (location.search.match(/[?&]ch=([^&]*)/) || [])[1] || "";
+  try { ch = decodeURIComponent(ch); } catch (e) {}
+  ch = SCH26_ALIAS[ch] || ch;
+  ch = ch.toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 20);
+  return ch;
+}
 document.addEventListener("submit", function(e){
   var f = e.target.closest(".lead-form");
   if(!f) return;
@@ -633,7 +645,8 @@ document.addEventListener("submit", function(e){
   var btn = f.querySelector("button");
   btn.disabled = true; btn.textContent = "提交中…";
   msg.textContent = ""; msg.className = "f-msg";
-  fd.page = "school26";
+  var _ch = sch26Channel();
+  fd.page = _ch ? "school26-" + _ch : "school26";
   fetch(API_BASE + "/api/public/forms/submit", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

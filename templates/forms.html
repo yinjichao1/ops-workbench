@@ -176,8 +176,14 @@ var curKind = 'all';       // 当前渠道类型（决定列）
 var curPlat = '';          // 投放渠道筛选：'' 全部 / 代号 / 'none' 未标注
 var all = [];
 
+// 录用查询工具投放渠道中文名（school26-<ch> 前缀，与 match_routes.PLATFORM_LABELS 同步维护）
+var PLAT_CH_LABELS = {'douyin':'抖音','shipinhao':'微信视频号','gzh':'微信公众号','xhs':'小红书','pengyouquan':'朋友圈','qun':'社群/微信群','ditui':'线下地推','zhuanjie':'转介绍','ziran':'自然流量','liaoning':'辽宁校区','jilin':'吉林校区','heilongjiang':'黑龙江校区'};
 function label(code){
   if(!code) return '未标注';
+  if(code.indexOf('school26-') === 0){
+    var ch = code.slice('school26-'.length);
+    return '录用查询-' + (PLAT_CH_LABELS[ch] || ch);
+  }
   return PAGE_LABELS[code] || code;
 }
 function toast(m){
