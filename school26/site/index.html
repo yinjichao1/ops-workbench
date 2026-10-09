@@ -386,8 +386,8 @@ function renderSchool(s){
   });
   rowsArr.forEach(function(r){ if(r[1] > maxRow) maxRow = r[1]; });
 
-  /* TOP 省份条形图（含直属单列） */
-  var bars = "", showN = Math.min(locked ? 3 : 8, rowsArr.length);
+  /* TOP 省份条形图（含直属单列）—— 锁定时整体打码（与明细表同一 lockcover 门控），不再免费露 TOP3 */
+  var bars = "", showN = Math.min(8, rowsArr.length);
   for(i = 0; i < showN; i++){
     var pr = rowsArr[i], w = Math.max(3, Math.round(pr[1] / maxRow * 100));
     bars += '<div class="bar-row' + (i === 0 ? " hot" : "") + '" data-nav="#/p/' + uenc(PROVS[pr[0]]) + '">' +
@@ -424,7 +424,6 @@ function renderSchool(s){
   rowsArr.forEach(function(r){ if(r[0] < ZPIDX) covered++; });
 
   var tblCard = '<div class="card tbl-wrap" style="padding:6px 8px"><table class="mx">' + thead + tbody + "</table></div>";
-  var barsHint = (locked && rowsArr.length > 3) ? '<p class="cat-sum" style="margin-top:6px">还有 ' + (rowsArr.length - 3) + " 个单位，解锁后查看</p>" : "";
 
   app.innerHTML = '' +
   '<a class="back" data-nav="#/">‹ 返回首页</a>' +
@@ -449,7 +448,10 @@ function renderSchool(s){
   (locked ? "" : '<p class="cat-sum">' + catSum + "</p>") +
   (rowsArr.length ?
     '<div class="sec-t"><h2>录用人数 TOP 单位</h2><span>点击查看该单位高校排行</span></div>' +
-    '<div class="card bars">' + bars + "</div>" + barsHint +
+    (locked ?
+      '<div class="lockwrap"><div class="card bars blur">' + bars + '</div>' +
+      '<div class="lockcover"><button class="lockbtn" data-unlock>留资解锁 · 录用人数 TOP 单位</button></div></div>'
+      : '<div class="card bars">' + bars + "</div>") +
     '<div class="sec-t"><h2>各省 · 各批次明细</h2><span>' + (bt < 0 ? "合计口径" : BATCHES[bt] + "口径") + "</span></div>" +
     (locked ?
       '<div class="lockwrap">' + tblCard.replace('<div class="card tbl-wrap"', '<div class="card tbl-wrap blur"') +
