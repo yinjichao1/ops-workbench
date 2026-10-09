@@ -10,7 +10,7 @@
 存储：
 - ws_archives       完整档案 JSON 快照 + 摘要列（附件 base64 剥离、证件照保留）
 - ws_archive_items  多行明细子表（教育经历/家庭成员等逐行）
-- leads             同步写一条摘要线索（source="网申模拟"），失败不影响档案保存
+- leads             同步写一条摘要线索（source="登录页"），失败不影响档案保存
 """
 import json
 import csv
@@ -41,7 +41,7 @@ LEVEL_SHORT = {
     "大学本科": "本科", "大学专科": "大专",
     "本科": "本科", "专科": "大专", "硕士": "硕士", "博士": "博士",
 }
-SOURCE_LEADS = "网申模拟"
+SOURCE_LEADS = "登录页"   # 线索归类标签（2026-10-09 主管要求：网申系统留资统一归「登录页」渠道；note 保留网申模拟明细）
 
 # ── 简易内存限流（同 IP 10 分钟最多 5 次，与 match 工具同款） ──
 _RATE = {}
@@ -203,7 +203,7 @@ def submit_lead(body: LeadIn, request: Request, db: SqlSession = Depends(get_db)
     """引导页留资（公开免认证）。只收姓名+手机号+年级，写 leads 摘要行。
 
     设计取舍：
-    - 与完整提交共用 source="网申模拟"，运营在同一个线索流里看，note 区分来源
+    - 与完整提交共用 source="登录页"，运营在同一个线索流里看，note 区分来源（网申模拟·引导页留资 / 网申模拟提交）
     - 同手机号当日去重更新（重复进入不刷量）
     - 失败不影响学员继续填写（前端拿不到 ok 也放行）
     """
@@ -271,7 +271,7 @@ def _save_items(db: SqlSession, archive_id: int, archive: dict):
 
 
 def _upsert_lead_summary(db: SqlSession, s: dict):
-    """写线索摘要到 leads 表（source=网申模拟）。任何失败都不影响档案保存。
+    """写线索摘要到 leads 表（source=登录页）。任何失败都不影响档案保存。
 
     注意：leads 表每周 CSV 按周替换，摘要行可能随当周替换被清掉——
     完整档案永远以 ws_archives 为准，这里只求进入每周线索流。
