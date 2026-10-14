@@ -71,7 +71,12 @@ WSLEAD_CH_LABELS = {"douyin": "抖音", "shipinhao": "视频号", "xhs": "小红
 # 所以这一入口的数据源是 leads 表，按 source 前缀筛选；写入口径完全不动。
 MINIAPP_CHANNEL = "miniapp"
 MINIAPP_LABEL = "小程序线索收集"
-MINIAPP_SOURCE_PREFIX = "小程序"      # source 形如「小程序-公众号菜单」
+MINIAPP_SOURCE_PREFIX = "小程序"      # source 形如「小程序-抖音」
+
+# 小程序投放平台（2026-10-14 渠道码按平台出，与小程序 utils/config.js CHANNELS 同名同步）
+# code = 渠道码 scene 里的 channel=<code>；线索 source 形如「小程序-<label>」
+# 平台分布之外的自然传播细分（社群分享 / 朋友圈 / 未知渠道）自动追加进筛选条
+MINIAPP_PLAT_LABELS = {"douyin": "抖音", "shipinhao": "视频号", "gzh": "公众号", "xhs": "小红书"}
 
 # 表单项目代号 → 中文名（新项目上线时在此登记，前端 PAGE_LABELS 保持同步）
 PAGE_LABELS = {
@@ -109,6 +114,59 @@ def _miniapp_query(db):
     避免「统计到的」和「看得到的」对不上。
     """
     return db.query(Lead).filter(Lead.source.like(MINIAPP_SOURCE_PREFIX + "%"))
+
+
+def _miniapp_plat_counts(db):
+    """小程序投放平台分布：按 source 后缀（细分名）聚合计数。
+
+    返回 {细分名: {"total": n, "today": n}}；source 恰为「小程序」（无后缀）
+    归入空串键（前端映射为「未标注」）。
+    """
+    rows = (
+        db.query(
+            Lead.source,
+            func.count(Lead.id),
+            func.sum(_today_flag(Lead.created_at)),
+        )
+        .filter(Lead.source.like(MINIAPP_SOURCE_PREFIX + "%"))
+        .group_by(Lead.source)
+        .all()
+    )
+    counts = {}
+    for s, n, t in rows:
+        detail = _miniapp_detail(s)
+        c = counts.setdefault(detail, {"total": 0, "today": 0})
+        c["total"] += int(n or 0)
+        c["today"] += int(t or 0)
+    return counts
+
+
+def _miniapp_plat_options(counts):
+    """小程序平台筛选条专用选项（与 match 的 platform_options 同一思路）：
+
+    - 常驻 4 平台（MINIAPP_PLAT_LABELS）0 条也返回，运营能看到"渠道在，还没起量"；
+    - 分布里多出来的细分（社群分享 / 朋友圈 / 未知渠道等自然传播入口）
+      按线索数倒序追加（preset=False），不会隐身；
+    - 空细分（source 恰为「小程序」）不在这里 —— 前端按 match 的惯例单独补「未标注」。
+    """
+    opts = []
+    for code, label in MINIAPP_PLAT_LABELS.items():
+        c = counts.get(label, {"total": 0, "today": 0})
+        opts.append(
+            {"code": code, "label": label, "total": c["total"],
+             "today": c["today"], "preset": True}
+        )
+    extras = sorted(
+        ((d, c) for d, c in counts.items() if d and d not in MINIAPP_PLAT_LABELS.values()),
+        key=lambda kv: -kv[1]["total"],
+    )
+    for detail, c in extras:
+        # 细分名直接作为 code 回传（前端原样 echo，_miniapp_rows 按 source 精确匹配）
+        opts.append(
+            {"code": detail, "label": detail, "total": c["total"],
+             "today": c["today"], "preset": False}
+        )
+    return opts
 
 
 @router.get("/collect/overview")
@@ -214,6 +272,8 @@ def collect_overview(db: SqlSession = Depends(get_db)):
         .filter(func.date(Lead.created_at) == func.current_date())
         .count()
     )
+    # 投放平台：常驻 4 平台（渠道码按平台出）+ 自然传播细分，供管理页筛选条使用
+    miniapp_plat_counts = _miniapp_plat_counts(db)
     channels.append(
         {
             "channel": MINIAPP_CHANNEL,
@@ -221,6 +281,23 @@ def collect_overview(db: SqlSession = Depends(get_db)):
             "label": MINIAPP_LABEL,
             "total": int(miniapp_total),
             "today": int(miniapp_today),
+            "platforms": [
+                {
+                    "code": next(
+                        (k for k, n in MINIAPP_PLAT_LABELS.items() if n == label),
+                        label,
+                    ),
+                    "label": label or "未标注",
+                    "total": v["total"],
+                    "today": v["today"],
+                }
+                for label, v in sorted(
+                    miniapp_plat_counts.items(),
+                    key=lambda kv: kv[1]["total"],
+                    reverse=True,
+                )
+            ],
+            "platform_options": _miniapp_plat_options(miniapp_plat_counts),
         }
     )
 
@@ -456,17 +533,30 @@ def _miniapp_detail(source):
     return s
 
 
-def _miniapp_rows(db, keyword=""):
+def _miniapp_rows(db, keyword="", plat=""):
     """小程序线索明细（源：主线索表 leads，source 以「小程序」开头）。
 
     字段口径：
     - 小程序没有的字段（学校/专业/匹配档位等）按统一结构留空，这样「全部」Tab
       合并四类数据时前端不必做兼容判断。
     - 小程序**没有投放渠道**（platform）这一维 —— 它的来路写在 source 后缀里
-      （如「小程序-公众号菜单」），故单独用 source_detail 返回，不污染 platform
+      （如「小程序-抖音」），故单独用 source_detail 返回，不污染 platform
       语义（platform 仍是「只有匹配工具有」的那个维度）。
+
+    plat 筛选（2026-10-14 渠道码按平台出后新增，只在本入口 list/export 生效，
+    all 视图的 platform 过滤口径不变 —— 那里仍只保留 match 行）：
+    - 'douyin' 等常驻代号 → 中文（MINIAPP_PLAT_LABELS）→ source 精确匹配
+    - 中文细分名（如「社群分享」）→ source 精确匹配
+    - 'none' → source 恰为「小程序」（无后缀，未标注）
     """
     q = _miniapp_query(db)
+    p = (plat or "").strip()
+    if p:
+        if p == "none":
+            q = q.filter(Lead.source == MINIAPP_SOURCE_PREFIX)
+        else:
+            want = MINIAPP_PLAT_LABELS.get(p.lower(), p)
+            q = q.filter(Lead.source == MINIAPP_SOURCE_PREFIX + "-" + want)
     kw = (keyword or "").strip()
     if kw:
         like = f"%{kw}%"
@@ -580,16 +670,18 @@ def collect_list(
     platform: str = Query("", description="投放渠道：代号 / 中文名 / none（未标注）；空=全部"),
     db: SqlSession = Depends(get_db),
 ):
-    """统一明细。channel=all 时合并四类来源；match/exam/miniapp 各返回自己的表；其余按表单项目过滤。
+    """统一明细。channel=all 时合并五类来源；match/exam/miniapp 各返回自己的表；其余按表单项目过滤。
 
-    platform 只对匹配工具渠道有意义（其余入口没有这一维），在 all 视图里同样生效。
+    platform 对匹配工具 = 投放渠道（?ch= 打标）；对小程序 = 投放平台（渠道码 scene 打标，
+    按 source 后缀筛选，常驻 4 平台 + 自然传播细分）。all 视图里 platform 仍只作用于匹配工具行
+    （口径规则：其他入口没有可比维度，全留着会得到"筛了抖音却混进表单线索"的假结果）。
     """
     if channel == MATCH_CHANNEL:
         rows = _match_rows(db, keyword, platform)
     elif channel == EXAM_CHANNEL:
         rows = _exam_rows(db)
     elif channel == MINIAPP_CHANNEL:
-        rows = _miniapp_rows(db, keyword)
+        rows = _miniapp_rows(db, keyword, platform)
     elif channel == APPLY_CHANNEL:
         rows = _apply_rows(db, keyword)
     elif channel and channel != "all":
@@ -647,13 +739,16 @@ def collect_export(
             )
         fname = f"collect_match{plat_suffix}.csv"
     elif channel == MINIAPP_CHANNEL:
-        w.writerow(["ID", "提交时间", "姓名", "手机", "来源细分", "校区", "有效性", "状态"])
-        for r in _miniapp_rows(db):
+        # 小程序投放平台筛选：与 match 同一 norm 口径（douyin/抖音 → douyin）。
+        # 文件名后缀沿用 plat_suffix（ASCII）—— Content-Disposition 头是 latin-1，
+        # 中文后缀会直接 UnicodeEncodeError，别改回中文。
+        w.writerow(["ID", "提交时间", "姓名", "手机", "投放平台", "校区", "有效性", "状态"])
+        for r in _miniapp_rows(db, "", plat):
             w.writerow(
                 [r["id"], r["created_at"], r["name"], r["phone"], r["source_detail"],
                  r["campus"], r["validity"], r["status"]]
             )
-        fname = "collect_miniapp.csv"
+        fname = f"collect_miniapp{plat_suffix}.csv"
     elif channel == APPLY_CHANNEL:
         w.writerow(["ID", "提交时间", "姓名", "手机", "学校", "专业", "学历",
                     "毕业时间", "体检评分", "完整度%", "硬伤", "风险", "投放渠道"])
