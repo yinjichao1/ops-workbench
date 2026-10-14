@@ -1,0 +1,113 @@
+/* 思格电网模考排位赛 · 网页版样式
+   品牌口径：扁平极简 / 主蓝 #0a69cd / 蓝白 / 移动端优先 */
+
+:root{
+  --primary:#0a69cd;
+  --primary-soft:#eef4fd;
+  --ink:#16202c;
+  --ink2:#4a5867;
+  --ink3:#8a94a3;
+  --line:#e8ecf2;
+  --bg:#f5f7fa;
+  --card:#fff;
+  --good:#1a9e5c;
+  --bad:#d93025;
+  --radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.6}
+.wrap{max-width:720px;margin:0 auto;padding:16px 14px 80px}
+img{max-width:100%;vertical-align:middle}
+button{font-family:inherit;cursor:pointer;border:0;background:none}
+a{color:var(--primary)}
+
+/* ── 首页 ── */
+.hero{text-align:center;padding:26px 0 18px}
+.hero__tag{display:inline-block;font-size:12px;color:var(--primary);background:var(--primary-soft);border-radius:20px;padding:3px 12px;margin-bottom:10px}
+.hero h1{font-size:24px;letter-spacing:.5px}
+.hero__sub{color:var(--ink2);font-size:13px;margin-top:6px}
+.warn{background:#fff7e8;border:1px solid #f5d8a3;color:#9a6b1b;border-radius:var(--radius);padding:10px 14px;font-size:13px;margin:10px 0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+.stats .st{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);text-align:center;padding:10px 4px}
+.stats .st b{display:block;font-size:18px;color:var(--primary)}
+.stats .st span{font-size:11px;color:var(--ink3)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin:12px 0}
+.card__title{font-size:14px;color:var(--ink2);margin-bottom:8px}
+.notice{list-style:none}
+.notice li{font-size:13px;color:var(--ink2);padding:3px 0 3px 16px;position:relative}
+.notice li::before{content:"";position:absolute;left:2px;top:11px;width:6px;height:6px;border-radius:50%;background:var(--primary)}
+.actions{display:flex;flex-direction:column;gap:10px;margin:16px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card--tap{text-align:left;margin:0}
+.card--tap b{display:block;font-size:15px}
+.card--tap span{font-size:12px;color:var(--ink3)}
+.foot{text-align:center;color:var(--ink3);font-size:12px;margin-top:28px;line-height:1.8}
+
+/* ── 按钮 ── */
+.btn{border-radius:10px;padding:10px 18px;font-size:15px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.btn--primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn--ghost{background:transparent;color:var(--primary);border-color:var(--primary)}
+.btn--big{padding:13px;font-size:16px}
+.btn:active{opacity:.85}
+
+/* ── 答题页 ── */
+.exambar{position:sticky;top:0;z-index:9;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:9px 12px;margin:0 -14px 10px}
+.exambar__back,.exambar__sheet{font-size:13px;color:var(--ink2);padding:6px 10px;border-radius:8px;background:var(--bg)}
+.exambar__timer{flex:1;text-align:center;font-variant-numeric:tabular-nums;font-size:16px;font-weight:700;color:var(--primary)}
+.exambar__timer.low{color:var(--bad)}
+.pagenav{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.pagenav::-webkit-scrollbar{display:none}
+.pagenav .pg{flex:0 0 auto;font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink2)}
+.pagenav .pg.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.q{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:13px 14px;margin-bottom:10px;scroll-margin-top:110px}
+.q__head{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px}
+.q__no{flex:0 0 auto;font-size:12px;font-weight:700;color:var(--primary);background:var(--primary-soft);border-radius:6px;padding:1px 7px;margin-top:2px}
+.q__segs{font-size:15px}
+.q__segs img{margin:6px 0;border-radius:6px;border:1px solid var(--line)}
+.q__opts{margin-top:9px;display:flex;flex-direction:column;gap:7px}
+.opt{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:14px;background:#fff}
+.opt .k{flex:0 0 auto;font-weight:700;color:var(--ink2)}
+.opt img{margin-top:4px}
+.opt.on{border-color:var(--primary);background:var(--primary-soft)}
+.opt.on .k{color:var(--primary)}
+.submitbar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:720px;background:rgba(255,255,255,.97);border-top:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));z-index:9}
+.submitbar__count{flex:1;font-size:13px;color:var(--ink2)}
+
+/* ── 答题卡 ── */
+.sheet{position:fixed;inset:auto 0 0 0;max-height:62vh;overflow:auto;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -6px 24px rgba(22,32,44,.12);padding:14px;z-index:20}
+.sheet__head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.sheet__head span{flex:1;font-size:12px;color:var(--ink3)}
+.sheet__close{font-size:13px;color:var(--primary)}
+.sheet__grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:7px}
+.sheet__grid .cell{height:36px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;font-size:13px;color:var(--ink2)}
+.sheet__grid .cell.on{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* ── 成绩页 ── */
+.score-hero{background:linear-gradient(180deg,var(--primary) 0%,#0a5cb4 100%);border-radius:16px;color:#fff;text-align:center;padding:26px 16px;margin:10px 0 14px}
+.score-hero__tier{font-size:13px;opacity:.85}
+.score-hero__score{margin:6px 0}
+.score-hero__score b{font-size:52px;font-weight:800}
+.score-hero__score i{font-style:normal;font-size:15px;opacity:.7;margin-left:4px}
+.score-hero__badge{display:inline-block;background:rgba(255,255,255,.18);border-radius:20px;padding:4px 16px;font-size:14px;font-weight:700}
+.score-hero__line{font-size:12px;opacity:.85;margin-top:8px}
+.view .score-hero + .stats .st{background:#fff}
+
+/* ── 错题本 / 历次成绩 ── */
+.subbar{display:flex;align-items:center;gap:10px;padding:4px 0 12px}
+.subbar__back{font-size:13px;color:var(--primary);padding:6px 10px;border-radius:8px;background:var(--primary-soft)}
+.tabs{display:flex;gap:7px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs .tab{flex:0 0 auto;font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid var(--line);background:var(--card);color:var(--ink2)}
+.tabs .tab.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.ansline{display:flex;gap:14px;font-size:13px;margin-bottom:8px}
+.ansline .mine{color:var(--bad)}
+.ansline .key{color:var(--good)}
+.empty{padding:46px 0;text-align:center;color:var(--ink3);font-size:13px}
+.hist{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px}
+.hist b{font-size:22px;color:var(--primary);min-width:64px}
+.hist .meta{flex:1;font-size:12px;color:var(--ink2);line-height:1.7}
+
+/* ── toast ── */
+.toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:rgba(22,32,44,.92);color:#fff;padding:9px 18px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:99}
+.toast.show{opacity:1}

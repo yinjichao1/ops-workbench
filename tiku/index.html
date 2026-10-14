@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>思格电网模考排位赛 · 备考刷题</title>
+<meta name="description" content="国家电网招聘考试全真模考：公共与行业知识 + 专业知识综合卷，165 题在线作答，交卷即出分，错题解析复盘。">
+<link rel="stylesheet" href="assets/style.css?v=1">
+</head>
+<body>
+<div id="app" class="wrap">
+
+  <!-- ════════ 首页 ════════ -->
+  <section id="view-home" class="view">
+    <header class="hero">
+      <div class="hero__tag">思格电网教研院</div>
+      <h1 id="homeTitle">思格电网模考排位赛</h1>
+      <p class="hero__sub" id="homeSubtitle">公共与行业知识 + 专业知识综合卷</p>
+    </header>
+
+    <div id="bankWarn" class="warn" style="display:none">
+      题库数据尚未加载（assets/bank-data.js 缺失或为空），暂不能开考。
+    </div>
+
+    <div class="stats" id="homeStats"></div>
+
+    <div class="card">
+      <h2 class="card__title">考试须知</h2>
+      <ul class="notice" id="homeNotice"></ul>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn--primary btn--big" id="btnStart">开始考试</button>
+      <button class="btn btn--ghost btn--big" id="btnContinue" style="display:none">继续答题</button>
+    </div>
+
+    <div class="grid2">
+      <button class="card card--tap" id="btnWrong">
+        <b>错题本</b><span>按场次复盘错题解析</span>
+      </button>
+      <button class="card card--tap" id="btnHistory">
+        <b>历次成绩</b><span>本机作答记录（最近 10 次）</span>
+      </button>
+    </div>
+
+    <footer class="foot">
+      思格教育 · 专注电力电网央国企招聘培训<br>
+      <a href="https://sigedianwang.cn" target="_blank" rel="noopener">sigedianwang.cn</a>
+    </footer>
+  </section>
+
+  <!-- ════════ 答题页 ════════ -->
+  <section id="view-exam" class="view" style="display:none">
+    <div class="exambar">
+      <button class="exambar__back" id="btnBackHome">退出</button>
+      <div class="exambar__timer" id="timer">--:--:--</div>
+      <button class="exambar__sheet" id="btnSheet">答题卡</button>
+    </div>
+
+    <div class="pagenav" id="pageNav"></div>
+
+    <div id="paper"></div>
+
+    <div class="submitbar">
+      <span class="submitbar__count" id="answeredCount">已答 0/0</span>
+      <button class="btn btn--primary" id="btnSubmit">交卷</button>
+    </div>
+
+    <div class="sheet" id="sheet" style="display:none">
+      <div class="sheet__head">
+        <b>答题卡</b><span id="sheetCount"></span>
+        <button class="sheet__close" id="btnSheetClose">收起</button>
+      </div>
+      <div class="sheet__grid" id="sheetGrid"></div>
+    </div>
+  </section>
+
+  <!-- ════════ 成绩页 ════════ -->
+  <section id="view-result" class="view" style="display:none">
+    <div class="score-hero">
+      <div class="score-hero__tier" id="resTier"></div>
+      <div class="score-hero__score"><b id="resScore">0</b><i>/ 100</i></div>
+      <div class="score-hero__badge" id="resBadge"></div>
+      <p class="score-hero__line" id="resLine"></p>
+    </div>
+    <div class="stats" id="resStats"></div>
+    <div class="actions">
+      <button class="btn btn--primary btn--big" id="btnGoWrong">查看错题解析</button>
+      <button class="btn btn--ghost btn--big" id="btnGoHome">返回首页</button>
+    </div>
+  </section>
+
+  <!-- ════════ 错题本 ════════ -->
+  <section id="view-wrong" class="view" style="display:none">
+    <div class="subbar">
+      <button class="subbar__back" id="btnWrongBack">← 返回</button>
+      <b>错题解析</b>
+    </div>
+    <div class="tabs" id="attemptTabs"></div>
+    <div id="wrongList"></div>
+  </section>
+
+  <!-- ════════ 历次成绩 ════════ -->
+  <section id="view-history" class="view" style="display:none">
+    <div class="subbar">
+      <button class="subbar__back" id="btnHistoryBack">← 返回</button>
+      <b>历次成绩</b>
+    </div>
+    <div id="historyList"></div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="assets/bank-data.js?v=1"></script>
+<script src="assets/engine.js?v=1"></script>
+<script src="assets/app.js?v=1"></script>
+</body>
+</html>
