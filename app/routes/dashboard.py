@@ -661,7 +661,7 @@ def dashboard_bootstrap(
 
     背景：用户经 Cloudflare 中转访问时，每个请求都要跨国往返一次；
     首页原先要发 11 个请求，合并成 1 个后等待时间约减半。
-    逻辑完全复用下方既有接口函数，保证数据口径一致。
+    逻辑完全复用既有接口函数（直调时需显式传参，不能依赖 FastAPI 默认值）。
     """
     from .leads import leads_recent
 
@@ -683,15 +683,16 @@ def dashboard_bootstrap(
     }
 
 
-@router.get("/bootstrap.js")
+@router.get("/bootstrap-{mode}.js")
 def dashboard_bootstrap_js(
-    mode: str = Query("week", description="week 或 month"),
+    mode: str,
     db: Session = Depends(get_db),
 ):
-    """首屏聚合接口的 .js 后缀别名。
+    """首屏聚合接口的 .js 后缀别名（mode 走路径，不走查询参数）。
 
-    Cloudflare 默认只缓存带静态后缀（js/css/图片等）的路径，
-    加 .js 后缀 + nginx 下发 Cache-Control，数据即可在 CDN 边缘缓存，
-    省掉跨国回源。查询参数不参与 CF 缓存键，故不用它做缓存穿透。
+    Cloudflare 默认只缓存带静态后缀的路径，且不区分查询参数，
+    因此把 week/month 放进路径，避免两种维度互相串缓存。
     """
+    if mode not in ("week", "month"):
+        mode = "week"
     return dashboard_bootstrap(mode=mode, db=db)

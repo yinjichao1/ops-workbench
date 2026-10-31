@@ -234,7 +234,7 @@ async function loadOverviewNC() {
     const accResults = {};
     let bootOk = false;
     try {
-      const bR = await fetch(API + "/dashboard/bootstrap.js?mode=" + mode);
+      const bR = await fetch(API + "/dashboard/bootstrap-" + mode + ".js");
       if (bR.ok) {
         const b = await bR.json();
         ov = (b.overview || {}).data || [];
