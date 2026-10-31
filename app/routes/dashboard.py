@@ -650,3 +650,48 @@ def platform_detail(
             })
 
     return {"aggregate": aggregate, "accounts_data": accounts_data}
+
+
+@router.get("/bootstrap")
+def dashboard_bootstrap(
+    mode: str = Query("week", description="week 或 month"),
+    db: Session = Depends(get_db),
+):
+    """首屏聚合接口：一次请求返回总览/热门/最近线索/KPI/各平台趋势与账号明细。
+
+    背景：用户经 Cloudflare 中转访问时，每个请求都要跨国往返一次；
+    首页原先要发 11 个请求，合并成 1 个后等待时间约减半。
+    逻辑完全复用下方既有接口函数，保证数据口径一致。
+    """
+    from .leads import leads_recent
+
+    platforms = {}
+    for plat in PLATFORMS:
+        platforms[plat] = {
+            "trend": dashboard_trend(platform=plat, account="", mode=mode, db=db),
+            "detail": platform_detail(
+                platform=plat, account="", week="", mode=mode, month="", db=db
+            ),
+        }
+    return {
+        "mode": mode,
+        "overview": dashboard_overview(start_week="", end_week="", mode=mode, db=db),
+        "hot": hot_content(mode=mode, week="", month="", db=db),
+        "leads": leads_recent(limit=5, db=db),
+        "kpi": dashboard_kpi(db=db),
+        "platforms": platforms,
+    }
+
+
+@router.get("/bootstrap.js")
+def dashboard_bootstrap_js(
+    mode: str = Query("week", description="week 或 month"),
+    db: Session = Depends(get_db),
+):
+    """首屏聚合接口的 .js 后缀别名。
+
+    Cloudflare 默认只缓存带静态后缀（js/css/图片等）的路径，
+    加 .js 后缀 + nginx 下发 Cache-Control，数据即可在 CDN 边缘缓存，
+    省掉跨国回源。查询参数不参与 CF 缓存键，故不用它做缓存穿透。
+    """
+    return dashboard_bootstrap(mode=mode, db=db)

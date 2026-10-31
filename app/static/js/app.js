@@ -228,26 +228,47 @@ async function loadOverviewNC() {
   if (lbl) lbl.textContent = mode === "month" ? "显示上月数据" : "显示上周数据";
 
   try {
-    const [ovR, hotR, leadsR] = await Promise.all([
-      fetch(API + "/dashboard/overview?mode=" + mode),
-      fetch(API + "/dashboard/hot-content?mode=" + mode),
-      fetch(API + "/leads/recent?limit=5"),
-    ]);
-    const ov = (await ovR.json()).data || [];
-    const hot = (await hotR.json()).data || {};
-    const leads = (await leadsR.json()).data || [];
-
+    // 首屏聚合：优先一次请求拿全量数据（跨国访问下可省掉一半往返），失败自动回落到逐接口
+    let ov, hot, leads;
     const trendResults = {};
     const accResults = {};
-    await Promise.all(PLATFORMS.map(async (p) => {
-      const [tR, aR] = await Promise.all([
-        fetch(API + `/dashboard/trend?platform=${encodeURIComponent(p)}&mode=${mode}`),
-        fetch(API + `/dashboard/platform-detail?platform=${encodeURIComponent(p)}&mode=${mode}`),
+    let bootOk = false;
+    try {
+      const bR = await fetch(API + "/dashboard/bootstrap.js?mode=" + mode);
+      if (bR.ok) {
+        const b = await bR.json();
+        ov = (b.overview || {}).data || [];
+        hot = (b.hot || {}).data || {};
+        leads = (b.leads || {}).data || [];
+        PLATFORMS.forEach(p => {
+          const d = (b.platforms || {})[p] || {};
+          trendResults[p] = (d.trend || {}).trend || [];
+          accResults[p] = ((d.detail || {}).accounts_data || []).map(x => Object.assign({ platform: p }, x));
+        });
+        bootOk = true;
+      }
+    } catch (e) {
+      bootOk = false;
+    }
+    if (!bootOk) {
+      const [ovR, hotR, leadsR] = await Promise.all([
+        fetch(API + "/dashboard/overview?mode=" + mode),
+        fetch(API + "/dashboard/hot-content?mode=" + mode),
+        fetch(API + "/leads/recent?limit=5"),
       ]);
-      trendResults[p] = (await tR.json()).trend || [];
-      const agg = await aR.json();
-      accResults[p] = (agg.accounts_data || []).map(x => Object.assign({ platform: p }, x));
-    }));
+      ov = (await ovR.json()).data || [];
+      hot = (await hotR.json()).data || {};
+      leads = (await leadsR.json()).data || [];
+      await Promise.all(PLATFORMS.map(async (p) => {
+        const [tR, aR] = await Promise.all([
+          fetch(API + `/dashboard/trend?platform=${encodeURIComponent(p)}&mode=${mode}`),
+          fetch(API + `/dashboard/platform-detail?platform=${encodeURIComponent(p)}&mode=${mode}`),
+        ]);
+        trendResults[p] = (await tR.json()).trend || [];
+        const agg = await aR.json();
+        accResults[p] = (agg.accounts_data || []).map(x => Object.assign({ platform: p }, x));
+      }));
+    }
 
     renderNcTeam(ov, mode);
     renderNcPlatforms(ov);
@@ -3152,7 +3173,7 @@ async function loadLeads() {
     <div class="stat-value ${c.cls}">${c.val}</div>
   </div>`).join("");
 
-  // 渠道有效性汇总（两级：录入渠道 → 备注细分）
+  // 渠道有效性汇总（两级：标准渠道 → 细分渠道，v2 渠道分类）
   const sv = (data.by_source_note || []).filter(s => s.total > 0);
   const summaryTable = (rows, nameKey) => `
     <div class="lead-table-head">
@@ -3170,10 +3191,10 @@ async function loadLeads() {
         <span class="lt-num i5">${s.intent5}</span>
         <span class="lt-num">${s.total}</span>
       </div>`).join("")}`;
-  // 两级渠道：渠道行 + 备注细分子行
+  // 两级渠道：渠道行 + 细分渠道子行
   const srcNoteHtml = (rows) => `
     <div class="lead-table-head">
-      <span>渠道 / 备注细分</span><span class="v">有效</span><span class="p">待定</span><span class="i">无效</span><span>有效率</span><span class="sub-hide">意向1</span><span class="sub-hide">意向3</span><span class="sub-hide">意向5</span><span>合计</span>
+      <span>渠道 / 细分渠道</span><span class="v">有效</span><span class="p">待定</span><span class="i">无效</span><span>有效率</span><span class="sub-hide">意向1</span><span class="sub-hide">意向3</span><span class="sub-hide">意向5</span><span>合计</span>
     </div>
     ${rows.map(s => `
       <div class="lead-table-row lead-src-row">

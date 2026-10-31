@@ -27,6 +27,10 @@ def _migrate_columns():
         if "campus" not in cols:
             with engine.begin() as conn:
                 conn.execute(text("ALTER TABLE leads ADD COLUMN campus VARCHAR(50) DEFAULT ''"))
+        # 细分渠道（v2 渠道分类 2026-10-31）：账号/投放位白名单，见 app/channel_config.py
+        if "sub_source" not in cols:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE leads ADD COLUMN sub_source VARCHAR(50) DEFAULT ''"))
     if "match_leads" in insp.get_table_names():
         # 投放渠道（?ch= 参数）。历史记录保持空串，管理页显示"未标注"。
         cols = {c["name"] for c in insp.get_columns("match_leads")}

@@ -7,9 +7,13 @@ from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy.orm import Session as SqlSession
 from ..models import get_db, Lead, LeadDeal
+from ..channel_config import (
+    CHANNEL_TREE,
+    classify_sub_source,
+    normalize_source,
+)
 from io import BytesIO
 import csv
-import re
 
 router = APIRouter()
 
@@ -50,44 +54,17 @@ def clear_leads(db: SqlSession = Depends(get_db)):
     return {"ok": True}
 
 
-def _parse_sub_source(source: str, note: str) -> list:
-    """从备注中智能提取细分渠道。返回 [(category, value)]"""
-    results = []
-    n = note or ""
+def _resolve_sub_source(source: str, note: str, sub: str = "") -> str:
+    """细分渠道解析：优先取结构化 sub_source 字段（Excel「细分渠道」列），
+    为空则按备注自动分类到白名单（规则见 app/channel_config.py）。
 
-    if source == "抖音":
-        # 提取 (XX抖音) 或 (XX抖音私信) 格式
-        m = re.findall(r'[（(]([^）)]*?抖音[^）)]*?)[）)]', n)
-        if m:
-            for sub in m:
-                sub_clean = sub.replace("私信", "").replace("号", "").strip()
-                if sub_clean:
-                    results.append(("抖音", sub_clean + "号"))
-        # 提取 "范校抖音私信" "葛老师抖音" 无括号格式
-        m2 = re.findall(r'(思格教育抖音|范校抖音|葛老师抖音|安哥抖音)(?:号|私信)?', n)
-        for sub in m2:
-            results.append(("抖音", sub + "号"))
-        if not results:
-            results.append(("抖音", "其他抖音来源"))
-
-    elif source == "微信公众号":
-        if "匹配工具" in n or "表单" in n:
-            results.append(("公众号", "表单/匹配工具"))
-        elif "进群" in n or "社群" in n or "加群" in n:
-            results.append(("公众号", "进群/加社群"))
-        elif "企业微信" in n:
-            results.append(("公众号", "企业微信咨询"))
-        else:
-            results.append(("公众号", "其他公众号"))
-
-    elif source == "微信视频号":
-        m = re.findall(r'(范校视频号|思格视频号|葛老师视频号)', n)
-        if m:
-            results.append(("视频号", m[0]))
-        else:
-            results.append(("视频号", "其他视频号"))
-
-    return results
+    抖音/视频号/公众号不设"其他"，识别不了的返回"未标注"，由运营补齐后重传。
+    """
+    s = (sub or "").strip()
+    if s:
+        return s
+    std_source = normalize_source(source, note)
+    return classify_sub_source(std_source, note)
 
 
 class LeadIn(BaseModel):
@@ -99,6 +76,7 @@ class LeadIn(BaseModel):
     date: str = ""
     status: str = ""
     source: str = ""
+    sub_source: str = ""
     validity: str = ""
     intent: int = 0
     school: str = ""
@@ -111,11 +89,14 @@ class LeadIn(BaseModel):
 
 @router.post("/leads/bulk")
 def create_lead(body: LeadIn, db: SqlSession = Depends(get_db)):
+    std_source = normalize_source(body.source, body.note)
     lead = Lead(
         name=body.name, gender=body.gender, phone=body.phone,
         year=body.year, month=body.month,
         date=date.fromisoformat(body.date) if body.date else date.today(),
-        status=body.status, source=body.source, validity=body.validity,
+        status=body.status, source=std_source,
+        sub_source=_resolve_sub_source(std_source, body.note, body.sub_source),
+        validity=body.validity,
         intent=body.intent, school=body.school, grade=body.grade,
         contact_count=body.contact_count, owner=body.owner,
         campus=body.campus, note=body.note,
@@ -185,12 +166,12 @@ def leads_export(
     import io as _io
     buf = _io.StringIO()
     w = csv.writer(buf)
-    w.writerow(["ID", "日期", "提交时间", "姓名", "电话", "年级", "来源", "状态", "有效性", "校区", "备注"])
+    w.writerow(["ID", "日期", "提交时间", "姓名", "电话", "年级", "来源", "细分渠道", "状态", "有效性", "校区", "备注"])
     for r in rows:
         ts = r.created_at.strftime("%Y-%m-%d %H:%M") if r.created_at else ""
         w.writerow([
             r.id, r.date or "", ts, r.name or "", r.phone or "", r.grade or "",
-            r.source or "", r.status or "", r.validity or "", r.campus or "", r.note or "",
+            r.source or "", r.sub_source or "", r.status or "", r.validity or "", r.campus or "", r.note or "",
         ])
     return Response(
         content=buf.getvalue().encode("utf-8-sig"),
@@ -251,43 +232,37 @@ def leads_summary(
     by_region = defaultdict(int)
     by_day = defaultdict(int)
     intent_dist = defaultdict(int)
-    sub_douyin = defaultdict(int)
-    sub_gzh = defaultdict(int)
-    sub_shipin = defaultdict(int)
     # 渠道×有效性、地区×有效性 交叉分析 + 意向级别 1/3/5 统计
     src_valid = defaultdict(lambda: {"有效": 0, "无效": 0, "待定": 0, "total": 0, "intent1": 0, "intent3": 0, "intent5": 0})
     # 按所属校区（campus）分组（用户要求：地区有效性汇总改为按所属校区）
     cam_valid = defaultdict(lambda: {"有效": 0, "无效": 0, "待定": 0, "total": 0, "intent1": 0, "intent3": 0, "intent5": 0})
-    # 渠道 → 备注细分 两级结构
+    # 渠道 → 细分渠道 两级结构（v2：细分来自 sub_source 字段/备注自动分类）
     src_note = defaultdict(lambda: {"有效": 0, "无效": 0, "待定": 0, "total": 0, "subs": defaultdict(lambda: {"有效": 0, "无效": 0, "待定": 0, "total": 0})})
 
     for r in rows:
-        by_source[r.source or "其他"] += 1
+        note = r.note or ""
+        v = r.validity or "待定"
+        it = r.intent or 0
+        # v2 渠道分类：来源别名归一 + 二级细分（结构化字段优先，备注自动分类兜底）
+        src = normalize_source(r.source, note)
+        sub_val = _resolve_sub_source(src, note, r.sub_source)
+
+        by_source[src] += 1
         by_validity[r.validity or "待定"] += 1
         by_region[r.owner or "未知"] += 1
         intent_dist[r.intent or 0] += 1
         by_day[r.date.isoformat()] += 1
 
-        note = r.note or ""
-        v = r.validity or "待定"
-        it = r.intent or 0
-        src = r.source or "其他"
-
-        # 渠道按备注细分：优先取第一个细分结果（保持与线索总数一致）
-        subs = _parse_sub_source(r.source, note)
-        chan = subs[0][1] if subs else (r.source or "其他")
-        sub_val = chan
-
-        src_valid[chan][v] += 1
-        src_valid[chan]["total"] += 1
+        src_valid[src][v] += 1
+        src_valid[src]["total"] += 1
         if it == 1:
-            src_valid[chan]["intent1"] += 1
+            src_valid[src]["intent1"] += 1
         elif it == 3:
-            src_valid[chan]["intent3"] += 1
+            src_valid[src]["intent3"] += 1
         elif it == 5:
-            src_valid[chan]["intent5"] += 1
+            src_valid[src]["intent5"] += 1
 
-        # 两级：渠道(录入 source) → 备注细分
+        # 两级：标准渠道 → 细分渠道（细分渠道）
         src_note[src][v] += 1
         src_note[src]["total"] += 1
         src_note[src]["subs"][sub_val][v] += 1
@@ -303,14 +278,6 @@ def leads_summary(
             cam_valid[campus]["intent3"] += 1
         elif it == 5:
             cam_valid[campus]["intent5"] += 1
-
-        for cat, val in subs:
-            if cat == "抖音":
-                sub_douyin[val] += 1
-            elif cat == "公众号":
-                sub_gzh[val] += 1
-            elif cat == "视频号":
-                sub_shipin[val] += 1
 
     contact_sum = sum(r.contact_count or 0 for r in rows)
     high_contact = sum(1 for r in rows if (r.contact_count or 0) >= 3)
@@ -329,9 +296,6 @@ def leads_summary(
         "by_region": [{"name": k, "count": v} for k, v in sorted(by_region.items(), key=lambda x: -x[1])],
         "by_day": [{"date": k, "count": v} for k, v in sorted(by_day.items())],
         "intent_distribution": [{"level": k, "count": v} for k, v in sorted(intent_dist.items())],
-        "sub_douyin": [{"name": k, "count": v} for k, v in sorted(sub_douyin.items(), key=lambda x: -x[1])],
-        "sub_gzh": [{"name": k, "count": v} for k, v in sorted(sub_gzh.items(), key=lambda x: -x[1])],
-        "sub_shipin": [{"name": k, "count": v} for k, v in sorted(sub_shipin.items(), key=lambda x: -x[1])],
         "by_source_validity": [
             {
                 "name": k,
@@ -358,7 +322,7 @@ def leads_summary(
                 "valid": v["有效"], "invalid": v["无效"], "pending": v["待定"],
                 "total": v["total"],
                 "valid_rate": round(v["有效"] / v["total"] * 100, 1) if v["total"] else 0,
-                "subs": [
+                "subs": ([
                     {
                         "name": sn,
                         "valid": sv["有效"], "invalid": sv["无效"], "pending": sv["待定"],
@@ -366,7 +330,7 @@ def leads_summary(
                         "valid_rate": round(sv["有效"] / sv["total"] * 100, 1) if sv["total"] else 0,
                     }
                     for sn, sv in sorted(v["subs"].items(), key=lambda x: -x[1]["total"])
-                ],
+                ] if (len(v["subs"]) > 1 or next(iter(v["subs"]), "未标注") not in ("", "未标注")) else []),
             }
             for k, v in sorted(src_note.items(), key=lambda x: -x[1]["total"])
         ],
@@ -572,6 +536,9 @@ async def upload_leads(
             else:
                 date_str = str(date_val or "")
 
+            note_val = str(r.get("备注") or "")
+            # v2 渠道分类：来源别名归一 + 细分渠道（Excel「细分渠道」列优先，备注自动分类兜底）
+            std_source = normalize_source(str(r.get("招生来源") or ""), note_val)
             lead = Lead(
                 name=str(r.get("姓名") or ""),
                 gender=str(r.get("性别") or "未知"),
@@ -580,7 +547,8 @@ async def upload_leads(
                 month=int(r.get("月份") or 8),
                 date=date.fromisoformat(date_str) if date_str else date.today(),
                 status=STATUS_MAP.get(str(r.get("客户状态") or "").strip(), "跟进中"),
-                source=str(r.get("招生来源") or ""),
+                source=std_source,
+                sub_source=_resolve_sub_source(std_source, note_val, str(r.get("细分渠道") or "")),
                 validity=str(r.get("客户有效性") or "待定"),
                 intent=int(r.get("意向级别") or 0),
                 school=str(r.get("公立学校") or ""),
@@ -588,7 +556,7 @@ async def upload_leads(
                 contact_count=int(r.get("沟通次数") or 0),
                 owner=str(r.get("主责任人") or ""),
                 campus=str(r.get("所属校区") or ""),
-                note=str(r.get("备注") or ""),
+                note=note_val,
             )
             db.add(lead)
             imported += 1
