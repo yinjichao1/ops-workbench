@@ -29,6 +29,7 @@ def main():
     db = SessionLocal()
     src_fixed = 0
     sub_filled = 0
+    sub_healed = 0
     manual = []
     rows = []
     by_src = {}
@@ -43,7 +44,8 @@ def main():
                     r.source = std
                 src_fixed += 1
                 changed = True
-            if not (r.sub_source or "").strip():
+            cur_sub = (r.sub_source or "").strip()
+            if not cur_sub:
                 sub = classify_sub_source(std, note)
                 if not dry:
                     r.sub_source = sub
@@ -54,6 +56,14 @@ def main():
                         "ID": r.id, "日期": str(r.date or ""), "姓名": r.name or "",
                         "电话": r.phone or "", "来源": std, "备注": note,
                     })
+            elif cur_sub == "未标注" and std in NEED_SUB_SOURCES:
+                # 自愈：规则升级后重判历史未标注行，仍判不出才保留
+                better = classify_sub_source(std, note)
+                if better != "未标注":
+                    if not dry:
+                        r.sub_source = better
+                    sub_healed += 1
+                    changed = True
             # 分布统计（commit 会过期属性，必须在会话内完成快照）
             note2 = r.note or ""
             std2 = normalize_source(r.source, note2)
@@ -77,7 +87,7 @@ def main():
             w.writeheader()
             w.writerows(manual)
 
-    print(f"total={len(rows)} source_fixed={src_fixed} sub_filled={sub_filled} manual_review={len(manual)}" + ("  [DRY-RUN 未写库]" if dry else ""))
+    print(f"total={len(rows)} source_fixed={src_fixed} sub_filled={sub_filled} healed={sub_healed} manual_review={len(manual)}" + ("  [DRY-RUN 未写库]" if dry else ""))
     if manual and not dry:
         with open("/tmp/leads_manual_review.csv", "w", newline="", encoding="utf-8-sig") as f:
             w = csv.DictWriter(f, fieldnames=["ID", "日期", "姓名", "电话", "来源", "备注"])
