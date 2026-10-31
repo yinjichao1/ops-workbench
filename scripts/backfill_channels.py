@@ -31,6 +31,7 @@ def main():
     sub_filled = 0
     manual = []
     rows = []
+    by_src = {}
     try:
         rows = db.query(Lead).all()
         for r in rows:
@@ -53,6 +54,11 @@ def main():
                         "ID": r.id, "日期": str(r.date or ""), "姓名": r.name or "",
                         "电话": r.phone or "", "来源": std, "备注": note,
                     })
+            # 分布统计（commit 会过期属性，必须在会话内完成快照）
+            note2 = r.note or ""
+            std2 = normalize_source(r.source, note2)
+            sub2 = (r.sub_source or "").strip() or classify_sub_source(std2, note2)
+            by_src[(std2, sub2)] = by_src.get((std2, sub2), 0) + 1
             if changed and dry:
                 db.expunge(r)
         if not dry:
@@ -78,12 +84,6 @@ def main():
             w.writeheader()
             w.writerows(manual)
         print("人工补录清单 → /tmp/leads_manual_review.csv")
-    by_src = {}
-    for r in rows:
-        note = r.note or ""
-        std = normalize_source(r.source, note)
-        sub = (r.sub_source or "").strip() or classify_sub_source(std, note)
-        by_src[(std, sub)] = by_src.get((std, sub), 0) + 1
     for (src, sub), cnt in sorted(by_src.items(), key=lambda x: (-x[1])):
         print(f"{cnt:>5}  {src}  /  {sub or '-'}")
 
