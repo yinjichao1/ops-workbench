@@ -1,0 +1,1744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>29届备考前基础测评 · 电路摸底 | 思格教育 · 电网教研院</title>
+<!--
+  ============================================================
+  29届备考前基础测评（电路摸底）
+  ============================================================
+  Assumptions（待主管确认的假设，均已在页面内用占位标注）:
+  1. 题目占位: QUESTION_BANK 已填入40道电路真题（单选15×2分+多选10×4分+判断15×2分=100分），
+     答案与章节知识点来自《40道电路基础习题.docx》对照表；q4/q5 已配电路图，
+     4道原题含公式/配图的已加 note 标注
+  2. 二维码占位: 海报卡中的二维码为灰色占位块,
+     上线前替换 POSTER_QR_URL 配置为真实图片 URL
+  3. 信息收集: 打开页面首屏即登记（姓名/手机号/学校/年级）,
+     提交到 ops-workbench 线索接口 POST /api/leads/bulk（source=29届测评）,
+     网络失败时本地暂存待发、不拦人; 同一设备已登记过则跳过（localStorage）
+  4. 部署: 静态文件, 建议路径 sigedianwang.cn/ceping29/（同域可直接调 /api）
+  演示模式: URL 加 ?demo=1 → 跳过登记随机出分, 出分页可循环预览五个等级
+  ============================================================
+-->
+<style>
+  :root {
+    --brand: #0a69cd;        /* 主蓝 · 官网实测 */
+    --brand-deep: #1D3557;   /* 深蓝 · 品牌色盘 */
+    --bg: #f6f8fb;           /* 页面底 · 官网实测 */
+    --panel: #ffffff;
+    --ink: #17222e;          /* 主文字 · 官网实测 */
+    --muted: #5c6b7e;        /* 次文字 · 官网实测 */
+    --line: #dfe6ee;         /* 分隔线 · 官网实测 */
+    --red: #E63946;
+    --orange: #F77F00;
+    --gold: #FCBF49;
+    --radius: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 0 20px 48px; }
+
+  /* ===== 顶栏 ===== */
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 0 4px;
+  }
+  .topbar-mark {
+    width: 34px; height: 34px; border-radius: 9px; flex: none;
+    background: var(--brand); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 17px; letter-spacing: -1px;
+  }
+  .topbar-name { font-size: 13px; color: var(--muted); line-height: 1.35; }
+  .topbar-name b { display: block; color: var(--ink); font-size: 14px; }
+
+  /* ===== 屏幕切换 ===== */
+  .screen { display: none; animation: fadeIn .28s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  <!-- ===== 信息登记（打开页面首屏） ===== -->
+  .form-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 18px; margin-top: 18px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .field label em { color: var(--red); font-style: normal; margin-left: 2px; }
+  .field input, .field select {
+    width: 100%; border: 1.5px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; font-size: 15px; font-family: inherit;
+    background: #fff; color: var(--ink); outline: none;
+    transition: border-color .12s ease;
+    -webkit-appearance: none; appearance: none;
+  }
+  .field select { background-image: linear-gradient(45deg, transparent 50%, #5c6b7e 50%), linear-gradient(135deg, #5c6b7e 50%, transparent 50%); background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%; background-size: 6px 6px; background-repeat: no-repeat; }
+  .field input:focus, .field select:focus { border-color: var(--brand); }
+  .field .err { display: none; font-size: 12px; color: var(--red); margin-top: 4px; }
+  .field.invalid input { border-color: var(--red); }
+  .field.invalid .err { display: block; }
+  .form-tip { font-size: 12px; color: #9db0c3; text-align: center; margin-top: 12px; line-height: 1.7; }
+  .registered-bar {
+    display: none; align-items: center; justify-content: space-between;
+    background: #eef4fc; border-radius: 10px;
+    padding: 8px 14px; font-size: 13px; color: var(--brand); margin-bottom: 14px;
+  }
+  .registered-bar a { color: var(--brand); text-decoration: underline; cursor: pointer; flex: none; margin-left: 12px; }
+
+  /* ===== 自定义确认弹层（替代 window.confirm，预览iframe里原生confirm会被拦截） ===== */
+  .confirm-mask {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(23,34,46,.55);
+    display: none; align-items: center; justify-content: center;
+    padding: 32px;
+  }
+  .confirm-mask.show { display: flex; animation: overlayIn .2s ease; }
+  .confirm-card {
+    background: #fff; border-radius: 16px; padding: 24px 22px 18px;
+    max-width: 320px; width: 100%; text-align: center;
+    animation: gradePop .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  .confirm-card h4 { font-size: 17px; margin-bottom: 8px; }
+  .confirm-card p { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 18px; }
+  .confirm-card p b { color: var(--red); }
+  .confirm-btns { display: flex; gap: 10px; }
+  .confirm-btns button {
+    flex: 1; border: 0; border-radius: 10px; padding: 12px 0;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+  }
+  .confirm-btns .c-go { background: var(--brand); color: #fff; }
+  .confirm-btns .c-back { background: #eef4fc; color: var(--brand); }
+
+  /* ===== INTRO ===== */
+  .hero { padding: 40px 0 8px; }
+  .hero-kicker {
+    display: inline-block; font-size: 12px; font-weight: 700;
+    color: var(--brand); background: #eef4fc;
+    padding: 4px 12px; border-radius: 999px; letter-spacing: 1px;
+  }
+  .hero h1 { font-size: 30px; line-height: 1.3; margin: 14px 0 6px; letter-spacing: 1px; }
+  .hero h1 em { font-style: normal; color: var(--brand); }
+  .hero-sub { color: var(--muted); font-size: 15px; margin-bottom: 22px; }
+  .facts { display: flex; gap: 10px; margin-bottom: 26px; }
+  .fact {
+    flex: 1; background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 12px 8px; text-align: center;
+  }
+  .fact b { display: block; font-size: 20px; color: var(--brand); font-variant-numeric: tabular-nums; }
+  .fact span { font-size: 12px; color: var(--muted); }
+  .btn {
+    display: block; width: 100%; border: 0; cursor: pointer;
+    background: var(--brand); color: #fff;
+    font-size: 17px; font-weight: 700; letter-spacing: 2px;
+    padding: 15px 0; border-radius: var(--radius);
+    transition: transform .12s ease, opacity .12s ease;
+  }
+  .btn:active { transform: scale(.97); opacity: .9; }
+  .btn-ghost {
+    display: block; width: 100%; cursor: pointer; text-align: center;
+    background: transparent; color: var(--muted);
+    font-size: 14px; padding: 12px 0; border: 1px solid var(--line);
+    border-radius: var(--radius); margin-top: 10px;
+  }
+  .demo-note { margin-top: 18px; text-align: center; font-size: 12px; color: #9db0c3; }
+  .demo-note a { color: #9db0c3; text-decoration: underline; cursor: pointer; }
+
+  .ranks-preview { margin-top: 28px; }
+  .ranks-preview h2 { font-size: 14px; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
+  .rank-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 8px 14px 8px 8px; margin-bottom: 8px;
+  }
+  .rank-avatar {
+    flex: none; width: 48px; height: 48px; border-radius: 10px;
+    background: #fff; border: 1px solid var(--line);
+    object-fit: cover;
+  }
+  .rank-chip {
+    flex: none; width: 76px; text-align: center;
+    font-size: 15px; font-weight: 800; color: #fff;
+    padding: 5px 0; border-radius: 8px;
+  }
+  .rank-range { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* ===== QUIZ · 列表式答题 ===== */
+  .quiz-head { position: sticky; top: 0; background: var(--bg); padding: 12px 0 10px; z-index: 6; }
+  .quiz-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .quiz-count { font-size: 14px; color: var(--muted); }
+  .quiz-count b { color: var(--brand); font-size: 18px; font-variant-numeric: tabular-nums; }
+  .sheet-toggle {
+    border: 1px solid var(--line); background: #fff; color: var(--brand);
+    font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 999px; cursor: pointer;
+  }
+  .progress { height: 6px; background: var(--line); border-radius: 999px; overflow: hidden; }
+  .progress-bar { height: 100%; width: 0; background: var(--brand); border-radius: 999px; transition: width .25s ease; }
+
+  /* 答题卡 */
+  .sheet { display: none; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-top: 10px; }
+  .sheet.open { display: block; }
+  .sheet h4 { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .sheet-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+  .sheet-cell {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; background: #fff; border: 1px solid var(--line);
+    font-size: 12px; color: var(--muted); cursor: pointer; font-variant-numeric: tabular-nums;
+  }
+  .sheet-cell.done { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 700; }
+
+  .qgroup-title {
+    display: flex; align-items: baseline; gap: 8px;
+    font-size: 15px; font-weight: 800; margin: 22px 0 10px;
+  }
+  .qgroup-title small { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .qcard { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 16px 14px; margin-bottom: 10px; scroll-margin-top: 86px; }
+  .q-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .q-badge {
+    flex: none; font-size: 12px; font-weight: 800; color: #fff;
+    background: var(--brand); border-radius: 6px; padding: 2px 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .q-score { font-size: 11px; color: #9db0c3; }
+  .q-text { font-size: 15.5px; font-weight: 600; line-height: 1.7; }
+  .q-img { width: 100%; max-width: 300px; border: 1px solid var(--line); border-radius: 10px; margin-top: 10px; display: block; }
+  .q-note { margin-top: 8px; font-size: 12px; color: var(--orange); background: #fdf3e7; border-radius: 8px; padding: 6px 10px; line-height: 1.6; }
+  .opts { margin-top: 12px; display: grid; gap: 8px; }
+  .opt {
+    display: flex; align-items: flex-start; gap: 10px; cursor: pointer;
+    border: 1.5px solid var(--line); border-radius: 10px;
+    padding: 10px 12px; font-size: 14px; background: #fff; line-height: 1.55;
+    transition: border-color .12s ease, background .12s ease;
+  }
+  .opt .tag {
+    flex: none; width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid var(--line); color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; margin-top: 1px;
+  }
+  .opt.picked { border-color: var(--brand); background: #eef4fc; }
+  .opt.picked .tag { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+  .quiz-footer {
+    position: sticky; bottom: 0; background: var(--bg);
+    padding: 12px 0 max(12px, env(safe-area-inset-bottom)); z-index: 6;
+  }
+  .btn-submit-all {
+    display: block; width: 100%; border: 0; cursor: pointer;
+    background: var(--brand); color: #fff;
+    font-size: 16px; font-weight: 700; letter-spacing: 2px;
+    padding: 14px 0; border-radius: var(--radius);
+  }
+  .btn-submit-all:active { opacity: .9; }
+
+  /* ===== 错题库 ===== */
+  .wrong-head { display: flex; align-items: center; justify-content: space-between; margin: 28px 0 10px; }
+  .wrong-head .sec-title { margin: 0; }
+  .wrong-redo {
+    border: 1px dashed var(--brand); color: var(--brand); background: #fff;
+    font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 999px; cursor: pointer;
+  }
+  .wrong-item { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--red); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
+  .wrong-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .wrong-tag { font-size: 11px; color: var(--muted); background: #eef4fc; border-radius: 999px; padding: 2px 9px; }
+  .wrong-tag.hot { color: var(--red); background: #fdecec; font-weight: 700; }
+  .wrong-q { font-size: 14px; font-weight: 600; line-height: 1.7; margin-bottom: 10px; }
+  .wrong-ans { display: grid; gap: 5px; font-size: 13.5px; }
+  .wrong-ans .mine { color: var(--red); }
+  .wrong-ans .right { color: #1a9e5c; }
+  .wrong-ans b { font-weight: 800; }
+  .wrong-done { text-align: center; color: #1a9e5c; font-size: 15px; font-weight: 700; background: #ecf9f1; border-radius: var(--radius); padding: 18px 0; }
+  .quiz-mode-tip { background: #fdf3e7; color: var(--orange); font-size: 13px; font-weight: 700; border-radius: 10px; padding: 10px 14px; margin-top: 10px; text-align: center; }
+
+  /* ===== RESULT ===== */
+  .result-head { text-align: center; padding: 34px 0 6px; }
+  .result-kicker { font-size: 13px; color: var(--muted); letter-spacing: 2px; }
+  .score-num {
+    font-size: 76px; font-weight: 800; line-height: 1.1;
+    font-variant-numeric: tabular-nums; margin: 6px 0 0;
+  }
+  .score-num small { font-size: 20px; color: var(--muted); font-weight: 600; }
+  .grade-band {
+    margin: 18px 0 12px; border-radius: var(--radius);
+    padding: 20px 20px 22px; text-align: center; color: #fff;
+  }
+  .grade-avatar {
+    width: 130px; height: 130px; border-radius: 18px;
+    background: #fff; margin: 0 auto 10px; display: block;
+    border: 4px solid rgba(255,255,255,.55);
+    object-fit: cover;
+    animation: avatarWobble 2.6s ease-in-out infinite;
+  }
+  @keyframes avatarWobble {
+    0%, 100% { transform: rotate(-2.5deg); }
+    50% { transform: rotate(2.5deg); }
+  }
+  .grade-name { font-size: 40px; font-weight: 800; letter-spacing: 6px; text-shadow: 0 2px 0 rgba(0,0,0,.12); }
+  .grade-tag { font-size: 13px; opacity: .92; letter-spacing: 1px; margin-top: 2px; }
+  .grade-comment {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px 18px; font-size: 15px; line-height: 1.8;
+  }
+  .grade-comment b { color: var(--brand); }
+
+  .sec-title { font-size: 14px; font-weight: 700; color: var(--muted); letter-spacing: 1px; margin: 28px 0 10px; }
+  .poster-hint { font-size: 12px; color: #9db0c3; text-align: center; margin-top: 8px; }
+  .poster-box {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 10px; display: flex; justify-content: center;
+  }
+  .poster-box img { width: 100%; max-width: 320px; border-radius: 8px; display: block; }
+
+  .unlock {
+    margin-top: 28px; background: var(--brand-deep); color: #fff;
+    border-radius: var(--radius); padding: 22px 20px;
+  }
+  .unlock h3 { font-size: 19px; letter-spacing: 1px; }
+  .unlock p { font-size: 13.5px; opacity: .85; margin: 8px 0 14px; line-height: 1.7; }
+  .unlock .btn { background: var(--gold); color: var(--brand-deep); font-size: 15px; letter-spacing: 1px; padding: 13px 0; }
+  .unlock .btn:active { opacity: .9; }
+  .unlock .already { margin-top: 12px; text-align: center; font-size: 13px; opacity: .8; }
+  .unlock .already a { color: #fff; text-decoration: underline; cursor: pointer; }
+  .qr-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .qr-slot {
+    flex: none; width: 92px; height: 92px; background: #fff; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: #9db0c3; font-size: 11px; text-align: center; line-height: 1.5; padding: 8px;
+  }
+  .qr-copy { font-size: 13.5px; line-height: 1.7; opacity: .9; }
+
+  .plan-lock-note { font-size: 12px; color: rgba(255,255,255,.55); text-align: center; margin-top: 10px; }
+
+  /* ===== PLAN 时间轴 ===== */
+  .timeline { position: relative; padding-left: 24px; }
+  .timeline::before {
+    content: ""; position: absolute; left: 6px; top: 8px; bottom: 8px;
+    width: 2px; background: var(--line);
+  }
+  .stage { position: relative; padding-bottom: 22px; }
+  .stage:last-child { padding-bottom: 0; }
+  .stage::before {
+    content: ""; position: absolute; left: -24px; top: 6px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #fff; border: 3px solid var(--brand);
+  }
+  .stage.now::before { background: var(--gold); border-color: var(--brand); }
+  .stage-when { font-size: 12px; font-weight: 700; color: var(--brand); letter-spacing: 1px; }
+  .stage h4 { font-size: 17px; margin: 2px 0 6px; }
+  .stage p { font-size: 13.5px; color: var(--muted); line-height: 1.75; }
+  .stage .now-badge {
+    display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 700;
+    color: var(--brand-deep); background: var(--gold);
+    padding: 1px 8px; border-radius: 999px; vertical-align: 2px;
+  }
+
+  .result-actions { display: flex; gap: 10px; margin-top: 26px; }
+  .demo-switch { text-align: center; margin-top: 14px; }
+  .demo-switch button {
+    background: none; border: 1px dashed #9db0c3; color: #9db0c3;
+    border-radius: 999px; padding: 6px 16px; font-size: 12px; cursor: pointer;
+  }
+
+  /* ===== 出分动画组 ===== */
+  .grading-overlay {
+    position: fixed; inset: 0; z-index: 99;
+    background: var(--brand-deep); color: #fff;
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px;
+  }
+  .grading-overlay.show { display: flex; animation: overlayIn .25s ease; }
+  @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+  .grading-icon {
+    width: 64px; height: 64px; border-radius: 50%;
+    border: 3px solid rgba(255,255,255,.25); border-top-color: var(--gold);
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .grading-text { font-size: 17px; font-weight: 700; letter-spacing: 2px; }
+  .grading-sub { font-size: 13px; opacity: .6; }
+  .grading-skip {
+    display: none; margin-top: 8px;
+    background: none; border: 1px dashed rgba(255,255,255,.5); color: #fff;
+    font-size: 13px; padding: 8px 18px; border-radius: 999px; cursor: pointer;
+  }
+  .grading-dots span { display: inline-block; animation: dotJump 1s infinite; }
+  .grading-dots span:nth-child(2) { animation-delay: .15s; }
+  .grading-dots span:nth-child(3) { animation-delay: .3s; }
+  @keyframes dotJump { 0%,60%,100% { transform: translateY(0); opacity:.5; } 30% { transform: translateY(-6px); opacity:1; } }
+
+  .anim-pop { opacity: 0; animation: gradePop .55s cubic-bezier(.34,1.56,.64,1) forwards; }
+  @keyframes gradePop {
+    0% { opacity: 0; transform: scale(.4); }
+    65% { opacity: 1; transform: scale(1.08); }
+    82% { transform: scale(.96); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  .anim-rise { opacity: 0; animation: rise .5s ease forwards; }
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  .d1 { animation-delay: .75s; } .d2 { animation-delay: 1.0s; } .d3 { animation-delay: 1.25s; }
+  #planBox .stage { opacity: 0; animation: rise .45s ease forwards; }
+  #planBox .stage:nth-child(1) { animation-delay: .15s; }
+  #planBox .stage:nth-child(2) { animation-delay: .35s; }
+  #planBox .stage:nth-child(3) { animation-delay: .55s; }
+  #planBox .stage:nth-child(4) { animation-delay: .75s; }
+
+  footer { text-align: center; font-size: 12px; color: #9db0c3; padding: 30px 0 0; line-height: 1.8; }
+
+  @media (min-width: 520px) {
+    .wrap { padding-top: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="topbar-mark">思</div>
+    <div class="topbar-name"><b>思格教育 · 电网教研院</b>29届备考服务体系</div>
+  </div>
+
+  <!-- ============ 屏0 · 信息登记（打开即见） ============ -->
+  <section id="screen-form" class="screen">
+    <div class="hero">
+      <span class="hero-kicker">29届 · 备考前基础测评</span>
+      <h1>先登记，<br>再开考。</h1>
+      <p class="hero-sub">30 秒填完下面几项，马上开始你的电路摸底。</p>
+    </div>
+    <div class="registered-bar" id="registeredBar">
+      <span id="registeredInfo"></span>
+      <a onclick="reEditForm()">重新填写</a>
+    </div>
+    <div class="form-card" id="formCard">
+      <div class="field" id="fName">
+        <label>姓名<em>*</em></label>
+        <input type="text" id="inName" maxlength="20" placeholder="请填写真实姓名" autocomplete="name">
+        <div class="err">请填写姓名</div>
+      </div>
+      <div class="field" id="fPhone">
+        <label>手机号<em>*</em></label>
+        <input type="tel" id="inPhone" maxlength="11" placeholder="用于接收备考资料与课程通知" autocomplete="tel" inputmode="numeric">
+        <div class="err">请填写正确的11位手机号</div>
+      </div>
+      <div class="field" id="fSchool">
+        <label>学校<em>*</em></label>
+        <input type="text" id="inSchool" maxlength="30" placeholder="请填写学校全称" autocomplete="organization">
+        <div class="err">请填写学校</div>
+      </div>
+      <div class="field" id="fGrade">
+        <label>当前年级<em>*</em></label>
+        <select id="inGrade">
+          <option value="">请选择年级</option>
+          <option value="大二">大二（29届主力）</option>
+          <option value="大三">大三</option>
+          <option value="大四">大四</option>
+          <option value="其他">其他</option>
+        </select>
+        <div class="err">请选择年级</div>
+      </div>
+      <button class="btn" id="btnSubmitForm" onclick="submitForm()">登记完成 · 开始测评</button>
+      <div class="form-tip">信息仅用于备考服务与课程咨询，不会对外泄露</div>
+    </div>
+    <footer>思格教育 · 电网教研院 · 专注电力电网央国企招聘培训</footer>
+  </section>
+
+  <!-- ============ 屏1 · 首页 ============ -->
+  <section id="screen-intro" class="screen active">
+    <div class="hero">
+      <span class="hero-kicker">29届 · 备考前基础测评</span>
+      <h1>你现在，<br>离国家电网有多远？</h1>
+      <p class="hero-sub">电路摸底 40 题（含多选），测完直接给结果——是夯、是人上人，还是暂时的小趴菜，卷子说了算。</p>
+    </div>
+    <div class="facts">
+      <div class="fact"><b>40</b><span>道题 · 三题型</span></div>
+      <div class="fact"><b>100</b><span>分制</span></div>
+      <div class="fact"><b>20<small style="font-size:12px">分钟</small></b><span>建议用时</span></div>
+    </div>
+    <button class="btn" onclick="startQuiz()">开始测评</button>
+    <div class="demo-note" id="demoNote" style="display:none">演示模式：<a onclick="jumpDemo()">直接随机出分看五个等级</a></div>
+
+    <div class="ranks-preview">
+      <h2>测评等级 · 五档</h2>
+      <div id="rankPreview"></div>
+    </div>
+
+    <footer>测评为备考前摸底参考，不作为任何录取依据<br>思格教育 · 电网教研院</footer>
+  </section>
+
+  <!-- ============ 屏2 · 答题（列表式） ============ -->
+  <section id="screen-quiz" class="screen">
+    <div class="quiz-head">
+      <div class="quiz-meta">
+        <div class="quiz-count">已答 <b id="qAnswered">0</b> / 40 题</div>
+        <button class="sheet-toggle" id="sheetToggle" onclick="toggleSheet()">答题卡</button>
+      </div>
+      <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+      <div class="sheet" id="answerSheet">
+        <h4>答题卡 · 点题号直达</h4>
+        <div class="sheet-grid" id="sheetGrid"></div>
+      </div>
+      <div class="quiz-mode-tip" id="redoTip" style="display:none">错题重做模式 · 只需处理做错的题，其他题保留原答案</div>
+    </div>
+    <div id="quizList"></div>
+    <div class="quiz-footer">
+      <button class="btn-submit-all" id="btnSubmitAll" onclick="onSubmitClick()">交卷 · 查看结果</button>
+    </div>
+  </section>
+
+  <!-- ============ 屏3 · 出分 ============ -->
+  <section id="screen-result" class="screen">
+    <div class="result-head" id="resultHeadWrap">
+      <div class="result-kicker">你的电路摸底成绩</div>
+      <div class="score-num"><span id="scoreNum">0</span><small> / 100</small></div>
+    </div>
+    <div class="grade-band" id="gradeBand">
+      <img class="grade-avatar" id="gradeAvatar" alt="">
+      <div class="grade-name" id="gradeName"></div>
+      <div class="grade-tag" id="gradeTag"></div>
+    </div>
+    <div class="grade-comment" id="gradeComment"></div>
+
+    <div id="posterSec">
+      <div class="sec-title">你的等级海报 · 长按图片保存</div>
+      <div class="poster-box"><img id="posterImg" alt="等级海报"></div>
+      <div class="poster-hint">保存后发群里，看看你室友是什么段位</div>
+    </div>
+
+    <!-- 错题库 -->
+    <div id="wrongSec">
+      <div class="wrong-head">
+        <div class="sec-title" id="wrongTitle">错题回顾</div>
+        <button class="wrong-redo" id="wrongRedoBtn" onclick="redoWrong()" style="display:none">只重做错题</button>
+      </div>
+      <div id="wrongList"></div>
+    </div>
+
+    <!-- 完整备考流程（登记即含，直接展示） -->
+    <div id="planBox" style="display:none">
+      <div id="planSec">
+        <div class="sec-title">29届 · 现在开始的完整备考流程</div>
+        <div class="timeline" id="planTimeline"></div>
+      </div>
+      <div class="result-actions">
+        <button class="btn" onclick="backHome()">再测一次</button>
+      </div>
+    </div>
+
+    <div class="demo-switch" id="demoSwitch" style="display:none">
+      <button onclick="demoLoop()">换个分数看看（演示模式）</button>
+    </div>
+    <footer>思格教育 · 电网教研院 · 专注电力电网央国企招聘培训</footer>
+  </section>
+</div>
+
+<script>
+/* ================================================================
+   配置区 —— 上线前只需改这里
+   ================================================================ */
+/* 线索接口：ops-workbench POST /api/leads/bulk（开放、CORS全开）。
+   部署到 sigedianwang.cn 后走相对路径即可；本地 file:// 预览时走完整域名。 */
+const API_BASE = location.protocol.startsWith("http") ? "" : "https://sigedianwang.cn";
+const LEAD_SOURCE = "29届测评";   // 线索来源标记，进线索池便于筛选
+const QR_IMAGE_URL = "";  // 出分页二维码图片 URL，留空则显示占位块
+const POSTER_QR_URL = ""; // 海报卡二维码图片 URL，留空则绘制占位块
+
+/* 等级体系：5档（决策已确认），img 为对应的卡通形象图 */
+const GRADES = [
+  { min: 90, name: "夯",     tag: "不用验牌的真神",               color: "#E63946", img: "images/grade-hong.webp",
+    comment: "这分数发出去，评论区只会刷「我要验牌」——验了，是真的，野生狗奶级别的稳定发挥。但别翘尾巴，国网笔试专治各种膨胀，稳住。" },
+  { min: 75, name: "人上人", tag: "已经赢麻了但还能再赢",         color: "#F77F00", img: "images/grade-renshangren.webp",
+    comment: "正式确诊为人上人！这底子已经压过同届一大截，别人还在纠结中午吃啥，你已经在研究国网公告了。就一句话：把优势焊死，别让下学期的自己跌回人间。" },
+  { min: 60, name: "潜力股", tag: "现在买进绝对不亏",             color: "#0a69cd", img: "images/grade-qianligu.webp",
+    comment: "骨架有了，肉还没长全。现在这分就像刚开盘的低价股——低谷起步，后面全是上涨空间。照着规划走，下一批「正式确诊为人上人」的名单里，第一个写你。" },
+  { min: 40, name: "NPC",    tag: "镜头借位都拍不到",             color: "#5c6b7e", img: "images/grade-npc.webp",
+    comment: "正式确诊为NPC：台词没两句，存在感约等于电线杆。但现在慌还来得及——大二开始练级，谁不是从背景板一路熬成主角的？" },
+  { min: 0,  name: "小趴菜", tag: "电子布洛芬建议一次吃两粒",     color: "#8a97a5", img: "images/grade-xiaopacai.webp",
+    comment: "正式确诊为小趴菜，趴姿标准得能进教材。先别划走！两年时间，够你把「趴」字抠掉，到时候给你表演一个浪子踢球。现在开始，真不晚。" },
+];
+
+/* 卡通形象图预加载（供页面与海报canvas使用） */
+const GRADE_IMG_CACHE = {};
+GRADES.forEach(g => {
+  const im = new Image();
+  im.src = g.img;
+  GRADE_IMG_CACHE[g.name] = im;
+});
+
+/* 备考流程：四阶段按学年切（决策已确认） */
+const PLAN = [
+  { when: "2026.10 — 2027.06", title: "大二 · 基础期", now: true,
+    desc: "电路先修 + 高数打底，把本测评暴露的短板逐个补掉。这个阶段的任务不是刷题，是把地基打牢、把学习习惯立住。" },
+  { when: "2027.09 — 2028.06", title: "大三 · 系统一轮",
+    desc: "电力系统分析、继电保护、电机学等专业课系统过一轮，全科框架成型。一轮的质量直接决定你后期能冲多高。" },
+  { when: "2028.07 — 2028.08", title: "大三暑假 · 强化刷题",
+    desc: "集中强化，真题套卷滚动刷，错题清零。暑假是拉开差距的两个月，也是分数涨得最快的两个月。" },
+  { when: "2028.09 — 2029.06", title: "大四 · 一批冲刺",
+    desc: "一批公告（约2028年10月）→ 网申 → 笔试 → 面试，全力冲一批；一批失利的直接转战二批（约2029年3-4月），两条腿走路。" },
+];
+
+/* ================================================================
+   题库占位 —— 填题时逐题替换 q / options / answer
+   score 规则：前25题各3分，后5题各5分，合计100分
+   ================================================================ */
+const QUESTION_BANK = [
+ {
+  "type": "single",
+  "q": "电流的参考方向指（ ）。",
+  "options": [
+   "负电荷移动方向",
+   "电路中任意设定的方向",
+   "正电荷移动方向",
+   "电流的实际方向"
+  ],
+  "answer": "B",
+  "img": null,
+  "note": null,
+  "chapter": "第一章·电路基本概念与定律",
+  "point": "电流和电压的参考方向",
+  "score": 2
+ },
+ {
+  "type": "single",
+  "q": "某二端元件，电压和电流为关联参考方向，若该元件吸收功率为100W，电压为10V，则电流为（ ）。",
+  "options": [
+   "10A",
+   "-10A",
+   "5A",
+   "-5A"
+  ],
+  "answer": "A",
+  "img": null,
+  "note": null,
+  "chapter": "第一章·电路基本概念与定律",
+  "point": "电功率和能量",
+  "score": 2
+ },
+ {
+  "type": "single",
+  "q": "三角形连接每个电阻为3Ω，等效成星形连接后每个电阻是（ ）Ω。【国网2024考试真题】",
+  "options": [
+   "3",
+   "6",
+   "9",
+   "1"
+  ],
+  "answer": "D",
+  "img": null,
+  "note": null,
+  "chapter": "第二章·电阻电路等效变换",
+  "point": "Y形联结和△联结等效互换公式",
+  "score": 2
+ },
+ {
+  "type": "single",
+  "q": "图（b）为图（a）的等效电路，则 Is 和等效电阻 Rs 为（ ）。",
+  "options": [
+   "Is=2A，Rs=4.5Ω",
+   "Is=2A，Rs=9Ω",
+   "Is=1A，Rs=4.5Ω",
+   "Is=1A，Rs=9Ω"
+  ],
+  "answer": "B",
+  "img": "images/q4.png",
+  "note": null,
+  "chapter": "第二章·电阻电路等效变换",
+  "point": "实际电压源与实际电流源等效互换",
+  "score": 2
+ },
+ {
+  "type": "single",
+  "q": "在下图所示电路中，已知电源电压与目标电流，则电阻 R 值为（ ）。",
+  "options": [
+   "R=2Ω",
+   "R=4Ω",
+   "R=6Ω",
+   "R=8Ω"
+  ],
+  "answer": "A",
+  "img": "images/q5.png",
+  "note": "原题选项为公式形式，此处按常见形式整理，以讲义为准",
+  "chapter": "第二章·电阻电路等效变换",
+  "point": "输入电阻",
+  "score": 2
+ },
+ {
+  "type": "single",
+  "q": "一个具有4个节点、6条支路的电路，有（ ）个网孔电流。",
+  "options": [
+   "6",
+   "2",
+   "4",
+   "3"
+  ],
+  "answer": "D",
+  "img": null,
+  "note": null,
+  "chapter": "第三章·电阻电路一般分析",
+  "point": "网孔电流",
+  "score": 2
+ },
+ {
+  "type": "single",
+  "q": "求出图示电路的诺顿等效电路参数（ ）。【配图请对照讲义】",
+  "options": [
+   "3A，2Ω",
+   "9A，3Ω",
+   "6A，3Ω",
+   "6A，1Ω"
+  ],
+  "answer": "C",
+  "img": null,
+  "note": null,
+  "chapter": "第四章·叠加/戴维宁/诺顿",
+  "point": "诺顿定理",
+  "score": 2
+ },
+ {
+  "type": "single",
+  "q": "一个内阻为R0的电压源，当负载电阻为（ ）时获得最大功率。【国网考试2024一批次真题】",
+  "options": [
+   "R0",
+   "0",
+   "2R0",
+   "R0/4"
+  ],
+  "answer": "A",
+  "img": null,
+  "note": null,
+  "chapter": "第四章·叠加/戴维宁/诺顿",
+  "point": "最大功率传输定理",
+  "score": 2
+ },
+ {
+  "type": "single",
+  "q": "已知 F1=-4+3j，F2=2.78-9.20j，则 F1/F2 为（ ）。",
+  "options": [
+   "F=0.52∠36.32°",
+   "F=0.52∠216.32°",
+   "F=5∠216.32°",
+   "F=3∠36.32°"
+  ],
+  "answer": "B",
+  "img": null,
+  "note": null,
+  "chapter": "第七章·相量法",
+  "point": "复数的运算",
+  "score": 2
+ },
+ {
+  "type": "single",
+  "q": "电阻和电感串联的正弦交流电路，电阻为3Ω，感抗为4Ω，电路阻抗的大小为（ ）Ω。【国网考试真题】",
+  "options": [
+   "7",
+   "5",
+   "3",
+   "4"
+  ],
+  "answer": "B",
+  "img": null,
+  "note": null,
+  "chapter": "第八章·正弦稳态分析",
+  "point": "阻抗定义",
+  "score": 2
+ },
+ {
+  "type": "single",
+  "q": "两互感线圈顺向串联时，其等效电感量 L顺=（ ）。【国网考试2025二批次真题】",
+  "options": [
+   "L1+L2-2M",
+   "L1+L2+2M",
+   "L1+L2",
+   "L1-L2+2M"
+  ],
+  "answer": "C",
+  "img": null,
+  "note": "原题选项为公式形式，此处按标准形式整理",
+  "chapter": "第九章·耦合电感",
+  "point": "耦合电感的串联",
+  "score": 2
+ },
+ {
+  "type": "single",
+  "q": "符合全耦合、参数无穷大、无损耗3个条件的变压器称为（ ）。",
+  "options": [
+   "空芯变压器",
+   "理想变压器",
+   "实际变压器",
+   "以上都可以"
+  ],
+  "answer": "B",
+  "img": null,
+  "note": null,
+  "chapter": "第九章·耦合电感",
+  "point": "理想变压器的条件",
+  "score": 2
+ },
+ {
+  "type": "single",
+  "q": "RLC并联电路谐振时，如改变电阻R，则（ ）。",
+  "options": [
+   "谐振频率f0将增大",
+   "谐振频率f0将减小",
+   "谐振频率f0不变化",
+   "谐振频率f0变化不确定"
+  ],
+  "answer": "C",
+  "img": null,
+  "note": null,
+  "chapter": "第十章·频率响应与谐振",
+  "point": "G、C、L并联电路",
+  "score": 2
+ },
+ {
+  "type": "single",
+  "q": "三相四线制电路，已知火线与零线之间的电压为220V，则火线与火线之间的电压为（ ）。【国网考试2025二批次真题】",
+  "options": [
+   "267V",
+   "0V",
+   "220V",
+   "380V"
+  ],
+  "answer": "D",
+  "img": null,
+  "note": null,
+  "chapter": "第十一章·三相电路",
+  "point": "线电压与相电压的关系",
+  "score": 2
+ },
+ {
+  "type": "single",
+  "q": "若一个二端口网络Y参数方程满足 Y12=Y21，则该二端口网络具有（ ）。【配图/公式请对照讲义】",
+  "options": [
+   "对称性和互易性",
+   "互易性",
+   "对称性",
+   "不对称也不互易"
+  ],
+  "answer": "B",
+  "img": null,
+  "note": null,
+  "chapter": "第十三章·二端口网络",
+  "point": "导纳参数方程",
+  "score": 2
+ },
+ {
+  "type": "multi",
+  "q": "某电路元件的电压与电流参考方向如图所示，若U<0，I>0，以下说法正确的是（ ）。【配图请对照讲义】",
+  "options": [
+   "电压与电流为关联参考方向",
+   "电流实际方向是从a到b",
+   "b点是高电位点",
+   "a点是高电位点"
+  ],
+  "answer": "ABC",
+  "img": null,
+  "note": null,
+  "chapter": "第一章·电路基本概念与定律",
+  "point": "电流和电压的参考方向",
+  "score": 4
+ },
+ {
+  "type": "multi",
+  "q": "对于含有受控源的电路，下列叙述中正确的是（ ）。",
+  "options": [
+   "受控源可先当作独立电源处理，列写电路方程",
+   "在结点电压法中，当受控源的控制量不是结点电压时，需要添加用结点电压表示控制量的补充方程",
+   "在回路电流法中，当受控源的控制量不是回路电流时，需要添加用回路电流表示控制量的补充方程",
+   "若采用回路电流法，对列写的方程进行化简，在最终的表达式中互阻始终相等，即Rij=Rji"
+  ],
+  "answer": "ABC",
+  "img": null,
+  "note": null,
+  "chapter": "第一章·电路基本概念与定律",
+  "point": "电路元件与一般分析方法",
+  "score": 4
+ },
+ {
+  "type": "multi",
+  "q": "以下哪种电路分析方法适用于非平面电路（ ）。",
+  "options": [
+   "支路电流法",
+   "结点电压法",
+   "回路电流法",
+   "网孔电流法"
+  ],
+  "answer": "ABC",
+  "img": null,
+  "note": null,
+  "chapter": "第三章·电阻电路一般分析",
+  "point": "电路分析方法适用范围",
+  "score": 4
+ },
+ {
+  "type": "multi",
+  "q": "下列说法正确的是（ ）。",
+  "options": [
+   "电感是一种能够储存磁场能量的元件",
+   "电容在直流情况下相当于短路",
+   "电阻是一种记忆元件",
+   "电容是一种无源元件"
+  ],
+  "answer": "AD",
+  "img": null,
+  "note": null,
+  "chapter": "第五章·储能元件",
+  "point": "电容元件与电感元件",
+  "score": 4
+ },
+ {
+  "type": "multi",
+  "q": "换路定则指出：（ ）。",
+  "options": [
+   "uc(0+)=uc(0-)",
+   "uL(0+)=uL(0-)",
+   "ic(0+)=ic(0-)",
+   "iL(0+)=iL(0-)"
+  ],
+  "answer": "AD",
+  "img": null,
+  "note": null,
+  "chapter": "第六章·一阶二阶电路",
+  "point": "换路定则",
+  "score": 4
+ },
+ {
+  "type": "multi",
+  "q": "一阶电路的三要素是指（ ）。【国网考试2023二批次真题】",
+  "options": [
+   "起始值",
+   "初始值",
+   "稳态值",
+   "时间常数"
+  ],
+  "answer": "BCD",
+  "img": null,
+  "note": null,
+  "chapter": "第六章·一阶二阶电路",
+  "point": "一阶电路的三要素法",
+  "score": 4
+ },
+ {
+  "type": "multi",
+  "q": "关于谐振电路，说法正确的是（ ）。【国网考试2023一批次真题】",
+  "options": [
+   "品质因数高的谐振电路对非谐振频率有强抵制力",
+   "串谐电路的谐振频率与电阻和电容匹配值有关",
+   "串谐电路的谐振频率与电感和电容匹配值有关",
+   "电路工作在谐振频率时谐振支路吸收的无功功率为零"
+  ],
+  "answer": "ACD",
+  "img": null,
+  "note": null,
+  "chapter": "第十章·频率响应与谐振",
+  "point": "RLC串联电路谐振时的特点",
+  "score": 4
+ },
+ {
+  "type": "multi",
+  "q": "对于星型接线三相对称电路，描述正确的是（ ）。",
+  "options": [
+   "线电压有效值是相电压有效值的√3倍",
+   "相电压有效值是线电压有效值的√3倍",
+   "线电流等于相电流",
+   "线电压超前相应相电压30度"
+  ],
+  "answer": "ACD",
+  "img": null,
+  "note": null,
+  "chapter": "第十一章·三相电路",
+  "point": "线电压（电流）与相电压（电流）的关系",
+  "score": 4
+ },
+ {
+  "type": "multi",
+  "q": "在计算非正弦周期电路时，应该注意的是（ ）。",
+  "options": [
+   "电路参数随频率在改变",
+   "电路参数不能随频率发生改变",
+   "电路响应等于各次谐波响应分量的瞬时值叠加",
+   "总响应等于各次分量的相量叠加"
+  ],
+  "answer": "AC",
+  "img": null,
+  "note": null,
+  "chapter": "第十二章·非正弦周期",
+  "point": "非正弦周期电流电路的计算",
+  "score": 4
+ },
+ {
+  "type": "multi",
+  "q": "下列说法正确的是（ ）。",
+  "options": [
+   "互易二端口满足互易定理，即对于Y参数方程满足Y12=Y21",
+   "互易二端口四个参数中只有三个是独立的",
+   "结构不对称的二端口，只要其电气特性是对称的，也可以称为对称二端口",
+   "对称二端口只有一个参数是独立的"
+  ],
+  "answer": "ABC",
+  "img": null,
+  "note": null,
+  "chapter": "第十三章·二端口网络",
+  "point": "二端口网络",
+  "score": 4
+ },
+ {
+  "type": "judge",
+  "q": "理想电流源的输出电流由电源本身决定，与外电路无关。",
+  "options": [
+   "正确",
+   "错误"
+  ],
+  "answer": "A",
+  "img": null,
+  "note": null,
+  "chapter": "第一章·电路基本概念与定律",
+  "point": "电压源和电流源【国网考试真题】",
+  "score": 2
+ },
+ {
+  "type": "judge",
+  "q": "基尔霍夫定律仅与元件的相互连接有关，而与元件的性质无关。",
+  "options": [
+   "正确",
+   "错误"
+  ],
+  "answer": "A",
+  "img": null,
+  "note": null,
+  "chapter": "第一章·电路基本概念与定律",
+  "point": "基尔霍夫定律",
+  "score": 2
+ },
+ {
+  "type": "judge",
+  "q": "两个电路互为等效电路，是指两者对外作用效果相同。",
+  "options": [
+   "正确",
+   "错误"
+  ],
+  "answer": "A",
+  "img": null,
+  "note": null,
+  "chapter": "第二章·电阻电路等效变换",
+  "point": "等效变换的概念",
+  "score": 2
+ },
+ {
+  "type": "judge",
+  "q": "一个具有n个节点、b条支路的电路，对其所能列出相互独立的基尔霍夫电压定律方程为 b-n-1 个。",
+  "options": [
+   "正确",
+   "错误"
+  ],
+  "answer": "B",
+  "img": null,
+  "note": null,
+  "chapter": "第三章·电阻电路一般分析",
+  "point": "KCL、KVL独立方程数",
+  "score": 2
+ },
+ {
+  "type": "judge",
+  "q": "叠加定理既适用于线性电路中电压、电流的求解，也适用于线性电路中功率的求解。",
+  "options": [
+   "正确",
+   "错误"
+  ],
+  "answer": "B",
+  "img": null,
+  "note": null,
+  "chapter": "第四章·叠加/戴维宁/诺顿",
+  "point": "叠加定理",
+  "score": 2
+ },
+ {
+  "type": "judge",
+  "q": "暂态电路中存在两个电容一定是二阶电路。",
+  "options": [
+   "正确",
+   "错误"
+  ],
+  "answer": "B",
+  "img": null,
+  "note": null,
+  "chapter": "第六章·一阶二阶电路",
+  "point": "二阶电路",
+  "score": 2
+ },
+ {
+  "type": "judge",
+  "q": "电感电容相串联，UL=120V，UC=80V，则总电压等于200V。",
+  "options": [
+   "正确",
+   "错误"
+  ],
+  "answer": "B",
+  "img": null,
+  "note": null,
+  "chapter": "第七章·相量法",
+  "point": "基本电路元件伏安关系的相量形式",
+  "score": 2
+ },
+ {
+  "type": "judge",
+  "q": "正弦电流电路中，电容电压和电流取关联参考方向时，电压与电流相位相同。",
+  "options": [
+   "正确",
+   "错误"
+  ],
+  "answer": "B",
+  "img": null,
+  "note": null,
+  "chapter": "第七章·相量法",
+  "point": "正弦交流电路中的电容元件",
+  "score": 2
+ },
+ {
+  "type": "judge",
+  "q": "如图所示无源二端网络N的平均功率P=20W，功率因数λ=cosφ=0.8（滞后），则其无功功率Q等于15var。【配图请对照讲义】",
+  "options": [
+   "正确",
+   "错误"
+  ],
+  "answer": "A",
+  "img": null,
+  "note": null,
+  "chapter": "第八章·正弦稳态分析",
+  "point": "视在功率",
+  "score": 2
+ },
+ {
+  "type": "judge",
+  "q": "提高功率因数，可使负载中的电流减小，因此电源利用率提高。",
+  "options": [
+   "正确",
+   "错误"
+  ],
+  "answer": "B",
+  "img": null,
+  "note": null,
+  "chapter": "第八章·正弦稳态分析",
+  "point": "功率因数的提高",
+  "score": 2
+ },
+ {
+  "type": "judge",
+  "q": "理想变压器既不消耗能量，也不贮存能量。",
+  "options": [
+   "正确",
+   "错误"
+  ],
+  "answer": "A",
+  "img": null,
+  "note": null,
+  "chapter": "第九章·耦合电感",
+  "point": "理想变压器",
+  "score": 2
+ },
+ {
+  "type": "judge",
+  "q": "在电源对称、负载不对称的三相三线制电路中，将产生中性点位移。",
+  "options": [
+   "正确",
+   "错误"
+  ],
+  "answer": "A",
+  "img": null,
+  "note": null,
+  "chapter": "第十一章·三相电路",
+  "point": "不对称三相电路",
+  "score": 2
+ },
+ {
+  "type": "judge",
+  "q": "非正弦周期量的有效值等于它各次谐波有效值之和。",
+  "options": [
+   "正确",
+   "错误"
+  ],
+  "answer": "B",
+  "img": null,
+  "note": null,
+  "chapter": "第十二章·非正弦周期",
+  "point": "有效值",
+  "score": 2
+ },
+ {
+  "type": "judge",
+  "q": "二端口网络是四端网络，但四端网络不一定是二端口网络。",
+  "options": [
+   "正确",
+   "错误"
+  ],
+  "answer": "A",
+  "img": null,
+  "note": null,
+  "chapter": "第十三章·二端口网络",
+  "point": "二端口网络",
+  "score": 2
+ },
+ {
+  "type": "judge",
+  "q": "电流表和电压表串联附加电阻后，都能扩大量程。",
+  "options": [
+   "正确",
+   "错误"
+  ],
+  "answer": "B",
+  "img": null,
+  "note": null,
+  "chapter": "第十四章·电参数测量",
+  "point": "电参数的测量方法",
+  "score": 2
+ }
+];
+
+/* ================================================================
+   以下为逻辑代码，无需改动
+   ================================================================ */
+const $ = id => document.getElementById(id);
+const isDemo = new URLSearchParams(location.search).get("demo") === "1";
+
+let quizRedoMode = false;
+let redoIndices = [];
+let answers = new Array(QUESTION_BANK.length).fill(null);
+let lastScore = 0;
+let lastWrongIdx = [];
+
+/* ---- 等级预览（首页） ---- */
+(function renderRankPreview() {
+  const ranges = ["90 - 100", "75 - 89", "60 - 74", "40 - 59", "39 - 0"];
+  $("rankPreview").innerHTML = GRADES.map((g, i) =>
+    `<div class="rank-row">
+       <img class="rank-avatar" src="${g.img}" alt="">
+       <div class="rank-chip" style="background:${g.color}">${g.name}</div>
+       <div class="rank-range">${ranges[i]} 分 · ${g.tag}</div>
+     </div>`).join("");
+  if (isDemo) $("demoNote").style.display = "block";
+})();
+
+/* 启动：按登记状态决定首屏（演示模式跳过登记） */
+initForm();
+
+/* 补发暂存线索：正式环境下把之前提交失败/预览暂存的登记逐条补进线索池 */
+(function flushPending() {
+  if (!(location.hostname === "sigedianwang.cn" || location.hostname === "www.sigedianwang.cn")) return;
+  let q = [];
+  try { q = JSON.parse(localStorage.getItem("ceping29_lead_pending") || "[]"); } catch (e) {}
+  if (!q.length) return;
+  const rest = [];
+  q.forEach(lead => {
+    fetch(API_BASE + "/api/leads/bulk", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(lead),
+    }).then(r => { if (!r.ok) rest.push(lead); }).catch(() => rest.push(lead));
+  });
+  setTimeout(() => {
+    try { localStorage.setItem("ceping29_lead_pending", JSON.stringify(rest)); } catch (e) {}
+  }, 4000);
+})();
+
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+/* ---- 信息登记（打开页面即收集，提交进 ops-workbench 线索池） ---- */
+const LS_KEY = "ceping29_lead";
+
+function initForm() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(LS_KEY) || "null"); } catch (e) {}
+  if (saved && saved.name && saved.phone) {
+    // 已登记过：显示已登记条，直接进首页
+    $("registeredBar").style.display = "flex";
+    $("registeredInfo").textContent = `已登记：${saved.name}（${saved.grade}）`;
+    $("formCard").style.display = "none";
+    showScreen("screen-intro");
+  } else {
+    showScreen(isDemo ? "screen-intro" : "screen-form");
+  }
+}
+
+function submitForm() {
+  const name = $("inName").value.trim();
+  const phone = $("inPhone").value.trim();
+  const school = $("inSchool").value.trim();
+  const grade = $("inGrade").value;
+  let ok = true;
+  const mark = (id, bad) => { $(id).classList.toggle("invalid", bad); if (bad) ok = false; };
+  mark("fName", !name);
+  mark("fPhone", !/^1\d{10}$/.test(phone));
+  mark("fSchool", !school);
+  mark("fGrade", !grade);
+  if (!ok) return;
+
+  const btn = $("btnSubmitForm");
+  btn.disabled = true; btn.textContent = "提交中…";
+  const now = new Date();
+  const lead = {
+    name, phone, school, grade,
+    gender: "", year: now.getFullYear(), month: now.getMonth() + 1,
+    date: now.toISOString().slice(0, 10),
+    status: "未跟进", source: LEAD_SOURCE, validity: "待定",
+    intent: 0, contact_count: 0, owner: "", campus: "",
+    note: `29届备考前基础测评（${grade}）· 自动收集`,
+  };
+
+  const finish = () => {
+    try { localStorage.setItem(LS_KEY, JSON.stringify({ name, phone, school, grade })); } catch (e) {}
+    $("registeredBar").style.display = "flex";
+    $("registeredInfo").textContent = `已登记：${name}（${grade}）`;
+    $("formCard").style.display = "none";
+    btn.disabled = false; btn.textContent = "登记完成 · 开始测评";
+    showScreen("screen-intro");
+  };
+  const stashPending = () => {
+    try {
+      const q = JSON.parse(localStorage.getItem("ceping29_lead_pending") || "[]");
+      q.push(lead);
+      localStorage.setItem("ceping29_lead_pending", JSON.stringify(q));
+    } catch (e) {}
+  };
+
+  /* 预览/本地环境（非正式域名）直接跳过远程提交，暂存后放行 */
+  const isProd = location.hostname === "sigedianwang.cn" || location.hostname === "www.sigedianwang.cn";
+  if (!isProd) { stashPending(); finish(); return; }
+
+  /* 正式环境：3.5秒超时兜底，失败/超时一律暂存放行，绝不拦人 */
+  const ctrl = new AbortController();
+  const kill = setTimeout(() => ctrl.abort(), 3500);
+  const failSafe = setTimeout(finish, 4500); /* 双保险：任何情况下4.5秒内必放行 */
+  fetch(API_BASE + "/api/leads/bulk", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(lead),
+    signal: ctrl.signal,
+  }).then(r => { if (!r.ok) throw new Error(r.status); clearTimeout(failSafe); finish(); })
+    .catch(() => { stashPending(); clearTimeout(failSafe); finish(); })
+    .finally(() => clearTimeout(kill));
+}
+
+function reEditForm() {
+  const saved = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+  $("inName").value = saved.name || "";
+  $("inPhone").value = saved.phone || "";
+  $("inSchool").value = saved.school || "";
+  $("inGrade").value = saved.grade || "";
+  $("registeredBar").style.display = "none";
+  $("formCard").style.display = "block";
+  showScreen("screen-form");
+}
+
+function startQuiz() {
+  quizRedoMode = false;
+  answers = new Array(QUESTION_BANK.length).fill(null);
+  buildQuizList(QUESTION_BANK.map((_, i) => i), "交卷 · 查看结果", false);
+  showScreen("screen-quiz");
+}
+function backHome() { showScreen("screen-intro"); }
+
+const TYPE_LABEL = { single: "单选题", multi: "多选题", judge: "判断题" };
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/* 生成列表式答题页：idxList 为要展示的题号（0-based） */
+function buildQuizList(idxList, submitText, isRedo) {
+  quizRedoMode = isRedo;
+  redoIndices = isRedo ? idxList.slice() : [];
+  $("btnSubmitAll").textContent = submitText;
+  $("redoTip").style.display = isRedo ? "block" : "none";
+
+  const groups = [
+    { type: "single", title: "一、单选题", sub: "每题 2 分" },
+    { type: "multi",  title: "二、多选题", sub: "每题 4 分 · 错选漏选不得分" },
+    { type: "judge",  title: "三、判断题", sub: "每题 2 分" },
+  ];
+  let html = "";
+  groups.forEach(g => {
+    const items = idxList.filter(i => QUESTION_BANK[i].type === g.type);
+    if (!items.length) return;
+    html += `<div class="qgroup-title">${g.title}<small>${items.length} 道 · ${g.sub}</small></div>`;
+    items.forEach(i => { html += renderQCard(i); });
+  });
+  $("quizList").innerHTML = html;
+  buildSheet(idxList);
+  updateProgress();
+}
+
+function renderQCard(i) {
+  const q = QUESTION_BANK[i];
+  const picked = answers[i] || "";
+  const imgHtml = q.img ? `<img class="q-img" src="${q.img}" alt="电路图">` : "";
+  const noteHtml = q.note ? `<div class="q-note">※ ${q.note}</div>` : "";
+  const opts = q.options.map((t, oi) => {
+    const letter = "ABCDEFGH"[oi];
+    const on = picked.includes(letter) ? "picked" : "";
+    return `<div class="opt ${on}" data-qi="${i}" data-letter="${letter}" onclick="pickOpt(${i},'${letter}')">
+              <span class="tag">${letter}</span><span>${esc(t)}</span>
+            </div>`;
+  }).join("");
+  return `<div class="qcard" id="qc${i}">
+    <div class="q-top"><span class="q-badge">${i + 1}</span><span class="q-score">${TYPE_LABEL[q.type]} · ${q.score} 分</span></div>
+    <div class="q-text">${esc(q.q)}</div>
+    ${imgHtml}${noteHtml}
+    <div class="opts">${opts}</div>
+  </div>`;
+}
+
+function buildSheet(idxList) {
+  $("sheetGrid").innerHTML = idxList.map(i =>
+    `<div class="sheet-cell" id="sc${i}" onclick="jumpTo(${i})">${i + 1}</div>`).join("");
+}
+function toggleSheet() { $("answerSheet").classList.toggle("open"); }
+function jumpTo(i) {
+  const el = $("qc" + i);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  $("answerSheet").classList.remove("open");
+}
+
+function pickOpt(i, letter) {
+  const q = QUESTION_BANK[i];
+  if (q.type === "multi") {
+    let cur = answers[i] ? answers[i].split("") : [];
+    cur = cur.includes(letter) ? cur.filter(c => c !== letter) : cur.concat(letter);
+    cur.sort();
+    answers[i] = cur.join("") || null;
+  } else {
+    answers[i] = letter;
+  }
+  // 局部刷新该题选中态与进度，不整页重绘（避免滚动跳动）
+  const card = $("qc" + i);
+  card.querySelectorAll(".opt").forEach(o => {
+    o.classList.toggle("picked", (answers[i] || "").includes(o.dataset.letter));
+  });
+  updateProgress();
+}
+
+function answeredCount() { return answers.filter(a => a !== null).length; }
+function updateProgress() {
+  const list = quizRedoMode ? redoIndices : QUESTION_BANK.map((_, i) => i);
+  const done = list.filter(i => answers[i] !== null).length;
+  $("qAnswered").textContent = done;
+  $("progressBar").style.width = (done / list.length * 100) + "%";
+  list.forEach(i => {
+    const cell = $("sc" + i);
+    if (cell) cell.classList.toggle("done", answers[i] !== null);
+  });
+}
+
+function onSubmitClick() {
+  const list = quizRedoMode ? redoIndices : QUESTION_BANK.map((_, i) => i);
+  const unanswered = list.filter(i => answers[i] === null);
+  if (unanswered.length > 0) {
+    $("confirmCount").textContent = unanswered.length;
+    $("confirmMask").classList.add("show");
+    return;
+  }
+  doSubmit();
+}
+function closeConfirm() { $("confirmMask").classList.remove("show"); }
+function forceSubmit() { closeConfirm(); doSubmit(); }
+function doSubmit() { submitQuiz(); }
+
+/* ---- 判分 ---- */
+function gradeOf(score) { return GRADES.find(g => score >= g.min); }
+function isCorrect(i) {
+  const q = QUESTION_BANK[i];
+  if (!q.answer || answers[i] === null) return false;
+  if (q.type === "multi") {
+    return answers[i].split("").sort().join("") === q.answer.split("").sort().join("");
+  }
+  return answers[i] === q.answer;
+}
+
+function submitQuiz() {
+  let score = 0;
+  lastWrongIdx = [];
+  QUESTION_BANK.forEach((q, i) => {
+    if (isCorrect(i)) score += q.score;
+    else lastWrongIdx.push(i);
+  });
+  window.__pendingScore = score;
+  // 批卷过渡：先来一段揭晓节奏，再进结果页动画
+  const ov = $("gradingOverlay");
+  ov.classList.add("show");
+  const go = () => {
+    ov.classList.remove("show");
+    try { renderResult(score); }
+    catch (e) { /* 出分动画任何异常也必须切到结果页 */ showScreen("screen-result"); }
+  };
+  setTimeout(go, 1100);
+  // 保底：批卷层若因环境异常 6 秒仍未消失，显示手动跳转按钮
+  clearTimeout(window.__gradingFailsafe);
+  window.__gradingFailsafe = setTimeout(() => {
+    if (ov.classList.contains("show")) $("gradingSkip").style.display = "inline-block";
+  }, 6000);
+}
+function gradingForceGo() {
+  $("gradingOverlay").classList.remove("show");
+  $("gradingSkip").style.display = "none";
+  try { renderResult(window.__pendingScore || 0); }
+  catch (e) { showScreen("screen-result"); }
+}
+
+/* 元素动画重触发（重复出分/再测一次时都能重播） */
+function replay(el, cls) {
+  el.classList.remove("anim-rise", "anim-pop", "d1", "d2", "d3");
+  void el.offsetWidth;
+  cls.split(" ").forEach(c => c && el.classList.add(c));
+}
+
+/* ---- 出分 ---- */
+function renderResult(score) {
+  lastScore = score;
+  const g = gradeOf(score);
+  replay($("resultHeadWrap"), "anim-rise");
+  // 分数从 0 滚动到实际分（easeOutCubic，约1.2s）
+  const numEl = $("scoreNum");
+  const t0 = performance.now(), dur = 1200;
+  (function tick(t) {
+    const k = Math.min((t - t0) / dur, 1);
+    numEl.textContent = Math.round(score * (1 - Math.pow(1 - k, 3)));
+    if (k < 1) requestAnimationFrame(tick);
+  })(t0);
+
+  const band = $("gradeBand");
+  band.style.background = g.color;
+  $("gradeAvatar").src = g.img;
+  $("gradeName").textContent = g.name;
+  $("gradeTag").textContent = g.tag;
+  $("gradeComment").innerHTML = `<b>「${g.name}」</b>：${g.comment}`;
+  drawPoster(score, g);
+
+  // 等级色块弹跳入场 → 评语 → 海报 → 时间轴，依次浮现
+  setTimeout(() => replay($("gradeBand"), "anim-pop"), 500);
+  setTimeout(() => replay($("gradeComment"), "anim-rise d1"), 500);
+  setTimeout(() => { replay($("posterSec"), "anim-rise d2"); }, 500);
+  setTimeout(() => replay($("planSec"), "anim-rise d3"), 500);
+
+  if (isDemo) $("demoSwitch").style.display = "block";
+  renderWrongBook();
+  renderPlan();
+  showScreen("screen-result");
+}
+
+/* ---- 错题库 ---- */
+function renderWrongBook() {
+  const sec = $("wrongSec");
+  if (!lastWrongIdx.length) {
+    $("wrongTitle").textContent = "错题回顾";
+    $("wrongRedoBtn").style.display = "none";
+    $("wrongList").innerHTML = `<div class="wrong-done">全对！一题没错，这波稳得离谱</div>`;
+    sec.style.display = "block";
+    return;
+  }
+  $("wrongTitle").textContent = `错题回顾 · ${lastWrongIdx.length} 题待消灭`;
+  $("wrongRedoBtn").style.display = quizRedoMode ? "none" : "inline-block";
+  $("wrongList").innerHTML = lastWrongIdx.map(i => {
+    const q = QUESTION_BANK[i];
+    const mine = answers[i] === null ? "未作答" : answers[i].split("").map(l => l + "." + (q.options["ABCDEFGH".indexOf(l)] || "")).join("　");
+    const right = q.answer.split("").map(l => l + "." + (q.options["ABCDEFGH".indexOf(l)] || "")).join("　");
+    const typeLabel = TYPE_LABEL[q.type];
+    return `<div class="wrong-item" id="wc${i}">
+      <div class="wrong-meta">
+        <span class="wrong-tag hot">第 ${i + 1} 题 · ${typeLabel}</span>
+        <span class="wrong-tag">${q.chapter}</span>
+        <span class="wrong-tag">${q.point}</span>
+      </div>
+      <div class="wrong-q">${esc(q.q)}</div>
+      <div class="wrong-ans">
+        <div class="mine"><b>✗ 我的答案：</b>${mine}</div>
+        <div class="right"><b>✓ 正确答案：</b>${right}</div>
+      </div>
+    </div>`;
+  }).join("");
+  sec.style.display = "block";
+}
+
+/* 错题重做：清空错题作答（其他题保留原答案），只渲染错题 */
+function redoWrong() {
+  buildQuizList(lastWrongIdx, "完成重做 · 重新出分", true);
+  lastWrongIdx.forEach(i => { answers[i] = null; });
+  updateProgress();
+  showScreen("screen-quiz");
+  window.scrollTo(0, 0);
+}
+
+/* ---- 备考流程时间轴（登记即含，直接展示） ---- */
+function renderPlan() {
+  const box = $("planBox");
+  if (!$("planTimeline").innerHTML) {
+    $("planTimeline").innerHTML = PLAN.map(s =>
+      `<div class="stage ${s.now ? "now" : ""}">
+         <div class="stage-when">${s.when}</div>
+         <h4>${s.title}${s.now ? '<span class="now-badge">你现在在这</span>' : ""}</h4>
+         <p>${s.desc}</p>
+       </div>`).join("");
+  }
+  box.style.display = "block";
+}
+
+/* ---- 海报卡（canvas 绘制 → img 长按保存） ---- */
+function drawPoster(score, g) {
+  const W = 750, H = 1180;
+  const c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const x = c.getContext("2d");
+
+  // 底
+  x.fillStyle = "#f6f8fb"; x.fillRect(0, 0, W, H);
+  // 顶部品牌带
+  x.fillStyle = "#1D3557"; x.fillRect(0, 0, W, 150);
+  x.fillStyle = "#ffffff";
+  x.font = "800 40px -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif";
+  x.fillText("29届 · 备考前基础测评", 50, 78);
+  x.font = "400 24px -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif";
+  x.fillStyle = "rgba(255,255,255,.72)";
+  x.fillText("思格教育 · 电网教研院 | 电路摸底", 50, 118);
+
+  // 分数
+  x.fillStyle = "#17222e";
+  x.font = "800 110px -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif";
+  x.textAlign = "center";
+  x.fillText(String(score), W / 2, 285);
+  x.fillStyle = "#5c6b7e";
+  x.font = "400 24px -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif";
+  x.fillText("满 分 100 · 电路 40 题", W / 2, 330);
+
+  // 卡通形象（白色圆角卡 + 图片）
+  const avSize = 195, avX = (W - avSize) / 2, avY = 355;
+  x.fillStyle = "#ffffff";
+  roundRect(x, avX, avY, avSize, avSize, 22); x.fill();
+  x.strokeStyle = "#dfe6ee"; x.lineWidth = 2;
+  roundRect(x, avX, avY, avSize, avSize, 22); x.stroke();
+  const avatar = GRADE_IMG_CACHE[g.name];
+  if (avatar && avatar.complete && avatar.naturalWidth > 0) {
+    x.save();
+    roundRect(x, avX + 8, avY + 8, avSize - 16, avSize - 16, 16);
+    x.clip();
+    x.drawImage(avatar, avX + 8, avY + 8, avSize - 16, avSize - 16);
+    x.restore();
+  } else {
+    x.fillStyle = "#9db0c3";
+    x.font = "400 16px sans-serif";
+    x.fillText("形象加载中", W / 2, avY + avSize / 2 + 6);
+  }
+
+  // 等级色块
+  const bw = 470, bh = 175, bx = (W - bw) / 2, by = 585;
+  x.textAlign = "left";
+  x.fillStyle = g.color;
+  roundRect(x, bx, by, bw, bh, 24); x.fill();
+  x.fillStyle = "#ffffff";
+  x.font = "800 76px -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif";
+  x.textAlign = "center";
+  x.fillText(g.name, W / 2, by + 95);
+  x.font = "400 25px -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif";
+  x.globalAlpha = .92;
+  x.fillText(g.tag, W / 2, by + 142);
+  x.globalAlpha = 1;
+
+  // 评语（自动换行）
+  x.textAlign = "left";
+  x.fillStyle = "#17222e";
+  x.font = "400 27px -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif";
+  wrapText(x, g.comment, 60, 825, W - 120, 44);
+
+  // 二维码区
+  x.fillStyle = "#1D3557";
+  roundRect(x, 60, 960, W - 120, 150, 20); x.fill();
+  const qrSize = 118, qrX = 84, qrY = 976;
+  if (POSTER_QR_URL) {
+    /* 真实二维码上线后走这里（需异步 drawImage，见 TODO 注释） */
+  }
+  x.fillStyle = "#ffffff";
+  roundRect(x, qrX, qrY, qrSize, qrSize, 8); x.fill();
+  x.fillStyle = "#9db0c3";
+  x.font = "400 16px sans-serif";
+  x.textAlign = "center";
+  x.fillText("二维码", qrX + qrSize / 2, qrY + 55);
+  x.fillText("占位", qrX + qrSize / 2, qrY + 78);
+  x.fillStyle = "rgba(255,255,255,.9)";
+  x.font = "400 24px -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif";
+  x.textAlign = "left";
+  x.fillText("扫码测一测 · 看你是什么段位", qrX + qrSize + 28, qrY + 62);
+  x.font = "400 20px sans-serif";
+  x.globalAlpha = .6;
+  x.fillText("思格教育 · 电网教研院", qrX + qrSize + 28, qrY + 100);
+  x.globalAlpha = 1;
+
+  $("posterImg").src = c.toDataURL("image/png");
+}
+
+function roundRect(x, rx, ry, w, h, r) {
+  x.beginPath();
+  x.moveTo(rx + r, ry);
+  x.arcTo(rx + w, ry, rx + w, ry + h, r);
+  x.arcTo(rx + w, ry + h, rx, ry + h, r);
+  x.arcTo(rx, ry + h, rx, ry, r);
+  x.arcTo(rx, ry, rx + w, ry, r);
+  x.closePath();
+}
+function wrapText(x, text, px, py, maxW, lh) {
+  let line = "", y = py;
+  for (const ch of text) {
+    if (x.measureText(line + ch).width > maxW) { x.fillText(line, px, y); line = ch; y += lh; }
+    else line += ch;
+  }
+  if (line) x.fillText(line, px, y);
+}
+
+/* ---- 演示模式 ---- */
+function jumpDemo() { demoAnswers(); renderResult(Math.floor(Math.random() * 101)); }
+/* 按等级顺序循环出分：跳到下一个等级，取档内中间分，便于逐档审评语 */
+function demoLoop() {
+  const idx = GRADES.findIndex(g => lastScore >= g.min);
+  const nextIdx = (idx + 1) % GRADES.length;
+  const upper = GRADES[idx].min - 1; /* 下一档的上限 = 当前档下限-1（夯档上限为100的特例已含在 idx+1 循环里，实际下一档是 人上人） */
+  const mid = Math.round((GRADES[nextIdx].min + upper) / 2);
+  demoAnswers();
+  renderResult(mid);
+}
+/* 演示模式：随机生成一份作答（约六成正确率），让错题库也有内容可看 */
+function demoAnswers() {
+  answers = QUESTION_BANK.map(q => {
+    if (Math.random() < 0.6) return q.answer;
+    const n = q.type === "multi" ? 3 : (q.type === "judge" ? 2 : 4);
+    let s = "";
+    while (s.length < (q.type === "multi" ? 2 : 1)) {
+      const l = "ABCD"[Math.floor(Math.random() * Math.min(n, 4))];
+      if (!s.includes(l)) s += l;
+    }
+    return s.split("").sort().join("");
+  });
+}
+</script>
+<!-- 交卷确认弹层 -->
+<div class="confirm-mask" id="confirmMask">
+  <div class="confirm-card">
+    <h4>还有题没答完</h4>
+    <p>还有 <b id="confirmCount">0</b> 题空着，交卷的话这些题按 <b>0 分</b>算。<br>要不回去再瞅两眼？</p>
+    <div class="confirm-btns">
+      <button class="c-back" onclick="closeConfirm()">回去答题</button>
+      <button class="c-go" onclick="forceSubmit()">直接交卷</button>
+    </div>
+  </div>
+</div>
+
+<!-- 批卷过渡层 -->
+<div class="grading-overlay" id="gradingOverlay">
+  <div class="grading-icon"></div>
+  <div class="grading-text">正在批卷<span class="grading-dots"><span>.</span><span>.</span><span>.</span></span></div>
+  <div class="grading-sub">看看你到底是什么段位</div>
+  <button class="grading-skip" id="gradingSkip" onclick="gradingForceGo()">卡住了？点这里直接看结果</button>
+</div>
+
+</body>
+</html>
