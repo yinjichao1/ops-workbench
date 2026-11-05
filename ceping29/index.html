@@ -208,7 +208,7 @@
   }
   .q-score { font-size: 11px; color: #9db0c3; }
   .q-text { font-size: 15.5px; font-weight: 600; line-height: 1.7; }
-  .q-img { width: 100%; max-width: 300px; border: 1px solid var(--line); border-radius: 10px; margin-top: 10px; display: block; }
+  .q-img { width: 100%; max-width: 360px; border: 1px solid var(--line); border-radius: 10px; margin-top: 10px; display: block; background: #fff; }
   .q-note { margin-top: 8px; font-size: 12px; color: var(--orange); background: #fdf3e7; border-radius: 8px; padding: 6px 10px; line-height: 1.6; }
   .opts { margin-top: 12px; display: grid; gap: 8px; }
   .opt {
@@ -592,9 +592,9 @@ const QUESTION_BANK = [
   "q": "电流的参考方向指（ ）。",
   "options": [
    "负电荷移动方向",
-   "电路中任意设定的方向",
+   "电路任意设定方向",
    "正电荷移动方向",
-   "电流的实际方向"
+   "电流实际方向"
   ],
   "answer": "B",
   "img": null,
@@ -621,7 +621,7 @@ const QUESTION_BANK = [
  },
  {
   "type": "single",
-  "q": "三角形连接每个电阻为3Ω，等效成星形连接后每个电阻是（ ）Ω。【国网2024考试真题】",
+  "q": "三角形每个电阻3Ω，等效成星型每个是多少（ ）Ω。【国网2024考试真题】",
   "options": [
    "3",
    "6",
@@ -645,7 +645,7 @@ const QUESTION_BANK = [
    "Is=1A，Rs=9Ω"
   ],
   "answer": "B",
-  "img": "images/q4.png",
+  "img": "images/q4ab.png",
   "note": null,
   "chapter": "第二章·电阻电路等效变换",
   "point": "实际电压源与实际电流源等效互换",
@@ -653,16 +653,15 @@ const QUESTION_BANK = [
  },
  {
   "type": "single",
-  "q": "在下图所示电路中，已知电源电压与目标电流，则电阻 R 值为（ ）。",
+  "q": "在下图所示电路中，电源电压 U=2V，若使电流 I=3A，电阻 R 值为（ ）。",
   "options": [
-   "R=2Ω",
-   "R=4Ω",
-   "R=6Ω",
-   "R=8Ω"
+   "1Ω",
+   "2Ω",
+   "3Ω"
   ],
   "answer": "A",
-  "img": "images/q5.png",
-  "note": "原题选项为公式形式，此处按常见形式整理，以讲义为准",
+  "img": "images/f_t5_circuit.png",
+  "note": null,
   "chapter": "第二章·电阻电路等效变换",
   "point": "输入电阻",
   "score": 2
@@ -685,7 +684,7 @@ const QUESTION_BANK = [
  },
  {
   "type": "single",
-  "q": "求出图示电路的诺顿等效电路参数（ ）。【配图请对照讲义】",
+  "q": "求出图示电路的诺顿等效电路参数（ ）。",
   "options": [
    "3A，2Ω",
    "9A，3Ω",
@@ -693,7 +692,7 @@ const QUESTION_BANK = [
    "6A，1Ω"
   ],
   "answer": "C",
-  "img": null,
+  "img": "images/f_t7_circuit.png",
   "note": null,
   "chapter": "第四章·叠加/戴维宁/诺顿",
   "point": "诺顿定理",
@@ -706,7 +705,7 @@ const QUESTION_BANK = [
    "R0",
    "0",
    "2R0",
-   "R0/4"
+   "1/4 R0"
   ],
   "answer": "A",
   "img": null,
@@ -752,13 +751,13 @@ const QUESTION_BANK = [
   "q": "两互感线圈顺向串联时，其等效电感量 L顺=（ ）。【国网考试2025二批次真题】",
   "options": [
    "L1+L2-2M",
+   "L1+L2+M",
    "L1+L2+2M",
-   "L1+L2",
-   "L1-L2+2M"
+   "L1+L2"
   ],
   "answer": "C",
   "img": null,
-  "note": "原题选项为公式形式，此处按标准形式整理",
+  "note": null,
   "chapter": "第九章·耦合电感",
   "point": "耦合电感的串联",
   "score": 2
@@ -813,7 +812,7 @@ const QUESTION_BANK = [
  },
  {
   "type": "single",
-  "q": "若一个二端口网络Y参数方程满足 Y12=Y21，则该二端口网络具有（ ）。【配图/公式请对照讲义】",
+  "q": "若一个二端口网络的Y参数方程如下图所示，则该二端口网络具有（ ）。",
   "options": [
    "对称性和互易性",
    "互易性",
@@ -821,15 +820,15 @@ const QUESTION_BANK = [
    "不对称也不互易"
   ],
   "answer": "B",
-  "img": null,
-  "note": null,
+  "img": "images/f_t15_eq.png",
+  "note": "方程为 I1=2U1-3U2，I2=-3U1+4U2",
   "chapter": "第十三章·二端口网络",
   "point": "导纳参数方程",
   "score": 2
  },
  {
   "type": "multi",
-  "q": "某电路元件的电压与电流参考方向如图所示，若U<0，I>0，以下说法正确的是（ ）。【配图请对照讲义】",
+  "q": "某电路元件的电压与电流参考方向如图所示，若U<0，I>0，以下说法正确的是（ ）。",
   "options": [
    "电压与电流为关联参考方向",
    "电流实际方向是从a到b",
@@ -837,7 +836,7 @@ const QUESTION_BANK = [
    "a点是高电位点"
   ],
   "answer": "ABC",
-  "img": null,
+  "img": "images/f_t16_elem.png",
   "note": null,
   "chapter": "第一章·电路基本概念与定律",
   "point": "电流和电压的参考方向",
@@ -850,7 +849,7 @@ const QUESTION_BANK = [
    "受控源可先当作独立电源处理，列写电路方程",
    "在结点电压法中，当受控源的控制量不是结点电压时，需要添加用结点电压表示控制量的补充方程",
    "在回路电流法中，当受控源的控制量不是回路电流时，需要添加用回路电流表示控制量的补充方程",
-   "若采用回路电流法，对列写的方程进行化简，在最终的表达式中互阻始终相等，即Rij=Rji"
+   "若采用回路电流法，对列写的方程进行化简，在最终的表达式中互阻始终是相等的，即Rij=Rji"
   ],
   "answer": "ABC",
   "img": null,
@@ -930,7 +929,7 @@ const QUESTION_BANK = [
    "品质因数高的谐振电路对非谐振频率有强抵制力",
    "串谐电路的谐振频率与电阻和电容匹配值有关",
    "串谐电路的谐振频率与电感和电容匹配值有关",
-   "电路工作在谐振频率时谐振支路吸收的无功功率为零"
+   "电路工作在谐振频率时谐振支路的吸收的无功功率为零"
   ],
   "answer": "ACD",
   "img": null,
@@ -1101,14 +1100,14 @@ const QUESTION_BANK = [
  },
  {
   "type": "judge",
-  "q": "如图所示无源二端网络N的平均功率P=20W，功率因数λ=cosφ=0.8（滞后），则其无功功率Q等于15var。【配图请对照讲义】",
+  "q": "如图所示无源二端网络N的平均功率P=20W，功率因数λ=cosφ=0.8（滞后），则其无功功率Q等于15var。",
   "options": [
    "正确",
    "错误"
   ],
   "answer": "A",
   "img": null,
-  "note": null,
+  "note": "原卷标注\"如图所示\"但文档中未附电路图，数值计算不受影响",
   "chapter": "第八章·正弦稳态分析",
   "point": "视在功率",
   "score": 2
