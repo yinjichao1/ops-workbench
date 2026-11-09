@@ -700,12 +700,12 @@ const QUESTION_BANK = [
  },
  {
   "type": "single",
-  "q": "一个内阻为R0的电压源，当负载电阻为（ ）时获得最大功率。【国网考试2024一批次真题】",
+  "q": "一个内阻为R<sub>0</sub>的电压源，当负载电阻为（ ）时获得最大功率。【国网考试2024一批次真题】",
   "options": [
-   "R0",
+   "R<sub>0</sub>",
    "0",
-   "2R0",
-   "1/4 R0"
+   "2R<sub>0</sub>",
+   "1/4 R<sub>0</sub>"
   ],
   "answer": "A",
   "img": null,
@@ -716,7 +716,7 @@ const QUESTION_BANK = [
  },
  {
   "type": "single",
-  "q": "已知 F1=-4+3j，F2=2.78-9.20j，则 F1/F2 为（ ）。",
+  "q": "已知 F<sub>1</sub>=-4+3j，F<sub>2</sub>=2.78-9.20j，则 F<sub>1</sub>/F<sub>2</sub> 为（ ）。",
   "options": [
    "F=0.52∠36.32°",
    "F=0.52∠216.32°",
@@ -750,10 +750,10 @@ const QUESTION_BANK = [
   "type": "single",
   "q": "两互感线圈顺向串联时，其等效电感量 L顺=（ ）。【国网考试2025二批次真题】",
   "options": [
-   "L1+L2-2M",
-   "L1+L2+M",
-   "L1+L2+2M",
-   "L1+L2"
+   "L<sub>1</sub>+L<sub>2</sub>-2M",
+   "L<sub>1</sub>+L<sub>2</sub>+M",
+   "L<sub>1</sub>+L<sub>2</sub>+2M",
+   "L<sub>1</sub>+L<sub>2</sub>"
   ],
   "answer": "C",
   "img": null,
@@ -782,10 +782,10 @@ const QUESTION_BANK = [
   "type": "single",
   "q": "RLC并联电路谐振时，如改变电阻R，则（ ）。",
   "options": [
-   "谐振频率f0将增大",
-   "谐振频率f0将减小",
-   "谐振频率f0不变化",
-   "谐振频率f0变化不确定"
+   "谐振频率f<sub>0</sub>将增大",
+   "谐振频率f<sub>0</sub>将减小",
+   "谐振频率f<sub>0</sub>不变化",
+   "谐振频率f<sub>0</sub>变化不确定"
   ],
   "answer": "C",
   "img": null,
@@ -821,7 +821,7 @@ const QUESTION_BANK = [
   ],
   "answer": "B",
   "img": "images/f_t15_eq.png",
-  "note": "方程为 I1=2U1-3U2，I2=-3U1+4U2",
+  "note": "方程为 I<sub>1</sub>=2U<sub>1</sub>-3U<sub>2</sub>，I<sub>2</sub>=-3U<sub>1</sub>+4U<sub>2</sub>",
   "chapter": "第十三章·二端口网络",
   "point": "导纳参数方程",
   "score": 2
@@ -894,10 +894,10 @@ const QUESTION_BANK = [
   "type": "multi",
   "q": "换路定则指出：（ ）。",
   "options": [
-   "uc(0+)=uc(0-)",
-   "uL(0+)=uL(0-)",
-   "ic(0+)=ic(0-)",
-   "iL(0+)=iL(0-)"
+   "u<sub>c</sub>(0+)=u<sub>c</sub>(0-)",
+   "u<sub>L</sub>(0+)=u<sub>L</sub>(0-)",
+   "i<sub>c</sub>(0+)=i<sub>c</sub>(0-)",
+   "i<sub>L</sub>(0+)=i<sub>L</sub>(0-)"
   ],
   "answer": "AD",
   "img": null,
@@ -974,7 +974,7 @@ const QUESTION_BANK = [
   "type": "multi",
   "q": "下列说法正确的是（ ）。",
   "options": [
-   "互易二端口满足互易定理，即对于Y参数方程满足Y12=Y21",
+   "互易二端口满足互易定理，即对于Y参数方程满足Y<sub>12</sub>=Y<sub>21</sub>",
    "互易二端口四个参数中只有三个是独立的",
    "结构不对称的二端口，只要其电气特性是对称的，也可以称为对称二端口",
    "对称二端口只有一个参数是独立的"
@@ -1072,7 +1072,7 @@ const QUESTION_BANK = [
  },
  {
   "type": "judge",
-  "q": "电感电容相串联，UL=120V，UC=80V，则总电压等于200V。",
+  "q": "电感电容相串联，U<sub>L</sub>=120V，U<sub>C</sub>=80V，则总电压等于200V。",
   "options": [
    "正确",
    "错误"
@@ -1345,7 +1345,7 @@ function startQuiz() {
 function backHome() { showScreen("screen-intro"); }
 
 const TYPE_LABEL = { single: "单选题", multi: "多选题", judge: "判断题" };
-const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/&lt;(\/?)(sub|sup)&gt;/g, "<$1$2>");
 
 /* 生成列表式答题页：idxList 为要展示的题号（0-based） */
 function buildQuizList(idxList, submitText, isRedo) {
